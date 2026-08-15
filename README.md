@@ -1,59 +1,61 @@
-# AngularTemp
+# Monocont — Frontend (Angular)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.3.
+Aplicación Web SPA cliente para la plataforma de gestión contable y tributaria **Monocont**, construida con **Angular**.
 
-## Development server
+---
 
-To start a local development server, run:
+## 📌 Características
+- Interfaz de usuario moderna y responsiva con **Tailwind CSS**.
+- Gestión de estado y autenticación con JWT (login, refresh token y login federado con Google).
+- Módulos públicos y privados con Guards de autenticación y autorización.
+- Módulos principales:
+  - **Autenticación:** Login, registro y recuperación de cuenta.
+  - **Empresas:** Listado, selección y administración de empresas contribuyentes.
+  - **Operaciones:** Ingesta y visualización de archivos de Compras y Ventas SUNAT (SIRE).
+  - **Catálogos:** Consulta en tiempo real de tipo de cambio oficial SUNAT / SBS.
 
-```bash
-ng serve
+---
+
+## 🏗 Estructura del Proyecto
+```
+FrontEnd/
+├── src/
+│   ├── app/
+│   │   ├── core/         # Servicios globales, interceptores HTTP, guards y modelos base
+│   │   ├── features/     # Módulos por dominio de negocio (auth, empresa, operaciones, public)
+│   │   ├── shared/       # Componentes reutilizables, pipes, directivas y UI
+│   │   ├── app.config.ts # Configuración de providers de Angular
+│   │   └── app.routes.ts # Enrutador principal
+│   ├── assets/           # Recursos estáticos (imágenes, fuentes, iconos)
+│   └── environments/     # Variables de entorno por ambiente
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+## ⚙️ Requisitos Previos
+- **Node.js**: v20.x o superior
+- **NPM**: v10.x o superior
+- **Angular CLI**: v22.x
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+---
 
-```bash
-ng generate component component-name
-```
+## 🚀 Instalación y Ejecución
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+1. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
 
-```bash
-ng generate --help
-```
+2. **Iniciar servidor de desarrollo:**
+   ```bash
+   npm start
+   # o
+   ng serve
+   ```
+   Navegar a `http://localhost:4200/`. La aplicación se recarga automáticamente ante cualquier cambio.
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+3. **Construir para producción:**
+   ```bash
+   npm run build
+   ```
+   Los artefactos optimizados se generarán en el directorio `dist/`.
