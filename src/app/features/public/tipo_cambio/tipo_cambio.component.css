@@ -1,0 +1,88 @@
+:host{display:block}.tipo-cambio-container{padding-bottom:3rem}.max-width{max-width:80rem;margin:0 auto;padding:0 1.5rem}
+
+/* Barra compacta del día */
+.tc-dia{margin-top:4rem;margin-bottom:2.5rem}
+.tc-dia-inner{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;background:#fff;border-radius:2rem;border:1.5px solid #dbe3ec;padding:1rem 1.5rem;box-shadow:0 2px 8px rgba(13,148,136,.05),0 8px 32px rgba(13,148,136,.04)}
+.tc-dia-label{display:flex;align-items:center;gap:.875rem}
+.tc-dia-icon{width:3rem;height:3rem;border-radius:1rem;background:linear-gradient(135deg,#f0fdfa,#ecfdf5);display:flex;align-items:center;justify-content:center;border:1px solid #ccfbf1}
+.tc-dia-icon svg{width:1.5rem;height:1.5rem;color:#0d9488}
+.tc-dia-titulo{font-size:.875rem;font-weight:700;color:#0f172a;line-height:1.2}
+.tc-dia-moneda{font-size:.75rem;font-weight:600;color:#94a3b8;margin-top:.125rem;letter-spacing:.03em}
+.tc-dia-separador{width:1px;height:2.5rem;background:#f1f5f9;flex-shrink:0}
+.tc-dia-valores{display:flex;align-items:center;gap:2rem;flex-wrap:wrap}
+.tc-dia-valor{display:flex;flex-direction:column;gap:.125rem}
+.tc-dia-campo{font-size:.6875rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em}
+.tc-dia-monto{font-size:1.5rem;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.tc-compra{color:#059669}
+.tc-venta{color:#7c3aed}
+.tc-dia-fecha{display:flex;align-items:center;gap:.5rem;color:#94a3b8;font-size:.8125rem;font-weight:600}
+.tc-dia-fecha svg{width:1.125rem;height:1.125rem;color:#0d9488}
+.tc-dia-sindato{text-align:center;color:#94a3b8;font-size:.9375rem;font-weight:500;padding:1.5rem}
+
+.alerta-error{display:flex;align-items:center;gap:.875rem;padding:1rem;border-radius:1.25rem;color:#b45309;font-size:.875rem;font-weight:500;margin-bottom:2.5rem;background:#fff7ed;border:1px solid #fde6c8}
+.alerta-error svg{flex-shrink:0;color:#f59e0b;width:1.25rem;height:1.25rem}
+
+/* ==================== Calendario Mensual ==================== */
+.cal-contenedor{background:#fff;border-radius:1.75rem;border:1.5px solid #dbe3ec;padding:1rem;box-shadow:0 2px 8px rgba(13,148,136,.04),0 8px 32px rgba(13,148,136,.05);margin-bottom:3rem}
+.cal-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+.cal-controls-left{display:flex;align-items:center;gap:.375rem}
+.cal-controls-right{display:flex;align-items:center;gap:.5rem}
+.cal-nav-btn{width:2.125rem;height:2.125rem;display:flex;align-items:center;justify-content:center;border-radius:.75rem;border:1.5px solid #e8ecf1;background:#f8fafc;color:#64748b;cursor:pointer;transition:all .3s}
+.cal-nav-btn:hover{border-color:#ccfbf1;background:#f0fdfa;color:#0d9488;transform:translateY(-1px)}
+.cal-nav-btn svg{width:1rem;height:1rem}
+.cal-hoy-btn{padding:.4375rem .875rem;border-radius:2rem;border:1.5px solid #e8ecf1;background:#fff;color:#0d9488;font-size:.75rem;font-weight:600;cursor:pointer;transition:all .3s;white-space:nowrap}
+.cal-hoy-btn:hover{border-color:#0d9488;background:#f0fdfa;transform:translateY(-1px)}
+.cal-titulo{flex:1;text-align:center}
+.cal-titulo h2{font-size:1.125rem;font-weight:800;color:#0f172a;letter-spacing:-.02em}
+.cal-titulo span{color:#0d9488;font-weight:800}
+.cal-selector{position:relative}
+.cal-selector-btn{display:inline-flex;align-items:center;gap:.375rem;padding:.4375rem .75rem;border:1.5px solid #e8ecf1;border-radius:.75rem;font-size:.75rem;font-weight:600;color:#0f172a;background:#f8fafc;cursor:pointer;transition:all .25s;white-space:nowrap}
+.cal-selector-btn:hover{border-color:#0d9488;background:#f0fdfa}
+.cal-selector-btn svg{width:.9375rem;height:.9375rem;color:#0d9488}
+.cal-selector-popup{position:absolute;top:calc(100% + .375rem);left:0;z-index:60;background:#fff;border:1.5px solid #dbe3ec;border-radius:1rem;padding:.75rem;box-shadow:0 8px 32px rgba(13,148,136,.12);width:17rem}
+.cal-selector-encabezado{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;padding:0 .125rem}
+.cal-selector-anio-btn{width:1.75rem;height:1.75rem;display:flex;align-items:center;justify-content:center;border-radius:.5rem;border:1.5px solid #e8ecf1;background:#f8fafc;color:#64748b;cursor:pointer;transition:all .25s}
+.cal-selector-anio-btn:hover:not(:disabled){border-color:#0d9488;color:#0d9488;background:#f0fdfa}
+.cal-selector-anio-btn:disabled{opacity:.35;cursor:not-allowed}
+.cal-selector-anio-btn svg{width:.875rem;height:.875rem}
+.cal-selector-anio{font-size:.875rem;font-weight:700;color:#0f172a}
+.cal-selector-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.375rem}
+.cal-selector-mes{padding:.5rem .25rem;border-radius:.625rem;border:1.5px solid transparent;background:#f8fafc;color:#334155;font-size:.6875rem;font-weight:600;cursor:pointer;transition:all .2s}
+.cal-selector-mes:hover:not(.cal-selector-mes--bloqueado){border-color:#ccfbf1;background:#f0fdfa;color:#0d9488}
+.cal-selector-mes--seleccionado{border-color:#0d9488;background:#f0fdfa;color:#0d9488}
+.cal-selector-mes--bloqueado{opacity:.35;cursor:not-allowed;background:#f1f5f9;color:#94a3b8}
+.cal-buscar-btn{display:inline-flex;align-items:center;justify-content:center;gap:.375rem;padding:.5rem 1.125rem;border-radius:.75rem;border:none;background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;font-size:.75rem;font-weight:600;cursor:pointer;transition:all .3s;white-space:nowrap;box-shadow:0 2px 8px rgba(13,148,136,.2);flex-shrink:0}
+.cal-buscar-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(13,148,136,.25)}
+.cal-buscar-btn svg{width:.9375rem;height:.9375rem}
+.cal-dias-semana{display:grid;grid-template-columns:repeat(7,1fr);gap:.375rem;margin-bottom:.375rem}
+.cal-dia-semana{text-align:center;font-size:.625rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;padding:.125rem 0}
+.cal-grid{display:flex;flex-direction:column;gap:.375rem}
+.cal-semana{display:grid;grid-template-columns:repeat(7,1fr);gap:.375rem}
+.cal-semana-separada{margin-top:.375rem}
+.cal-dia{display:flex;flex-direction:column;align-items:center;gap:.25rem;padding:.375rem .25rem;min-height:3.875rem;border-radius:.75rem;background:#f8fafc;border:2px dashed #8fa1b5}
+.cal-dia-numero{font-size:.75rem;font-weight:700;color:#0f172a}
+.cal-dia--fuera{opacity:.3}
+.cal-dia--fuera .cal-dia-numero{color:#94a3b8}
+.cal-dia--vacio{background:transparent}
+.cal-tarjeta{width:100%;text-align:center;font-size:.625rem;font-weight:700;padding:.1875rem .125rem;border-radius:.4375rem;font-variant-numeric:tabular-nums}
+.cal-tarjeta--compra{background:rgba(5,150,105,.1);color:#047857;border:1px solid rgba(5,150,105,.18)}
+.cal-tarjeta--venta{background:rgba(124,58,237,.1);color:#7c3aed;border:1px solid rgba(124,58,237,.18)}
+@media(max-width:767px){
+  .tc-dia{margin-top:2.5rem;margin-bottom:1.5rem}
+  .tc-dia-inner{flex-direction:column;align-items:flex-start;gap:1rem;padding:1rem}
+  .tc-dia-separador{width:100%;height:1px}
+  .tc-dia-valores{width:100%;justify-content:space-between;gap:1rem}
+  .max-width{padding:0 1rem}
+  .cal-contenedor{padding:.75rem}
+  .cal-header{flex-direction:column;align-items:stretch;gap:.75rem}
+  .cal-titulo{order:-1}
+  .cal-controls-left{justify-content:center}
+  .cal-controls-right{justify-content:center}
+  .cal-dia{min-height:3.5rem}
+  .cal-tarjeta{font-size:.5625rem}
+  .cal-dias-semana,.cal-semana{gap:.1875rem}
+  .cal-dia{gap:.1875rem;padding:.3125rem .125rem}
+  .cal-tarjeta{display:none}
+  .cal-dia--vacio{display:flex}
+  .cal-dia-numero{font-size:.6875rem}
+}

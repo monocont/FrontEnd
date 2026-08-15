@@ -1,0 +1,53 @@
+<div class="page-container">
+  <h2 class="page-title">Cumplimiento Fiscal</h2>
+  <p class="page-subtitle">Cálculo de impuestos, liquidaciones y emulación de formularios SUNAT.</p>
+
+  <div class="stats-grid mb-6">
+    <div class="stat-card">
+      <p class="stat-value">RER</p>
+      <p class="stat-label">Régimen</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-value">1.5%</p>
+      <p class="stat-label">Tasa</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-value">S/ 0</p>
+      <p class="stat-label">IGV</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-value">S/ 0</p>
+      <p class="stat-label">Renta</p>
+    </div>
+  </div>
+
+  <div class="card mb-6">
+    <h3 class="card-title">Liquidación de Impuestos</h3>
+    <div class="grid grid-cols-3 gap-4">
+      <div>
+        <label class="label">Año</label>
+        <input type="number" placeholder="2025" class="w-full input-soft" />
+      </div>
+      <div>
+        <label class="label">Mes</label>
+        <select class="w-full input-soft">
+          <option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option>
+          <option>Mayo</option><option>Junio</option><option>Julio</option><option>Agosto</option>
+          <option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option>
+        </select>
+      </div>
+      <div>
+        <label class="label">Empresa</label>
+        <select class="w-full input-soft">
+          <option>Constructora ABC S.A.C.</option>
+        </select>
+      </div>
+    </div>
+    <button type="button" class="btn btn-primary mt-4">Calcular Liquidación</button>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Formulario 621</h3>
+    <p class="text-xs text-muted">Pre-emulación interactiva del formulario oficial de SUNAT.</p>
+  </div>
+</div>

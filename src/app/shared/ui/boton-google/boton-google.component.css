@@ -1,0 +1,19 @@
+:host {
+  display: block;
+  width: 100%;
+}
+.google-button-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.google-button-ref {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 48px !important;
+}
+.google-button-ref iframe {
+  width: 100% !important;
+  height: 48px !important;
+}

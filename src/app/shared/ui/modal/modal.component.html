@@ -1,0 +1,47 @@
+@if (modalService.isOpen()) {
+  <div id="modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in" (click)="closeModal($event)">
+    <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden soft-shadow animate-scale-in" (click)="$event.stopPropagation()">
+      <div class="p-6">
+        <div class="flex items-start gap-4 mb-4">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ring-1 ring-black/[0.08]" [ngClass]="cfg.badgeBg">
+            @switch (modalService.config()?.type) {
+              @case ('info') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              }
+              @case ('warning') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              }
+              @case ('error') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              }
+              @case ('alert') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              }
+              @default {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><circle cx="12" cy="12" r="10"/><line x1="9.09" y1="9" x2="9.09" y2="9.01"/><line x1="14.91" y1="9" x2="14.91" y2="9.01"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="12" y1="18" x2="12.01" y2="18.01"/></svg>
+              }
+            }
+          </div>
+          <div class="flex-1 min-w-0 pt-0.5">
+            <h4 class="text-sm font-bold text-slate-800">{{ modalService.config()?.title }}</h4>
+            <p class="text-sm text-slate-500 mt-1 leading-relaxed">{{ modalService.config()?.message }}</p>
+          </div>
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+          @if (modalService.config()?.type === 'confirm') {
+            <button (click)="closeModal()" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all">
+              {{ modalService.config()?.cancelText || 'Cancelar' }}
+            </button>
+            <button (click)="confirmAction()" class="px-4 py-2 text-sm font-semibold text-white rounded-xl hover:opacity-90 transition-all" [ngClass]="cfg.buttonBg">
+              {{ modalService.config()?.confirmText || 'Confirmar' }}
+            </button>
+          } @else {
+            <button (click)="closeModal()" class="px-4 py-2 text-sm font-semibold text-white rounded-xl hover:opacity-90 transition-all" [ngClass]="cfg.buttonBg">
+              {{ modalService.config()?.confirmText || 'Cerrar' }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}

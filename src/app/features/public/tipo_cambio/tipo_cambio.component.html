@@ -1,0 +1,124 @@
+<div class="tipo-cambio-container">
+  <div class="max-width">
+    <!-- BARRA COMPACTA: Tipo de cambio del día -->
+    <div class="tc-dia">
+      <div *ngIf="datosDia; else sinDato" class="tc-dia-inner">
+        <div class="tc-dia-label">
+          <span class="tc-dia-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><line x1="17" x2="17" y1="5" y2="19"/><line x1="7" x2="7" y1="8" y2="16"/><rect width="20" height="12" x="2" y="13" rx="2"/></svg>
+          </span>
+          <div>
+            <p class="tc-dia-titulo">Tipo de Cambio del Día</p>
+            <p class="tc-dia-moneda">USD → PEN</p>
+          </div>
+        </div>
+
+        <div class="tc-dia-separador"></div>
+
+        <div class="tc-dia-valores">
+          <div class="tc-dia-valor">
+            <span class="tc-dia-campo">Compra</span>
+            <span class="tc-dia-monto tc-compra">{{ datosDia.precioCompra }}</span>
+          </div>
+          <div class="tc-dia-valor">
+            <span class="tc-dia-campo">Venta</span>
+            <span class="tc-dia-monto tc-venta">{{ datosDia.precioVenta }}</span>
+          </div>
+        </div>
+
+        <div class="tc-dia-separador"></div>
+
+        <div class="tc-dia-fecha">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <span>{{ datosDia.fecha | date:'dd/MM/yyyy' }}</span>
+        </div>
+      </div>
+      <ng-template #sinDato>
+        <p class="tc-dia-sindato">Seleccione un mes y año para ver el tipo de cambio</p>
+      </ng-template>
+    </div>
+
+    <!-- Mensaje de error -->
+    <div *ngIf="error" class="alerta-error">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+      <span>{{ error }}</span>
+    </div>
+
+    <!-- CALENDARIO MENSUAL -->
+    <div class="cal-contenedor">
+      <!-- Cabecera del calendario -->
+      <div class="cal-header">
+        <div class="cal-controls-left">
+          <button class="cal-nav-btn" (click)="navegarMes(-1)" aria-label="Mes anterior">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="cal-nav-btn" (click)="navegarMes(1)" aria-label="Mes siguiente">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="cal-hoy-btn" (click)="irAlMesActual()">Mes Actual</button>
+        </div>
+
+        <div class="cal-titulo">
+          <h2>{{ mesNombre }} <span>{{ anioActual }}</span></h2>
+        </div>
+
+        <div class="cal-controls-right">
+          <div class="cal-selector">
+            <button class="cal-selector-btn" (click)="toggleSelector()">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+              <span>{{ nombreMesSeleccionado }} {{ anioSeleccionado }}</span>
+            </button>
+
+            <div *ngIf="mostrarSelector" class="cal-selector-popup">
+              <div class="cal-selector-encabezado">
+                <button class="cal-selector-anio-btn" (click)="navegarAnioSelector(-1)" [disabled]="!anioSelectorAnteriorHabilitado()">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <span class="cal-selector-anio">{{ anioSelector }}</span>
+                <button class="cal-selector-anio-btn" (click)="navegarAnioSelector(1)" [disabled]="!anioSelectorSiguienteHabilitado()">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+              <div class="cal-selector-grid">
+                <button
+                  *ngFor="let m of listaMeses"
+                  class="cal-selector-mes"
+                  [class.cal-selector-mes--seleccionado]="m.value === mesSeleccionado && anioSelector === anioSeleccionado"
+                  [class.cal-selector-mes--bloqueado]="mesBloqueado(m.value)"
+                  (click)="seleccionarMes(m.value)"
+                >{{ m.nombre }}</button>
+              </div>
+            </div>
+          </div>
+
+          <button class="cal-buscar-btn" (click)="cargarDatos()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Buscar
+          </button>
+        </div>
+      </div>
+
+      <!-- Días de la semana -->
+      <div class="cal-dias-semana">
+        <span *ngFor="let d of diasSemana" class="cal-dia-semana">{{ d }}</span>
+      </div>
+
+      <!-- Grid de días -->
+      <div class="cal-grid">
+        <ng-container *ngFor="let semana of semanas; let idxSemana = index">
+          <div class="cal-semana" [class.cal-semana-separada]="idxSemana === 0">
+            <div *ngFor="let dia of semana" class="cal-dia" [class.cal-dia--fuera]="!dia.enMesActual" [class.cal-dia--vacio]="!dia.datos">
+              <span class="cal-dia-numero">{{ dia.numero }}</span>
+              <ng-container *ngIf="dia.datos">
+                <span class="cal-tarjeta cal-tarjeta--compra">Compra {{ dia.datos.compra }}</span>
+                <span class="cal-tarjeta cal-tarjeta--venta">Venta {{ dia.datos.venta }}</span>
+              </ng-container>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+    </div>
+  </div>
+  <app-loading></app-loading>
+</div>

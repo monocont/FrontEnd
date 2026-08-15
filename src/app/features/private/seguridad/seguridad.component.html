@@ -1,0 +1,203 @@
+<div class="page-container">
+  <h2 class="page-title">Seguridad y Perfil</h2>
+  <p class="page-subtitle">Gestiona tu perfil de usuario, contraseñas y sesiones activas.</p>
+
+  <div class="flex flex-col gap-6">
+    
+    <!-- Columna Izquierda: Datos Básicos -->
+    <div class="space-y-6">
+      
+      <div class="card p-6">
+        <div class="flex items-center justify-between mb-4 border-b pb-2">
+          <h3 class="text-lg font-semibold text-slate-800">Información de la Cuenta</h3>
+          <button (click)="openEditModal()" class="text-sm font-medium text-teal-600 hover:text-teal-700 flex items-center gap-1.5 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+            Editar
+          </button>
+        </div>
+        @if (authService.usuarioActual(); as usuario) {
+          <div class="mb-4">
+            <p class="text-sm text-slate-500 mb-1">Correo Electrónico</p>
+            <p class="font-medium text-slate-800">{{ usuario.correo }}</p>
+            <p class="text-xs text-slate-400 mt-1">Registrado vía: {{ usuario.metodoRegistro }}</p>
+          </div>
+          <div class="mb-4">
+            <p class="text-sm text-slate-500 mb-1">Nombres</p>
+            <p class="font-medium text-slate-800">{{ usuario.nombres }}</p>
+          </div>
+          <div class="mb-4">
+            <p class="text-sm text-slate-500 mb-1">Apellidos</p>
+            <p class="font-medium text-slate-800">{{ usuario.apellidos }}</p>
+          </div>
+        }
+      </div>
+
+
+
+    </div>
+
+    <!-- Columna Derecha: Contraseña y Seguridad -->
+    <div class="space-y-6">
+
+      <div class="card p-6">
+        <h3 class="text-lg font-semibold text-slate-800 mb-4 border-b pb-2">Contraseña</h3>
+        @if (authService.usuarioActual()?.tieneContrasena) {
+          <p class="text-sm text-slate-600 mb-4">Tienes una contraseña establecida para tu cuenta. Puedes cambiarla si lo deseas.</p>
+          <button (click)="openPasswordModal()" class="px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors">
+            Cambiar Contraseña
+          </button>
+        } @else {
+          <p class="text-sm text-slate-600 mb-4">Te has registrado usando Google y aún no tienes una contraseña local. Puedes establecer una para iniciar sesión con tu correo.</p>
+          <button (click)="openPasswordModal()" class="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors">
+            Establecer Contraseña
+          </button>
+        }
+      </div>
+
+      <div class="card p-6">
+        <h3 class="text-lg font-semibold text-slate-800 mb-4 border-b pb-2">Sesiones Activas</h3>
+        <p class="text-sm text-slate-500 mb-4">Aquí puedes ver desde dónde has iniciado sesión.</p>
+        <div class="p-3 bg-slate-50 rounded-lg border border-slate-100 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-slate-800">Este dispositivo</p>
+            <p class="text-xs text-slate-500">Sesión actual</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal para Editar Perfil -->
+@if (isEditModalOpen) {
+  <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+      
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-800">Actualizar Datos Básicos</h3>
+        <button type="button" (click)="closeEditModal()" class="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-full hover:bg-slate-100">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="p-6">
+        <form [formGroup]="perfilForm" (ngSubmit)="actualizarDatos()" class="space-y-4">
+          <div>
+            <label class="text-xs font-medium text-slate-600 block mb-1.5">Nombres</label>
+            <input type="text" formControlName="nombres" class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-teal-500" required />
+            @if (perfilForm.get('nombres')?.invalid && perfilForm.get('nombres')?.touched) {
+              <span class="text-xs text-red-500 mt-1 block">Requerido.</span>
+            }
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-600 block mb-1.5">Apellidos</label>
+            <input type="text" formControlName="apellidos" class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-teal-500" required />
+            @if (perfilForm.get('apellidos')?.invalid && perfilForm.get('apellidos')?.touched) {
+              <span class="text-xs text-red-500 mt-1 block">Requerido.</span>
+            }
+          </div>
+          
+          <div class="pt-2 flex justify-end gap-3">
+            <button type="button" (click)="closeEditModal()" class="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="perfilForm.invalid" class="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal para Contraseña -->
+@if (isPasswordModalOpen) {
+  <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+      
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-800">
+          {{ authService.usuarioActual()?.tieneContrasena ? 'Cambiar Contraseña' : 'Establecer Contraseña' }}
+        </h3>
+        <button type="button" (click)="closePasswordModal()" class="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-full hover:bg-slate-100">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="p-6">
+        <form [formGroup]="contrasenaForm" (ngSubmit)="establecerContrasena()" class="space-y-4">
+          <div>
+            <label class="text-xs font-medium text-slate-600 block mb-1.5">Nueva Contraseña</label>
+            <input type="password" formControlName="contrasena" placeholder="Mínimo 8 caracteres" class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-teal-500" required minlength="8" />
+            <div class="mt-2 space-y-1.5">
+              <div class="flex items-center gap-1.5 text-xs transition-colors" [class.text-teal-600]="passwordRequirements.length" [class.text-slate-500]="!passwordRequirements.length">
+                @if (passwordRequirements.length) {
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                } @else {
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-width="2"></circle></svg>
+                }
+                <span>Mínimo 8 caracteres</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs transition-colors" [class.text-teal-600]="passwordRequirements.uppercase" [class.text-slate-500]="!passwordRequirements.uppercase">
+                @if (passwordRequirements.uppercase) {
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                } @else {
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-width="2"></circle></svg>
+                }
+                <span>Una letra mayúscula</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs transition-colors" [class.text-teal-600]="passwordRequirements.lowercase" [class.text-slate-500]="!passwordRequirements.lowercase">
+                @if (passwordRequirements.lowercase) {
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                } @else {
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-width="2"></circle></svg>
+                }
+                <span>Una letra minúscula</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs transition-colors" [class.text-teal-600]="passwordRequirements.number" [class.text-slate-500]="!passwordRequirements.number">
+                @if (passwordRequirements.number) {
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                } @else {
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-width="2"></circle></svg>
+                }
+                <span>Un número</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs transition-colors" [class.text-teal-600]="passwordRequirements.special" [class.text-slate-500]="!passwordRequirements.special">
+                @if (passwordRequirements.special) {
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                } @else {
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-width="2"></circle></svg>
+                }
+                <span>Un carácter especial</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-600 block mb-1.5">Confirmar Contraseña</label>
+            <input type="password" formControlName="confirmarContrasena" placeholder="Repite la contraseña" class="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-teal-500" required />
+            @if (contrasenaForm.hasError('mismatch') && contrasenaForm.get('confirmarContrasena')?.touched) {
+              <span class="text-xs text-red-500 mt-1 block">Las contraseñas no coinciden.</span>
+            }
+          </div>
+          
+          <div class="pt-2 flex justify-end gap-3">
+            <button type="button" (click)="closePasswordModal()" class="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="contrasenaForm.invalid" class="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 disabled:opacity-50 transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+              {{ authService.usuarioActual()?.tieneContrasena ? 'Guardar Contraseña' : 'Establecer Contraseña' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

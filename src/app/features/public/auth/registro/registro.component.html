@@ -1,0 +1,110 @@
+<div class="register-page">
+  <a routerLink="/" class="reg-brand">
+    <img src="images/monocont.png" class="brand-icon" alt="M" />
+    <span class="brand-name">MONO<span class="text-teal">CONT</span></span>
+  </a>
+
+  <div class="reg-card">
+    <div class="text-center mb-8">
+      <h1 class="text-2xl font-bold text-slate-800 mb-2">Crea tu cuenta</h1>
+      <p class="text-sm text-slate-500">Comienza a gestionar tu cartera de clientes</p>
+    </div>
+
+    <div class="space-y-4">
+      <!-- FORMULARIO TRADICIONAL OCULTO POR AHORA 
+      <form [formGroup]="registroForm" (ngSubmit)="onRegister()" class="space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-medium text-slate-600 block mb-1.5">Nombres</label>
+            <input type="text" formControlName="nombres" placeholder="Marvin" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm input-soft focus:outline-none" required />
+            @if (registroForm.get('nombres')?.invalid && registroForm.get('nombres')?.touched) {
+              <span class="text-xs text-red-500 mt-1 block">Requerido.</span>
+            }
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-600 block mb-1.5">Apellidos</label>
+            <input type="text" formControlName="apellidos" placeholder="Ramirez" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm input-soft focus:outline-none" required />
+            @if (registroForm.get('apellidos')?.invalid && registroForm.get('apellidos')?.touched) {
+              <span class="text-xs text-red-500 mt-1 block">Requerido.</span>
+            }
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-600 block mb-1.5">Correo Electrónico</label>
+          <input type="email" formControlName="correo" placeholder="tu@correo.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm input-soft focus:outline-none" required />
+          @if (registroForm.get('correo')?.invalid && registroForm.get('correo')?.touched) {
+            <span class="text-xs text-red-500 mt-1 block">Correo inválido o requerido.</span>
+          }
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-600 block mb-1.5">Contraseña</label>
+          <input type="password" formControlName="contrasena" placeholder="Mínimo 8 caracteres" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm input-soft focus:outline-none" required minlength="8" />
+          <div class="mt-2 space-y-1.5">
+            <div class="flex items-center gap-1.5 text-xs transition-colors" [class.text-teal-600]="passwordRequirements.length" [class.text-slate-500]="!passwordRequirements.length">
+              @if (passwordRequirements.length) {
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              } @else {
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-width="2"></circle></svg>
+              }
+              <span>Mínimo 8 caracteres</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-xs transition-colors" [class.text-teal-600]="passwordRequirements.uppercase" [class.text-slate-500]="!passwordRequirements.uppercase">
+              @if (passwordRequirements.uppercase) {
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              } @else {
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-width="2"></circle></svg>
+              }
+              <span>Una letra mayúscula</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-xs transition-colors" [class.text-teal-600]="passwordRequirements.lowercase" [class.text-slate-500]="!passwordRequirements.lowercase">
+              @if (passwordRequirements.lowercase) {
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              } @else {
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-width="2"></circle></svg>
+              }
+              <span>Una letra minúscula</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-xs transition-colors" [class.text-teal-600]="passwordRequirements.number" [class.text-slate-500]="!passwordRequirements.number">
+              @if (passwordRequirements.number) {
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              } @else {
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-width="2"></circle></svg>
+              }
+              <span>Un número</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-xs transition-colors" [class.text-teal-600]="passwordRequirements.special" [class.text-slate-500]="!passwordRequirements.special">
+              @if (passwordRequirements.special) {
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              } @else {
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-width="2"></circle></svg>
+              }
+              <span>Un carácter especial</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-600 block mb-1.5">Confirmar Contraseña</label>
+          <input type="password" formControlName="confirmarContrasena" placeholder="Repite tu contraseña" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm input-soft focus:outline-none" required minlength="8" />
+          @if (registroForm.hasError('mismatch') && registroForm.get('confirmarContrasena')?.touched) {
+            <span class="text-xs text-red-500 mt-1 block">Las contraseñas no coinciden.</span>
+          }
+        </div>
+
+        <button type="submit" [disabled]="registroForm.invalid" class="w-full py-3 bg-teal-600 text-white text-sm font-semibold rounded-xl hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 soft-shadow flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+          Crear Cuenta
+        </button>
+      </form>
+
+      <div class="relative my-6">
+        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-100"></div></div>
+        <div class="relative flex justify-center"><span class="bg-white px-4 text-xs text-slate-400">O regístrate con</span></div>
+      </div>
+      -->
+
+      <app-boton-google buttonText="Regístrate con Google" (credential)="onGoogleCredential($event)" />
+    </div>
+
+    <p class="text-center text-xs text-slate-500 mt-6">¿Ya tienes cuenta? <a routerLink="/auth/login" class="text-teal-600 font-semibold hover:text-teal-700">Inicia sesión</a></p>
+  </div>
+</div>

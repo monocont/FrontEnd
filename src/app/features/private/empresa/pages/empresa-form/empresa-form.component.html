@@ -1,0 +1,173 @@
+<div class="page-container">
+  <div class="page-header">
+    <button class="btn-back" (click)="cancelar()" title="Volver">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div>
+      <h2 class="page-title">{{ titulo }}</h2>
+      <p class="page-subtitle">{{ esEdicion ? 'Modifica los datos de la empresa seleccionada.' : 'Completa los datos para registrar una nueva empresa.' }}</p>
+    </div>
+  </div>
+
+  <div class="tabs" *ngIf="esEdicion">
+    <button class="tab" [class.tab-active]="tabActivo === 'empresa'" (click)="tabActivo = 'empresa'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Empresa
+    </button>
+    <button class="tab" [class.tab-active]="tabActivo === 'sunat'" (click)="tabActivo = 'sunat'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Credencial SUNAT
+    </button>
+  </div>
+
+  <div class="card" *ngIf="tabActivo === 'empresa'">
+    <div class="card-header" *ngIf="esEdicion">
+      <h3 class="card-title">Datos de la Empresa</h3>
+      <button class="btn btn-outline btn-sm" *ngIf="!editMode" (click)="toggleEdit()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Editar
+      </button>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="guardar()" class="form">
+
+        <section class="form-section">
+          <h3 class="section-title">Informaci&oacute;n de la Empresa</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="label" for="ruc">RUC</label>
+              <input id="ruc" class="input-soft" formControlName="ruc" placeholder="11 d&iacute;gitos" />
+              <span class="error-msg" *ngIf="form.get('ruc')?.invalid && form.get('ruc')?.touched">
+                Ingresa un RUC v&aacute;lido de 11 d&iacute;gitos.
+              </span>
+            </div>
+            <div class="form-group">
+              <label class="label" for="razonSocial">Raz&oacute;n Social</label>
+              <input id="razonSocial" class="input-soft" formControlName="razonSocial" placeholder="Nombre legal de la empresa" />
+              <span class="error-msg" *ngIf="form.get('razonSocial')?.invalid && form.get('razonSocial')?.touched">
+                La raz&oacute;n social es obligatoria.
+              </span>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="label" for="nombreComercial">Nombre Comercial</label>
+              <input id="nombreComercial" class="input-soft" formControlName="nombreComercial" placeholder="Nombre comercial de la empresa" />
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h3 class="section-title">Datos Tributarios y Fiscales</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="label" for="codigoRegimenTributario">R&eacute;gimen Tributario</label>
+              <select id="codigoRegimenTributario" class="input-soft" formControlName="codigoRegimenTributario">
+                <option value="" disabled>Selecciona un r&eacute;gimen</option>
+                <option *ngFor="let regimen of regimenes" [value]="regimen.codigo">{{ regimen.descripcion }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="label" for="codigoEstadoContribuyente">Estado Contribuyente</label>
+              <select id="codigoEstadoContribuyente" class="input-soft" formControlName="codigoEstadoContribuyente">
+                <option value="" disabled>Selecciona un estado</option>
+                <option *ngFor="let estado of estados" [value]="estado.codigo">{{ estado.descripcion }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="label" for="codigoCondicionContribuyente">Condici&oacute;n Contribuyente</label>
+              <select id="codigoCondicionContribuyente" class="input-soft" formControlName="codigoCondicionContribuyente">
+                <option value="" disabled>Selecciona una condici&oacute;n</option>
+                <option *ngFor="let condicion of condiciones" [value]="condicion.codigo">{{ condicion.descripcion }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="label" for="direccionFiscal">Direcci&oacute;n Fiscal</label>
+              <input id="direccionFiscal" class="input-soft" formControlName="direccionFiscal" placeholder="Direcci&oacute;n fiscal de la empresa" />
+              <span class="error-msg" *ngIf="form.get('direccionFiscal')?.invalid && form.get('direccionFiscal')?.touched">
+                La direcci&oacute;n fiscal es obligatoria.
+              </span>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="label" for="departamento">Departamento</label>
+              <select id="departamento" class="input-soft" [disabled]="esEdicion && !editMode" (change)="onDepartamentoChange($event)">
+                <option value="">Selecciona departamento</option>
+                <option *ngFor="let d of departamentos" [value]="d.codigoDepartamento" [selected]="d.codigoDepartamento === departamentoSel">{{ d.departamento }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="label" for="provincia">Provincia</label>
+              <select id="provincia" class="input-soft" [disabled]="esEdicion && !editMode" (change)="onProvinciaChange($event)">
+                <option value="">Selecciona provincia</option>
+                <option *ngFor="let p of provincias" [value]="p.codigoProvincia" [selected]="p.codigoProvincia === provinciaSel">{{ p.provincia }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="label" for="distrito">Distrito</label>
+              <select id="distrito" class="input-soft" [disabled]="esEdicion && !editMode" (change)="onDistritoChange($event)">
+                <option value="">Selecciona distrito</option>
+                <option *ngFor="let d of distritos" [value]="d.codigoDistrito" [selected]="d.codigoDistrito === distritoSel">{{ d.distrito }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="label">Moneda Base</label>
+              <div class="moneda-label">
+                <span class="text-sm font-medium text-slate-800">{{ monedaNacional?.nombre }} ({{ monedaNacional?.simbolo }})</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="form-actions-bottom">
+          <button type="button" class="btn btn-secondary" *ngIf="!esEdicion" (click)="cancelar()">Cancelar</button>
+          <button type="button" class="btn btn-secondary" *ngIf="editMode" (click)="cancelarEdicion()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" *ngIf="!esEdicion || editMode">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card" *ngIf="tabActivo === 'sunat'">
+    <div class="card-header">
+      <h3 class="card-title">Credencial SUNAT</h3>
+      <button class="btn btn-outline btn-sm" *ngIf="!editModeCredencial && credencialRegistrada" (click)="toggleEditCredencial()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Editar
+      </button>
+    </div>
+    <div class="card-body">
+      <div *ngIf="!credencialRegistrada && !editModeCredencial" class="sunat-empty">
+        <p>No se encontr&oacute; registro de credencial SUNAT.</p>
+        <button class="btn btn-primary btn-sm" (click)="toggleEditCredencial()">Crear Credencial</button>
+      </div>
+      <form [formGroup]="credencialForm" class="form-credencial-edit" *ngIf="credencialRegistrada || editModeCredencial">
+        <div class="form-row-credencial">
+          <div class="form-group">
+            <label class="label" for="credencialUsuario">Usuario SOL</label>
+            <input id="credencialUsuario" class="input-soft" formControlName="usuarioSol" placeholder="Nombre de usuario SOL" />
+          </div>
+          <div class="form-group">
+            <label class="label" for="credencialClave">Clave SOL</label>
+            <div class="input-with-toggle">
+              <input id="credencialClave" class="input-soft" [type]="credencialPasswordVisible ? 'text' : 'password'" formControlName="claveSol" placeholder="Clave de acceso SOL" />
+              <button class="toggle-password" type="button" (click)="toggleCredencialPassword()">
+                <svg *ngIf="!credencialPasswordVisible" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg *ngIf="credencialPasswordVisible" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1-5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="form-actions-credencial" *ngIf="editModeCredencial">
+          <button type="button" class="btn btn-secondary" (click)="cancelarEdicionCredencial()">Cancelar</button>
+          <button type="button" class="btn btn-primary" (click)="saveCredencial()">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

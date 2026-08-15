@@ -1,0 +1,71 @@
+<div class="page-container">
+  <h2 class="page-title">Gesti&oacute;n de Empresas</h2>
+  <p class="page-subtitle">Listado de empresas registradas en el sistema.</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Empresas Registradas</h3>
+      <div class="card-header-right">
+        <button class="btn btn-primary btn-sm" (click)="nuevaEmpresa()">+ Nueva Empresa</button>
+        <span class="badge">{{ totalItems }} registradas</span>
+      </div>
+    </div>
+
+    <div class="filtros">
+      <input class="input-soft" placeholder="Buscar por RUC" [(ngModel)]="filtroRuc" />
+      <input class="input-soft" placeholder="Buscar por Raz&oacute;n Social" [(ngModel)]="filtroRazonSocial" />
+      <select class="input-soft" [(ngModel)]="filtroRegimen">
+        <option value="">Todos los reg&iacute;menes</option>
+        <option *ngFor="let regimen of regimenes" [value]="regimen.codigo">{{ regimen.descripcion }}</option>
+      </select>
+      <button class="btn btn-primary btn-sm" (click)="buscar()">Buscar</button>
+    </div>
+
+    <div class="card-body p-0">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>RUC</th>
+            <th>Raz&oacute;n Social</th>
+            <th>R&eacute;gimen</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let empresa of empresas">
+            <td>{{ empresa.ruc }}</td>
+            <td>{{ empresa.razonSocial }}</td>
+            <td>
+              <span class="regimen-badge" [class]="'regimen-badge ' + obtenerClaseRegimen(empresa.codigoRegimenTributario)">{{ obtenerNombreRegimen(empresa.codigoRegimenTributario) }}</span>
+            </td>
+            <td class="text-center">
+              <button class="btn-icon btn-edit" (click)="editar(empresa)" title="Editar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="btn-icon btn-delete" (click)="eliminar(empresa)" title="Eliminar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="empresas.length === 0">
+            <td colspan="4" class="text-center text-muted py-8">No se encontraron empresas.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="paginacion" *ngIf="totalPaginas > 1">
+      <button class="btn-page" [class.disabled]="paginaActual === 1" (click)="irPagina(paginaActual - 1)" [disabled]="paginaActual === 1">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Anterior
+      </button>
+      <div class="paginas">
+        <button class="btn-page" *ngFor="let p of [].constructor(totalPaginas); let i = index" [class.active]="paginaActual === i + 1" (click)="irPagina(i + 1)">{{ i + 1 }}</button>
+      </div>
+      <button class="btn-page" [class.disabled]="paginaActual === totalPaginas" (click)="irPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">
+        Siguiente
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
