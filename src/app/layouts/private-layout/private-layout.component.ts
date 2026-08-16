@@ -1,16 +1,40 @@
 import { Component, inject } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, NavigationEnd, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-private-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './private-layout.component.html',
   styleUrl: './private-layout.component.css',
 })
 export class PrivateLayoutComponent {
+  private router = inject(Router);
   authService = inject(AuthService);
+
+  esVistaDetalleCompleta: boolean = false;
+  sidebarColapsado: boolean = false;
+
+  toggleSidebar(): void {
+    this.sidebarColapsado = !this.sidebarColapsado;
+  }
+
+  constructor() {
+    this.evaluarRuta(this.router.url);
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      this.evaluarRuta(event.urlAfterRedirects || event.url);
+    });
+  }
+
+  private evaluarRuta(url: string): void {
+    // Solo aplica pantalla completa y padding cero si estamos dentro de detalle de ventas o compras
+    this.esVistaDetalleCompleta = /\/contabilidad\/empresa\/[^\/]+\/(ventas|compras)\/[^\/]+/.test(url);
+  }
 
   cerrarSesion(): void {
     this.authService.logout();

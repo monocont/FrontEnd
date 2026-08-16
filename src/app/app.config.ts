@@ -5,7 +5,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { AuthService } from './core/auth/auth.service';
-import { ApiRegistry, SEGURIDAD_API_URL, EMPRESA_API_URL, CATALOGOS_API_URL } from './core/config/api.registry';
+import { ApiRegistry, SEGURIDAD_API_URL, EMPRESA_API_URL, CATALOGOS_API_URL, OPERACIONES_API_URL } from './core/config/api.registry';
 import { environment } from '../environments/environment';
 
 function initializeAuth(): () => Promise<void> {
@@ -23,6 +23,7 @@ export const appConfig: ApplicationConfig = {
     { provide: SEGURIDAD_API_URL, useValue: environment.microservicios.seguridad || '' },
     { provide: EMPRESA_API_URL, useValue: environment.microservicios.empresa || '' },
     { provide: CATALOGOS_API_URL, useValue: environment.microservicios.catalogos || '' },
+    { provide: OPERACIONES_API_URL, useValue: environment.microservicios.operaciones || '' },
     { provide: ApiRegistry },
     {
       provide: APP_INITIALIZER,

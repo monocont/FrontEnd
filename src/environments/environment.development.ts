@@ -6,5 +6,6 @@ export const environment = {
     seguridad:   'http://localhost:5000/api/v1',
     empresa:     'http://localhost:5001/api/v1',
     catalogos:   'http://localhost:5002/api/v1',
+    operaciones: 'http://localhost:5003/api/v1',
   }
 };

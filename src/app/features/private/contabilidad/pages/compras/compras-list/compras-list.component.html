@@ -1,0 +1,200 @@
+<div class="space-y-6 max-w-7xl mx-auto pb-12">
+  <!-- Breadcrumb de Navegación -->
+  <nav class="flex items-center gap-2 text-xs font-medium text-slate-400">
+    <a routerLink="/home/contabilidad" class="hover:text-indigo-600 transition-colors">Empresas</a>
+    <span>/</span>
+    <a [routerLink]="['/home/contabilidad/empresa', ruc]" class="hover:text-indigo-600 transition-colors">{{ empresa?.razonSocial || ruc }}</a>
+    <span>/</span>
+    <span class="text-slate-700 font-semibold">Registro de Compras</span>
+  </nav>
+
+  <!-- Hero Header y Controles de Periodo -->
+  <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold tracking-wide uppercase mb-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        Compras y Adquisiciones (RCE / SIRE)
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Archivos de Compras Cargados</h1>
+      <p class="text-xs sm:text-sm text-slate-500 mt-1">
+        Consulta las cargas realizadas para <strong class="text-slate-700 font-semibold">{{ empresa?.razonSocial || ruc }}</strong> en el periodo seleccionado.
+      </p>
+    </div>
+
+    <!-- Filtros de Periodo y Botón de Nueva Carga -->
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Selector Año -->
+      <div>
+        <label class="block text-[11px] font-medium text-slate-400 mb-1">Año</label>
+        <select
+          [(ngModel)]="anioSeleccionado"
+          (change)="cambiarPeriodo()"
+          class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-2xl px-3.5 py-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer shadow-sm"
+        >
+          <option [value]="2026">2026</option>
+          <option [value]="2025">2025</option>
+          <option [value]="2024">2024</option>
+        </select>
+      </div>
+
+      <!-- Selector Mes -->
+      <div>
+        <label class="block text-[11px] font-medium text-slate-400 mb-1">Mes</label>
+        <select
+          [(ngModel)]="mesSeleccionado"
+          (change)="cambiarPeriodo()"
+          class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-2xl px-3.5 py-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer shadow-sm"
+        >
+          <option [value]="1">Enero</option>
+          <option [value]="2">Febrero</option>
+          <option [value]="3">Marzo</option>
+          <option [value]="4">Abril</option>
+          <option [value]="5">Mayo</option>
+          <option [value]="6">Junio</option>
+          <option [value]="7">Julio</option>
+          <option [value]="8">Agosto</option>
+          <option [value]="9">Setiembre</option>
+          <option [value]="10">Octubre</option>
+          <option [value]="11">Noviembre</option>
+          <option [value]="12">Diciembre</option>
+        </select>
+      </div>
+
+      <!-- Botón Nueva Carga -->
+      <div class="self-end">
+        <button
+          type="button"
+          (click)="irNuevaCarga()"
+          class="py-2.5 px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-all duration-200 shadow-md shadow-emerald-500/15 flex items-center gap-2 cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          <span>+ Nueva Carga de Compras</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Métricas Rápidas del Periodo -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Archivos Procesados</p>
+        <p class="text-2xl font-bold text-slate-800 mt-0.5">{{ totalArchivos }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Comprobantes Válidos</p>
+        <p class="text-2xl font-bold text-emerald-700 mt-0.5">{{ totalComprobantesValidos | number }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Observados / Duplicados</p>
+        <p class="text-2xl font-bold text-rose-700 mt-0.5">{{ totalObservaciones | number }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerta de Error si aplica -->
+  <div *ngIf="mensajeError" class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center justify-between animate-fade-in">
+    <span>{{ mensajeError }}</span>
+  </div>
+
+  <!-- Tabla de Cargas de Compras -->
+  <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <h2 class="text-lg font-bold text-slate-800">Historial de Archivos de Compras</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Haz clic en un registro para ver el detalle de comprobantes y errores</p>
+      </div>
+      <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">
+        Periodo {{ periodoCalculado }}
+      </span>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="bg-slate-50/75 text-slate-500 text-xs uppercase tracking-wider font-semibold border-b border-slate-100">
+          <tr>
+            <th class="py-4 px-6">Periodo</th>
+            <th class="py-4 px-6">Nombre de Archivo</th>
+            <th class="py-4 px-6">Formato</th>
+            <th class="py-4 px-6 text-right">Registros</th>
+            <th class="py-4 px-6 text-right">Válidos</th>
+            <th class="py-4 px-6 text-right">Observados</th>
+            <th class="py-4 px-6 text-center">Acción</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-700">
+          <tr *ngIf="cargando">
+            <td colspan="7" class="text-center py-12 text-slate-400">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <svg class="animate-spin h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                <span>Cargando historial de compras...</span>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="!cargando && cargas.length === 0">
+            <td colspan="7" class="text-center py-12 text-slate-400">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <p class="text-sm font-medium">No se han registrado archivos de compras para esta empresa.</p>
+                <button
+                  type="button"
+                  (click)="irNuevaCarga()"
+                  class="mt-2 text-xs text-emerald-600 font-semibold hover:underline cursor-pointer"
+                >
+                  + Cargar primer archivo de compras
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr
+            *ngFor="let carga of cargas"
+            (click)="verDetalleCarga(carga)"
+            class="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+          >
+            <td class="py-4 px-6 font-mono font-bold text-slate-800">
+              {{ carga.periodo }}
+            </td>
+            <td class="py-4 px-6 font-mono text-xs text-slate-800 max-w-xs truncate" [title]="carga.nombreOriginal">
+              {{ carga.nombreOriginal }}
+            </td>
+            <td class="py-4 px-6">
+              <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700">
+                .{{ carga.formato | lowercase }}
+              </span>
+            </td>
+            <td class="py-4 px-6 text-right font-semibold text-slate-800">
+              {{ carga.numRegistros | number }}
+            </td>
+            <td class="py-4 px-6 text-right font-semibold text-emerald-600">
+              {{ carga.numRegistrosValidos | number }}
+            </td>
+            <td class="py-4 px-6 text-right font-semibold text-rose-600">
+              {{ carga.numRegistrosError | number }}
+            </td>
+            <td class="py-4 px-6 text-center">
+              <span class="inline-flex items-center gap-1 text-xs text-emerald-600 font-semibold group-hover:underline">
+                Ver Datos
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

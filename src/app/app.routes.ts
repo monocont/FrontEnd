@@ -44,7 +44,64 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad',
-        loadComponent: () => import('./features/private/contabilidad/contabilidad.component').then((m) => m.ContabilidadComponent),
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./features/private/contabilidad/pages/contabilidad-empresa-list/contabilidad-empresa-list.component').then(
+                (m) => m.ContabilidadEmpresaListComponent
+              ),
+          },
+          {
+            path: 'empresa/:ruc',
+            loadComponent: () =>
+              import('./features/private/contabilidad/pages/contabilidad-hub/contabilidad-hub.component').then(
+                (m) => m.ContabilidadHubComponent
+              ),
+          },
+          {
+            path: 'empresa/:ruc/ventas',
+            loadComponent: () =>
+              import('./features/private/contabilidad/pages/ventas/ventas-list/ventas-list.component').then(
+                (m) => m.VentasListComponent
+              ),
+          },
+          {
+            path: 'empresa/:ruc/ventas/nueva',
+            loadComponent: () =>
+              import('./features/private/contabilidad/pages/ventas/ventas-detalle/ventas-detalle.component').then(
+                (m) => m.VentasDetalleComponent
+              ),
+          },
+          {
+            path: 'empresa/:ruc/ventas/:idCarga',
+            loadComponent: () =>
+              import('./features/private/contabilidad/pages/ventas/ventas-detalle/ventas-detalle.component').then(
+                (m) => m.VentasDetalleComponent
+              ),
+          },
+          {
+            path: 'empresa/:ruc/compras',
+            loadComponent: () =>
+              import('./features/private/contabilidad/pages/compras/compras-list/compras-list.component').then(
+                (m) => m.ComprasListComponent
+              ),
+          },
+          {
+            path: 'empresa/:ruc/compras/nueva',
+            loadComponent: () =>
+              import('./features/private/contabilidad/pages/compras/compras-detalle/compras-detalle.component').then(
+                (m) => m.ComprasDetalleComponent
+              ),
+          },
+          {
+            path: 'empresa/:ruc/compras/:idCarga',
+            loadComponent: () =>
+              import('./features/private/contabilidad/pages/compras/compras-detalle/compras-detalle.component').then(
+                (m) => m.ComprasDetalleComponent
+              ),
+          },
+        ],
       },
       {
         path: 'fiscal',
