@@ -27,6 +27,7 @@ export interface ArchivoCargaItem {
   numRegistros: number;
   numRegistrosValidos: number;
   numRegistrosError: number;
+  numObservaciones: number;
   estado: string;
   observaciones?: string;
   creadoPor?: string;
@@ -123,10 +124,14 @@ export class OperacionesService {
   listarCargas(
     empresaRuc: string,
     tipoArchivo: 'Ventas' | 'Compras' | string,
+    periodo?: string,
     pageNumber: number = 1,
     pageSize: number = 20
   ): Observable<ArchivoCargaItem[]> {
-    const query = `empresaRuc=${encodeURIComponent(empresaRuc)}&tipoArchivo=${encodeURIComponent(tipoArchivo)}&pageNumber=${pageNumber}&pageSize=${pageSize}`;
+    let query = `empresaRuc=${encodeURIComponent(empresaRuc)}&tipoArchivo=${encodeURIComponent(tipoArchivo)}&pageNumber=${pageNumber}&pageSize=${pageSize}`;
+    if (periodo && periodo.trim()) {
+      query += `&periodo=${encodeURIComponent(periodo.trim())}`;
+    }
 
     return this.http
       .get<any>(`${this.baseUrl}/cargas?${query}`, { withCredentials: true })
@@ -157,9 +162,9 @@ export class OperacionesService {
       );
   }
 
-  listarComprasPorCarga(idCarga: string, pageNumber: number = 1, pageSize: number = 50): Observable<CompraItem[]> {
+  listarComprasPorCarga(idCarga: string): Observable<CompraItem[]> {
     return this.http
-      .get<any>(`${this.baseUrl}/cargas/${idCarga}/compras?pageNumber=${pageNumber}&pageSize=${pageSize}`, { withCredentials: true })
+      .get<any>(`${this.baseUrl}/cargas/${idCarga}/compras`, { withCredentials: true })
       .pipe(
         map(res => {
           const data = this.extractData<any>(res);

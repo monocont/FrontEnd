@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EmpresaService, Empresa } from '../../../../empresa/services/empresa.service';
 import { OperacionesService, ArchivoCargaItem } from '../../../services/operaciones.service';
+import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
 
 @Component({
   selector: 'app-ventas-list',
@@ -17,6 +18,7 @@ export class VentasListComponent implements OnInit {
   private router = inject(Router);
   private empresaService = inject(EmpresaService);
   private operacionesService = inject(OperacionesService);
+  private loadingService = inject(LoadingService);
   private cdr = inject(ChangeDetectorRef);
 
   ruc: string = '';
@@ -25,20 +27,34 @@ export class VentasListComponent implements OnInit {
   cargando: boolean = true;
   mensajeError: string | null = null;
 
-  anioSeleccionado: number = new Date().getFullYear();
-  mesSeleccionado: number = new Date().getMonth() + 1;
-
-  get periodoCalculado(): string {
-    const mesStr = this.mesSeleccionado.toString().padStart(2, '0');
-    return `${this.anioSeleccionado}${mesStr}`;
-  }
-
-  // Métricas acumuladas del periodo
   totalArchivos: number = 0;
-  totalComprobantesValidos: number = 0;
-  totalObservaciones: number = 0;
+
+  // Selector de Periodo tipo Calendario (Popup Mes / Año)
+  periodoSeleccionado: string = ''; // formato "YYYYMM" o vacio
+  mostrarSelector: boolean = false;
+  anioSelector: number = new Date().getFullYear();
+  mesSeleccionado: number | null = null;
+  anioSeleccionado: number | null = null;
+
+  listaMeses = [
+    { value: 1, nombre: 'Ene', nombreCompleto: 'Enero' },
+    { value: 2, nombre: 'Feb', nombreCompleto: 'Febrero' },
+    { value: 3, nombre: 'Mar', nombreCompleto: 'Marzo' },
+    { value: 4, nombre: 'Abr', nombreCompleto: 'Abril' },
+    { value: 5, nombre: 'May', nombreCompleto: 'Mayo' },
+    { value: 6, nombre: 'Jun', nombreCompleto: 'Junio' },
+    { value: 7, nombre: 'Jul', nombreCompleto: 'Julio' },
+    { value: 8, nombre: 'Ago', nombreCompleto: 'Agosto' },
+    { value: 9, nombre: 'Set', nombreCompleto: 'Setiembre' },
+    { value: 10, nombre: 'Oct', nombreCompleto: 'Octubre' },
+    { value: 11, nombre: 'Nov', nombreCompleto: 'Noviembre' },
+    { value: 12, nombre: 'Dic', nombreCompleto: 'Diciembre' },
+  ];
 
   ngOnInit(): void {
+    const max = this.obtenerMesAnterior();
+    this.anioSelector = max.anio;
+
     this.route.paramMap.subscribe(params => {
       this.ruc = params.get('ruc') || '';
       if (this.ruc) {
@@ -46,6 +62,82 @@ export class VentasListComponent implements OnInit {
         this.cargarCargasVentas();
       }
     });
+  }
+
+  obtenerMesAnterior(): { anio: number; mes: number } {
+    const ahora = new Date();
+    let anio = ahora.getFullYear();
+    let mes = ahora.getMonth(); // 0-11 donde getMonth() es el mes anterior en base 1
+    if (mes === 0) {
+      mes = 12;
+      anio -= 1;
+    }
+    return { anio, mes };
+  }
+
+  toggleSelector(): void {
+    if (!this.mostrarSelector) {
+      const max = this.obtenerMesAnterior();
+      this.anioSelector = this.anioSeleccionado || max.anio;
+    }
+    this.mostrarSelector = !this.mostrarSelector;
+  }
+
+  cerrarSelector(): void {
+    this.mostrarSelector = false;
+  }
+
+  navegarAnioSelector(delta: number): void {
+    const anioMin = 2000;
+    const max = this.obtenerMesAnterior();
+    const nuevoAnio = this.anioSelector + delta;
+    if (nuevoAnio >= anioMin && nuevoAnio <= max.anio) {
+      this.anioSelector = nuevoAnio;
+    }
+  }
+
+  seleccionarMes(mes: number): void {
+    if (this.mesBloqueado(mes)) return;
+
+    this.mesSeleccionado = mes;
+    this.anioSeleccionado = this.anioSelector;
+    const mesStr = mes.toString().padStart(2, '0');
+    this.periodoSeleccionado = `${this.anioSeleccionado}${mesStr}`;
+    this.mostrarSelector = false;
+    this.cargarCargasVentas();
+  }
+
+  mesBloqueado(valor: number): boolean {
+    const max = this.obtenerMesAnterior();
+    return (
+      this.anioSelector > max.anio ||
+      (this.anioSelector === max.anio && valor > max.mes)
+    );
+  }
+
+  anioSelectorAnteriorHabilitado(): boolean {
+    return this.anioSelector > 2000;
+  }
+
+  anioSelectorSiguienteHabilitado(): boolean {
+    const max = this.obtenerMesAnterior();
+    return this.anioSelector < max.anio;
+  }
+
+  limpiarPeriodo(): void {
+    this.periodoSeleccionado = '';
+    this.mesSeleccionado = null;
+    this.anioSeleccionado = null;
+    this.mostrarSelector = false;
+    this.cargarCargasVentas();
+  }
+
+  get etiquetaBotonPeriodo(): string {
+    if (!this.periodoSeleccionado || !this.mesSeleccionado || !this.anioSeleccionado) {
+      return 'Todos los periodos';
+    }
+    const mesObj = this.listaMeses.find(m => m.value === this.mesSeleccionado);
+    return `${mesObj?.nombreCompleto || ''} ${this.anioSeleccionado}`;
   }
 
   cargarDatosEmpresa(): void {
@@ -64,17 +156,31 @@ export class VentasListComponent implements OnInit {
   cargarCargasVentas(): void {
     this.cargando = true;
     this.mensajeError = null;
+    this.loadingService.show();
     this.cdr.detectChanges();
 
-    this.operacionesService.listarCargas(this.ruc, 'Ventas', 1, 50).subscribe({
-      next: (res: ArchivoCargaItem[]) => {
+    this.operacionesService.listarCargas(this.ruc, 'Ventas', this.periodoSeleccionado, 1, 50).subscribe({
+      next: (res: any) => {
         this.cargando = false;
-        this.cargas = res || [];
-        this.calcularMetricas(this.cargas);
+        this.loadingService.hide();
+
+        const data = res?.data || res?.Data || res;
+        if (Array.isArray(data)) {
+          this.cargas = data;
+        } else if (data && Array.isArray(data.items)) {
+          this.cargas = data.items;
+        } else if (res && Array.isArray(res.items)) {
+          this.cargas = res.items;
+        } else {
+          this.cargas = [];
+        }
+
+        this.totalArchivos = this.cargas.length;
         this.cdr.detectChanges();
       },
       error: () => {
         this.cargando = false;
+        this.loadingService.hide();
         this.mensajeError = 'No se pudo cargar el historial de ventas.';
         this.cdr.detectChanges();
       }
@@ -85,16 +191,21 @@ export class VentasListComponent implements OnInit {
     this.cargarCargasVentas();
   }
 
-  private calcularMetricas(cargas: ArchivoCargaItem[]): void {
-    this.totalArchivos = cargas.length;
-    this.totalComprobantesValidos = cargas.reduce((acc, c) => acc + (c.numRegistrosValidos || 0), 0);
-    this.totalObservaciones = cargas.reduce((acc, c) => acc + (c.numRegistrosError || 0), 0);
+  irNuevaCarga(): void {
+    this.router.navigate(['/home/contabilidad/empresa', this.ruc, 'ventas', 'nueva']);
   }
 
-  irNuevaCarga(): void {
-    this.router.navigate(['/home/contabilidad/empresa', this.ruc, 'ventas', 'nueva'], {
-      queryParams: { periodo: this.periodoCalculado }
-    });
+  formatearPeriodo(periodo: string | number): string {
+    if (!periodo) return '-';
+    const str = periodo.toString().trim();
+    if (str.length === 6) {
+      const anio = str.substring(0, 4);
+      const mesNum = parseInt(str.substring(4, 6), 10);
+      const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+      const nombreMes = meses[mesNum - 1] || str.substring(4, 6);
+      return `${nombreMes} ${anio}`;
+    }
+    return str;
   }
 
   verDetalleCarga(carga: ArchivoCargaItem): void {

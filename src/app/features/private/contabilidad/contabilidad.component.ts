@@ -173,6 +173,7 @@ export class ContabilidadComponent implements OnInit {
       .listarCargas(
         this.rucSeleccionado,
         this.tabActiva === 'ventas' ? 'Ventas' : 'Compras',
+        undefined,
         this.paginaHistorial,
         this.tamanoPagina
       )
@@ -216,7 +217,7 @@ export class ContabilidadComponent implements OnInit {
         error: () => (this.cargandoDetalle = false),
       });
     } else {
-      this.operacionesService.listarComprasPorCarga(idCarga, 1, 50).subscribe({
+      this.operacionesService.listarComprasPorCarga(idCarga).subscribe({
         next: (res) => {
           this.cargandoDetalle = false;
           this.comprasDetalle = res || [];

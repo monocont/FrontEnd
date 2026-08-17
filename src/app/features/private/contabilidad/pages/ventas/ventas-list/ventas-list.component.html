@@ -8,102 +8,33 @@
     <span class="text-slate-700 font-semibold">Registro de Ventas</span>
   </nav>
 
-  <!-- Hero Header y Controles de Periodo -->
-  <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+  <!-- Header Compacto y Botón de Nueva Carga -->
+  <div class="bg-white px-6 py-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 text-sky-700 text-xs font-semibold tracking-wide uppercase mb-2">
+      <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 text-[11px] font-semibold uppercase tracking-wide mb-1">
         <span class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span>
         Ventas e Ingresos (RVIE / SIRE)
       </div>
-      <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Archivos de Ventas Cargados</h1>
-      <p class="text-xs sm:text-sm text-slate-500 mt-1">
-        Consulta las cargas realizadas para <strong class="text-slate-700 font-semibold">{{ empresa?.razonSocial || ruc }}</strong> en el periodo seleccionado.
+      <p class="text-xs text-slate-500">
+        Empresa: <strong class="text-slate-700 font-semibold">{{ empresa?.razonSocial || ruc }}</strong> (RUC: {{ ruc }})
       </p>
     </div>
 
-    <!-- Filtros de Periodo y Botón de Nueva Carga -->
-    <div class="flex flex-wrap items-center gap-3">
-      <!-- Selector Año -->
-      <div>
-        <label class="block text-[11px] font-medium text-slate-400 mb-1">Año</label>
-        <select
-          [(ngModel)]="anioSeleccionado"
-          (change)="cambiarPeriodo()"
-          class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-2xl px-3.5 py-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer shadow-sm"
-        >
-          <option [value]="2026">2026</option>
-          <option [value]="2025">2025</option>
-          <option [value]="2024">2024</option>
-        </select>
-      </div>
-
-      <!-- Selector Mes -->
-      <div>
-        <label class="block text-[11px] font-medium text-slate-400 mb-1">Mes</label>
-        <select
-          [(ngModel)]="mesSeleccionado"
-          (change)="cambiarPeriodo()"
-          class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-2xl px-3.5 py-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer shadow-sm"
-        >
-          <option [value]="1">Enero</option>
-          <option [value]="2">Febrero</option>
-          <option [value]="3">Marzo</option>
-          <option [value]="4">Abril</option>
-          <option [value]="5">Mayo</option>
-          <option [value]="6">Junio</option>
-          <option [value]="7">Julio</option>
-          <option [value]="8">Agosto</option>
-          <option [value]="9">Setiembre</option>
-          <option [value]="10">Octubre</option>
-          <option [value]="11">Noviembre</option>
-          <option [value]="12">Diciembre</option>
-        </select>
-      </div>
+    <div class="flex items-center gap-3">
+      <!-- Contador de Archivos Cargados -->
+      <span class="px-3.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-600">
+        {{ totalArchivos }} {{ totalArchivos === 1 ? 'archivo cargado' : 'archivos cargados' }}
+      </span>
 
       <!-- Botón Nueva Carga -->
-      <div class="self-end">
-        <button
-          type="button"
-          (click)="irNuevaCarga()"
-          class="py-2.5 px-5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition-all duration-200 shadow-md shadow-indigo-500/15 flex items-center gap-2 cursor-pointer"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-          <span>+ Nueva Carga de Ventas</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Métricas Rápidas del Periodo -->
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
-      <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-      </div>
-      <div>
-        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Archivos Procesados</p>
-        <p class="text-2xl font-bold text-slate-800 mt-0.5">{{ totalArchivos }}</p>
-      </div>
-    </div>
-
-    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
-      <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-      </div>
-      <div>
-        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Comprobantes Válidos</p>
-        <p class="text-2xl font-bold text-emerald-700 mt-0.5">{{ totalComprobantesValidos | number }}</p>
-      </div>
-    </div>
-
-    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
-      <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-      </div>
-      <div>
-        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Observados / Duplicados</p>
-        <p class="text-2xl font-bold text-rose-700 mt-0.5">{{ totalObservaciones | number }}</p>
-      </div>
+      <button
+        type="button"
+        (click)="irNuevaCarga()"
+        class="py-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm transition-all duration-200 shadow-sm shadow-indigo-500/20 flex items-center gap-2 cursor-pointer"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        <span>+ Nueva Carga de Ventas</span>
+      </button>
     </div>
   </div>
 
@@ -113,44 +44,118 @@
   </div>
 
   <!-- Tabla de Cargas de Ventas -->
-  <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+  <div class="bg-white rounded-3xl border border-slate-100 shadow-sm relative">
+    <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <h2 class="text-lg font-bold text-slate-800">Historial de Archivos de Ventas</h2>
-        <p class="text-xs text-slate-400 mt-0.5">Haz clic en un registro para ver el detalle de comprobantes y errores</p>
+        <p class="text-xs text-slate-400 mt-0.5">Haz clic en "Ver Datos" para acceder al detalle de comprobantes</p>
       </div>
-      <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">
-        Periodo {{ periodoCalculado }}
-      </span>
+
+      <!-- Selector de Periodo tipo Calendario -->
+      <div class="relative flex items-center gap-2">
+        <button
+          type="button"
+          (click)="toggleSelector()"
+          class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs transition-all shadow-xs cursor-pointer"
+        >
+          <svg class="w-4 h-4 text-emerald-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>
+          </svg>
+          <span>{{ etiquetaBotonPeriodo }}</span>
+          <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+
+        <!-- Botón Limpiar si hay periodo seleccionado -->
+        <button
+          *ngIf="periodoSeleccionado"
+          type="button"
+          (click)="limpiarPeriodo()"
+          class="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          title="Ver todos los periodos"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+
+        <!-- Popup Calendario Mes/Año -->
+        <div *ngIf="mostrarSelector" class="absolute right-0 top-full mt-2 z-50 bg-white border border-slate-200 rounded-2xl p-4 shadow-2xl w-64 animate-fade-in">
+          <!-- Cabecera de Año -->
+          <div class="flex items-center justify-between mb-3 px-1">
+            <button
+              type="button"
+              (click)="navegarAnioSelector(-1)"
+              [disabled]="!anioSelectorAnteriorHabilitado()"
+              class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <span class="text-sm font-bold text-slate-800">{{ anioSelector }}</span>
+            <button
+              type="button"
+              (click)="navegarAnioSelector(1)"
+              [disabled]="!anioSelectorSiguienteHabilitado()"
+              class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+
+          <!-- Cuadrícula de 12 Meses -->
+          <div class="grid grid-cols-3 gap-1.5 mb-3">
+            <button
+              *ngFor="let m of listaMeses"
+              type="button"
+              (click)="seleccionarMes(m.value)"
+              [disabled]="mesBloqueado(m.value)"
+              [class]="(m.value === mesSeleccionado && anioSelector === anioSeleccionado)
+                ? 'py-2 rounded-xl text-xs font-bold bg-emerald-500 text-white shadow-xs'
+                : (mesBloqueado(m.value)
+                  ? 'py-2 rounded-xl text-xs font-semibold bg-slate-50 text-slate-300 opacity-40 cursor-not-allowed'
+                  : 'py-2 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors cursor-pointer')"
+            >
+              {{ m.nombre }}
+            </button>
+          </div>
+
+          <!-- Pie de Popup: Ver Todos -->
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+            <button
+              type="button"
+              (click)="limpiarPeriodo()"
+              class="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 cursor-pointer"
+            >
+              Todos los periodos
+            </button>
+            <button
+              type="button"
+              (click)="cerrarSelector()"
+              class="text-[11px] font-medium text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto rounded-b-3xl">
       <table class="w-full text-sm text-left">
         <thead class="bg-slate-50/75 text-slate-500 text-xs uppercase tracking-wider font-semibold border-b border-slate-100">
           <tr>
             <th class="py-4 px-6">Periodo</th>
             <th class="py-4 px-6">Nombre de Archivo</th>
-            <th class="py-4 px-6">Formato</th>
-            <th class="py-4 px-6 text-right">Registros</th>
-            <th class="py-4 px-6 text-right">Válidos</th>
-            <th class="py-4 px-6 text-right">Observados</th>
+            <th class="py-4 px-4 text-center">Registros</th>
+            <th class="py-4 px-4 text-center">Válidos</th>
+            <th class="py-4 px-4 text-center">Con Error</th>
+            <th class="py-4 px-4 text-center">Observaciones</th>
             <th class="py-4 px-6 text-center">Acción</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 text-slate-700">
-          <tr *ngIf="cargando">
-            <td colspan="7" class="text-center py-12 text-slate-400">
-              <div class="flex flex-col items-center justify-center gap-2">
-                <svg class="animate-spin h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                <span>Cargando historial de ventas...</span>
-              </div>
-            </td>
-          </tr>
           <tr *ngIf="!cargando && cargas.length === 0">
             <td colspan="7" class="text-center py-12 text-slate-400">
               <div class="flex flex-col items-center justify-center gap-2">
                 <svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                <p class="text-sm font-medium">No se han registrado archivos de ventas para esta empresa.</p>
+                <p class="text-sm font-medium">No se han registrado archivos de ventas para este criterio.</p>
                 <button
                   type="button"
                   (click)="irNuevaCarga()"
@@ -163,34 +168,44 @@
           </tr>
           <tr
             *ngFor="let carga of cargas"
-            (click)="verDetalleCarga(carga)"
-            class="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+            class="hover:bg-slate-50/80 transition-colors"
           >
-            <td class="py-4 px-6 font-mono font-bold text-slate-800">
-              {{ carga.periodo }}
+            <td class="py-4 px-6">
+              <div class="font-semibold text-slate-800">{{ formatearPeriodo(carga.periodo) }}</div>
+              <div class="text-[11px] font-mono text-slate-400 font-normal">{{ carga.periodo }}</div>
             </td>
             <td class="py-4 px-6 font-mono text-xs text-slate-800 max-w-xs truncate" [title]="carga.nombreOriginal">
               {{ carga.nombreOriginal }}
             </td>
-            <td class="py-4 px-6">
-              <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700">
-                .{{ carga.formato | lowercase }}
+            <td class="py-4 px-4 text-center font-semibold text-slate-800">
+              {{ (carga.numRegistros || 0) | number }}
+            </td>
+            <td class="py-4 px-4 text-center font-semibold text-emerald-600">
+              {{ (carga.numRegistrosValidos || 0) | number }}
+            </td>
+            <td class="py-4 px-4 text-center font-semibold">
+              <span [class]="(carga.numRegistrosError || 0) > 0 ? 'text-rose-600 font-bold' : 'text-slate-400 font-normal'">
+                {{ (carga.numRegistrosError || 0) | number }}
               </span>
             </td>
-            <td class="py-4 px-6 text-right font-semibold text-slate-800">
-              {{ carga.numRegistros | number }}
-            </td>
-            <td class="py-4 px-6 text-right font-semibold text-emerald-600">
-              {{ carga.numRegistrosValidos | number }}
-            </td>
-            <td class="py-4 px-6 text-right font-semibold text-rose-600">
-              {{ carga.numRegistrosError | number }}
+            <td class="py-4 px-4 text-center font-semibold">
+              <span [class]="(carga.numObservaciones || 0) > 0 ? 'text-amber-600 font-bold' : 'text-slate-400 font-normal'">
+                {{ (carga.numObservaciones || 0) | number }}
+              </span>
             </td>
             <td class="py-4 px-6 text-center">
-              <span class="inline-flex items-center gap-1 text-xs text-indigo-600 font-semibold group-hover:underline">
-                Ver Datos
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-              </span>
+              <button
+                type="button"
+                (click)="verDetalleCarga(carga)"
+                class="w-8 h-8 inline-flex items-center justify-center rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-500 transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105"
+                title="Ver detalle de comprobantes"
+                aria-label="Ver datos"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
             </td>
           </tr>
         </tbody>
