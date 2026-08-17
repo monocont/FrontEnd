@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { EmpresaService, Empresa, RegimenTributario } from '../../../empresa/services/empresa.service';
+import { LoadingService } from '../../../../../shared/ui/loading/loading.service';
 
 @Component({
   selector: 'app-contabilidad-empresa-list',
@@ -15,6 +16,7 @@ export class ContabilidadEmpresaListComponent implements OnInit {
   private empresaService = inject(EmpresaService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private loadingService = inject(LoadingService);
 
   empresas: Empresa[] = [];
   regimenes: RegimenTributario[] = [];
@@ -49,6 +51,7 @@ export class ContabilidadEmpresaListComponent implements OnInit {
   cargarEmpresas(): void {
     this.cargando = true;
     this.mensajeError = null;
+    this.loadingService.show();
     this.cdr.detectChanges();
 
     this.empresaService.listar({
@@ -60,6 +63,7 @@ export class ContabilidadEmpresaListComponent implements OnInit {
     }).subscribe({
       next: (res: any) => {
         this.cargando = false;
+        this.loadingService.hide();
         const data = res?.data || res?.Data || res;
         if (data && Array.isArray(data.items)) {
           this.empresas = data.items;
@@ -82,6 +86,7 @@ export class ContabilidadEmpresaListComponent implements OnInit {
       },
       error: () => {
         this.cargando = false;
+        this.loadingService.hide();
         this.mensajeError = 'No se pudieron cargar las empresas para operaciones contables.';
         this.cdr.detectChanges();
       }

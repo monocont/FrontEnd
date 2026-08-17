@@ -13,8 +13,11 @@ import {
 import {
   CatalogoSunatService,
   TipoCpCatalogo,
-  TipoDocIdentidadCatalogo
+  TipoDocIdentidadCatalogo,
+  EstadoComprobanteCatalogo
 } from '../../../services/catalogo-sunat.service';
+import { ModalService } from '../../../../../../shared/ui/modal/modal.service';
+import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
 
 @Component({
   selector: 'app-compras-detalle',
@@ -29,11 +32,14 @@ export class ComprasDetalleComponent implements OnInit {
   private empresaService = inject(EmpresaService);
   private operacionesService = inject(OperacionesService);
   private catalogoSunatService = inject(CatalogoSunatService);
+  private modalService = inject(ModalService);
+  private loadingService = inject(LoadingService);
   private cdr = inject(ChangeDetectorRef);
 
   // Catálogos SUNAT
   tiposCp: TipoCpCatalogo[] = [];
   tiposDocIdentidad: TipoDocIdentidadCatalogo[] = [];
+  estadosComprobante: EstadoComprobanteCatalogo[] = [];
 
   ruc: string = '';
   idCarga: string | null = null;
@@ -250,6 +256,17 @@ export class ComprasDetalleComponent implements OnInit {
         console.error('Error al cargar catálogo tipo_doc_identidad:', err);
       }
     });
+
+    // 3. Catálogo Estado de Comprobante (catalogo.estado_comprobante)
+    this.catalogoSunatService.obtenerEstadosComprobante().subscribe({
+      next: (estados) => {
+        this.estadosComprobante = estados || [];
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al cargar catálogo estado_comprobante:', err);
+      }
+    });
   }
 
   cargarDatosEmpresa(): void {
@@ -349,6 +366,11 @@ export class ComprasDetalleComponent implements OnInit {
       const ext = file.name.split('.').pop()?.toLowerCase();
       if (ext !== 'txt' && ext !== 'csv') {
         this.mensajeError = 'Formato no soportado. Seleccione un archivo .txt o .csv';
+        this.modalService.open({
+          type: 'warning',
+          title: 'Formato no válido',
+          message: 'El archivo seleccionado no es válido. Solo se admiten archivos estructurados SUNAT RCE en formato .txt o .csv.'
+        });
         this.archivoSeleccionado = null;
         input.value = '';
         return;
@@ -358,41 +380,89 @@ export class ComprasDetalleComponent implements OnInit {
     }
   }
 
+  removerArchivoSeleccionado(): void {
+    this.archivoSeleccionado = null;
+    const input = document.getElementById('fileCompra') as HTMLInputElement;
+    if (input) {
+      input.value = '';
+    }
+  }
+
   ejecutarCarga(): void {
     if (!this.archivoSeleccionado) {
-      this.mensajeError = 'Seleccione un archivo oficial SUNAT para procesar.';
+      this.modalService.open({
+        type: 'warning',
+        title: 'Archivo Requerido',
+        message: 'Por favor seleccione un archivo oficial SUNAT RCE (.txt o .csv) para iniciar la carga.'
+      });
       return;
     }
 
     const periodo = this.periodoSeleccionado || this.periodoParam || (this.carga ? this.carga.periodo : '');
     if (!periodo) {
-      this.mensajeError = 'Por favor seleccione el periodo contable (Año y Mes) para la carga.';
+      this.modalService.open({
+        type: 'warning',
+        title: 'Periodo No Seleccionado',
+        message: 'Por favor seleccione el periodo contable (Año y Mes) para la carga.'
+      });
       return;
     }
 
     this.cargando = true;
     this.mensajeError = null;
     this.mensajeExito = null;
+    this.loadingService.show();
+    this.cdr.detectChanges();
 
     this.operacionesService.cargarCompras(this.ruc, periodo, this.archivoSeleccionado).subscribe({
       next: (res: CargarArchivoSunatDTO) => {
         this.cargando = false;
+        this.loadingService.hide();
         this.resultadoCarga = res;
         if (res.estado === 'Duplicado') {
           this.mensajeError = `El archivo ya fue cargado anteriormente (${res.observaciones || ''}).`;
+          this.modalService.open({
+            type: 'alert',
+            title: 'Archivo Duplicado',
+            message: `El archivo ya fue registrado anteriormente (${res.observaciones || ''}).`
+          });
         } else {
           this.mensajeExito = `Carga exitosa: ${res.numRegistrosValidos} válidos de ${res.numRegistros} registros leídos.`;
+          this.modalService.open({
+            type: 'info',
+            title: 'Carga Completada con Éxito',
+            message: `Se procesaron correctamente ${res.numRegistrosValidos} de ${res.numRegistros} comprobantes de compras para el periodo ${periodo}.`
+          });
         }
         this.archivoSeleccionado = null;
         if (res.idCarga) {
           this.idCarga = res.idCarga;
+          this.esNuevaCarga = false;
+          this.router.navigate(['/home/contabilidad/empresa', this.ruc, 'compras', res.idCarga]);
           this.cargarDetalleExistente(res.idCarga);
         }
+        this.cdr.detectChanges();
       },
       error: (err: any) => {
         this.cargando = false;
-        const msg = err.error?.message || err.error?.detail || err.error?.title || (typeof err.error === 'string' ? err.error : err.message) || 'Error en el servidor al procesar la carga.';
-        this.mensajeError = `${msg}`;
+        this.loadingService.hide();
+
+        let msg = '';
+        const errors = err.error?.errors || err.error?.Errors;
+        if (Array.isArray(errors) && errors.length > 0) {
+          msg = errors.join('\n');
+        } else if (typeof errors === 'string') {
+          msg = errors;
+        } else {
+          msg = err.error?.message || err.error?.detail || err.error?.title || (typeof err.error === 'string' ? err.error : err.message) || 'Error en el servidor al procesar la carga.';
+        }
+
+        this.modalService.open({
+          type: 'error',
+          title: 'Error en la Carga',
+          message: msg
+        });
+        this.cdr.detectChanges();
       }
     });
   }

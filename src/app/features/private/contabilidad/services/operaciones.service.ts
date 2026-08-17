@@ -80,6 +80,9 @@ export interface VentaItem {
   codigoMoneda: string;
   tipoCambio: number;
   codigoEstadoComprobante: string;
+  codigoTipoNota?: string;
+  tipoOperacion?: string;
+  camposLibres?: string;
 }
 
 @Injectable({ providedIn: 'root' })

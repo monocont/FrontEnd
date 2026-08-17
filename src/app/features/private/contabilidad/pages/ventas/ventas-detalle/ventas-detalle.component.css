@@ -110,6 +110,43 @@
   background-color: #fafbfc;
 }
 
+/* Colores de Fondo según Estado del Comprobante (0, 2, 8, 9) */
+/* 0: OMITIDO (Ámbar / Naranja suave - Alerta de omisión) */
+.excel-grid tbody tr.fila-omitido td {
+  background-color: #fffbeb !important;
+  color: #92400e;
+}
+.excel-grid tbody tr.fila-omitido:hover td {
+  background-color: #fef3c7 !important;
+}
+
+/* 2: ANULADO (Rojo / Rosa suave - Comprobante de baja) */
+.excel-grid tbody tr.fila-anulado td {
+  background-color: #fff1f2 !important;
+  color: #9f1239;
+}
+.excel-grid tbody tr.fila-anulado:hover td {
+  background-color: #ffe4e6 !important;
+}
+
+/* 8: OMITIDO ANTERIOR (Púrpura / Violeta suave - Arrastre de periodo anterior) */
+.excel-grid tbody tr.fila-omitido-anterior td {
+  background-color: #faf5ff !important;
+  color: #6b21a8;
+}
+.excel-grid tbody tr.fila-omitido-anterior:hover td {
+  background-color: #f3e8ff !important;
+}
+
+/* 9: RECTIFICADO ANTERIOR (Azul / Celeste suave - Modificación o ajuste previo) */
+.excel-grid tbody tr.fila-rectificado-anterior td {
+  background-color: #f0f9ff !important;
+  color: #075985;
+}
+.excel-grid tbody tr.fila-rectificado-anterior:hover td {
+  background-color: #e0f2fe !important;
+}
+
 .excel-grid tbody td.row-num {
   background-color: #f8fafc;
   color: #94a3b8;

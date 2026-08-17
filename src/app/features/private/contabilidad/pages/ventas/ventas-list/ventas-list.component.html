@@ -26,14 +26,14 @@
         {{ totalArchivos }} {{ totalArchivos === 1 ? 'archivo cargado' : 'archivos cargados' }}
       </span>
 
-      <!-- Botón Nueva Carga -->
+      <!-- Botón Cargar Ventas -->
       <button
         type="button"
         (click)="irNuevaCarga()"
         class="py-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm transition-all duration-200 shadow-sm shadow-indigo-500/20 flex items-center gap-2 cursor-pointer"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-        <span>+ Nueva Carga de Ventas</span>
+        <span>Cargar ventas</span>
       </button>
     </div>
   </div>
@@ -156,13 +156,6 @@
               <div class="flex flex-col items-center justify-center gap-2">
                 <svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 <p class="text-sm font-medium">No se han registrado archivos de ventas para este criterio.</p>
-                <button
-                  type="button"
-                  (click)="irNuevaCarga()"
-                  class="mt-2 text-xs text-indigo-600 font-semibold hover:underline cursor-pointer"
-                >
-                  + Cargar primer archivo de ventas
-                </button>
               </div>
             </td>
           </tr>

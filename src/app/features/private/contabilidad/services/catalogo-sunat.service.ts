@@ -20,6 +20,13 @@ export interface TipoDocIdentidadCatalogo {
   esRuc?: boolean;
 }
 
+export interface EstadoComprobanteCatalogo {
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  afectaIgv: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CatalogoSunatService {
   private http = inject(HttpClient);
@@ -35,5 +42,9 @@ export class CatalogoSunatService {
 
   obtenerTiposDocIdentidad(): Observable<TipoDocIdentidadCatalogo[]> {
     return this.api.get<TipoDocIdentidadCatalogo[]>('/tipo-doc-identidad');
+  }
+
+  obtenerEstadosComprobante(): Observable<EstadoComprobanteCatalogo[]> {
+    return this.api.get<EstadoComprobanteCatalogo[]>('/estado-comprobante');
   }
 }
