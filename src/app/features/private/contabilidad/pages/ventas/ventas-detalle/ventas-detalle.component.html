@@ -147,6 +147,7 @@
         <button type="button" (click)="limpiarFiltroEstados()" class="text-indigo-400 hover:text-indigo-800 ml-1 font-bold" title="Quitar filtro">✕</button>
       </div>
 
+      <!-- Buscador en tiempo real de la Grilla Excel y badges de filtro -->
       <div class="relative min-w-[200px] flex-1">
         <input
           type="text"
@@ -156,22 +157,28 @@
         />
         <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
       </div>
+
       <span *ngIf="filtroTexto || fechasEmisionSeleccionadas.length > 0 || tiposCpSeleccionados.length > 0 || seriesSeleccionadas.length > 0 || numerosSeleccionados.length > 0 || tiposDocSeleccionados.length > 0 || docsClienteSeleccionados.length > 0 || razonesSocialesSeleccionadas.length > 0 || monedasSeleccionadas.length > 0 || carSunatsSeleccionados.length > 0 || estadosSeleccionados.length > 0" class="text-[11px] text-slate-400 whitespace-nowrap">
         {{ ventasFiltradas.length }} coincidencias
       </span>
+
+      <!-- Botón Guardar Cambios (Verde al lado derecho de la caja de búsqueda) -->
+      <button
+        *ngIf="idsParaEliminar.length > 0"
+        type="button"
+        (click)="guardarCambios()"
+        [disabled]="guardandoCambios"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold shadow-sm transition-all cursor-pointer shrink-0"
+        title="Guardar cambios permanentemente en base de datos"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+        <span>Guardar Cambios</span>
+        <span class="bg-emerald-800 text-emerald-100 text-[10px] font-bold px-1.5 py-0.2 rounded-full">{{ idsParaEliminar.length }}</span>
+      </button>
     </div>
   </div>
 
-  <!-- Alertas de Estado -->
-  <div *ngIf="mensajeExito" class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between animate-fade-in">
-    <span>{{ mensajeExito }}</span>
-    <button type="button" (click)="mensajeExito = null" class="text-emerald-500 hover:text-emerald-700">✕</button>
-  </div>
 
-  <div *ngIf="mensajeError" class="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between animate-fade-in">
-    <span>{{ mensajeError }}</span>
-    <button type="button" (click)="mensajeError = null" class="text-rose-500 hover:text-rose-700">✕</button>
-  </div>
 
   <!-- SECCIÓN DROPZONE: Compacto para cuando es Nueva Carga -->
   <div *ngIf="esNuevaCarga || !idCarga" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs mb-2">
@@ -971,6 +978,9 @@
                 </div>
               </div>
             </th>
+
+            <!-- Columna Acciones -->
+            <th class="text-center w-16">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -1003,6 +1013,16 @@
             </td>
             <td class="text-center font-medium text-xs text-slate-800" [title]="v.codigoEstadoComprobante + ' - ' + obtenerDescripcionEstadoComprobante(v.codigoEstadoComprobante)">
               {{ obtenerNombreEstadoComprobante(v.codigoEstadoComprobante) }}
+            </td>
+            <!-- Botón Eliminar Fila (Visual/Front) -->
+            <td class="text-center">
+              <button
+                type="button"
+                (click)="eliminarFilaVisual(v, $event)"
+                class="p-1 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-all cursor-pointer"
+                title="Eliminar este comprobante">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
             </td>
           </tr>
         </tbody>

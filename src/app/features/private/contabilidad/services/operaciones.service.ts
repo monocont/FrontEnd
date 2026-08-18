@@ -190,4 +190,11 @@ export class OperacionesService {
         })
       );
   }
+
+  actualizarVentas(idCarga: string, eliminadosIds: string[]): Observable<{ exito: boolean; mensaje: string; numRegistros: number; numObservaciones: number }> {
+    const body = { eliminadosIds };
+    return this.http
+      .post<any>(`${this.baseUrl}/cargas/${idCarga}/actualizar-ventas`, body, { withCredentials: true })
+      .pipe(map(res => this.extractData<any>(res)));
+  }
 }

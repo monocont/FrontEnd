@@ -1196,6 +1196,94 @@ export class VentasDetalleComponent implements OnInit {
     URL.revokeObjectURL(url);
   }
 
+  // Registros marcados para eliminación (FrontEnd)
+  idsParaEliminar: string[] = [];
+  guardandoCambios: boolean = false;
+
+  async eliminarFilaVisual(venta: VentaItem, event?: Event): Promise<void> {
+    if (event) event.stopPropagation();
+
+    const confirmado = await this.modalService.open({
+      type: 'confirm',
+      title: 'Eliminar Registro de Venta',
+      message: `¿Está seguro de quitar el comprobante ${venta.serie}-${venta.numero} (${venta.razonSocial}) de la lista? Este cambio se aplicará definitivamente al presionar "Guardar Cambios".`,
+      confirmText: 'Sí, quitar',
+      cancelText: 'Cancelar'
+    });
+
+    if (!confirmado) return;
+
+    if (venta.idVenta) {
+      if (!this.idsParaEliminar.includes(venta.idVenta)) {
+        this.idsParaEliminar.push(venta.idVenta);
+      }
+    }
+
+    // Quitar del listado local en memoria
+    this.ventas = this.ventas.filter(v => v !== venta && v.idVenta !== venta.idVenta);
+    this.recalcularTotales();
+    this.cdr.detectChanges();
+  }
+
+  async guardarCambios(): Promise<void> {
+    if (!this.idCarga || this.esNuevaCarga) return;
+
+    if (this.idsParaEliminar.length === 0) {
+      return;
+    }
+
+    const confirmado = await this.modalService.open({
+      type: 'confirm',
+      title: 'Confirmar Guardado de Cambios',
+      message: `Se eliminarán permanentemente ${this.idsParaEliminar.length} comprobante(s) de la base de datos y se revalidarán todas las correlatividades y observaciones. ¿Desea continuar?`,
+      confirmText: 'Guardar',
+      cancelText: 'Cancelar'
+    });
+
+    if (!confirmado) return;
+
+    this.guardandoCambios = true;
+    this.loadingService.show();
+    this.mensajeError = null;
+    this.mensajeExito = null;
+    this.cdr.detectChanges();
+
+    this.operacionesService.actualizarVentas(this.idCarga, this.idsParaEliminar).subscribe({
+      next: async (res) => {
+        this.guardandoCambios = false;
+        this.loadingService.hide();
+        this.idsParaEliminar = [];
+        
+        // Recargar datos actualizados desde el backend inmediatamente
+        if (this.idCarga) {
+          this.cargarDetalleExistente(this.idCarga);
+        }
+        this.cdr.detectChanges();
+
+        await this.modalService.open({
+          type: 'info',
+          title: 'Operación Exitosa',
+          message: res?.mensaje || 'Registros actualizados y comprobantes revalidados correctamente.',
+          confirmText: 'Aceptar'
+        });
+      },
+      error: async (err) => {
+        this.guardandoCambios = false;
+        this.loadingService.hide();
+        console.error('Error al guardar cambios de ventas:', err);
+        const errorMsg = err?.error?.message || err?.error?.Mensaje || 'Ocurrió un error al actualizar los comprobantes de venta.';
+        this.cdr.detectChanges();
+
+        await this.modalService.open({
+          type: 'error',
+          title: 'Error al Guardar',
+          message: errorMsg,
+          confirmText: 'Aceptar'
+        });
+      }
+    });
+  }
+
   recalcularTotales(): void {
     const lista = this.ventasFiltradas;
     this.totalBaseImponible = lista.reduce((acc, v) => acc + (v.biGravada || 0), 0);
