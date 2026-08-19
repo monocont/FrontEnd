@@ -83,6 +83,9 @@ export interface VentaItem {
   codigoTipoNota?: string;
   tipoOperacion?: string;
   camposLibres?: string;
+  esNuevo?: boolean;
+  editando?: boolean;
+  modificado?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -191,8 +194,13 @@ export class OperacionesService {
       );
   }
 
-  actualizarVentas(idCarga: string, eliminadosIds: string[]): Observable<{ exito: boolean; mensaje: string; numRegistros: number; numObservaciones: number }> {
-    const body = { eliminadosIds };
+  actualizarVentas(
+    idCarga: string,
+    eliminadosIds: string[] = [],
+    nuevos: any[] = [],
+    modificados: any[] = []
+  ): Observable<{ exito: boolean; mensaje: string; numRegistros: number; numObservaciones: number }> {
+    const body = { eliminadosIds, nuevos, modificados };
     return this.http
       .post<any>(`${this.baseUrl}/cargas/${idCarga}/actualizar-ventas`, body, { withCredentials: true })
       .pipe(map(res => this.extractData<any>(res)));

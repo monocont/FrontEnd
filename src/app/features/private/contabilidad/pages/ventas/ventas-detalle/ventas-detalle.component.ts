@@ -742,27 +742,8 @@ export class VentasDetalleComponent implements OnInit {
       return list;
     }
 
-    return list.slice().sort((a: any, b: any) => {
-      for (const criterio of this.criteriosOrden) {
-        let valA = a[criterio.columna] ?? '';
-        let valB = b[criterio.columna] ?? '';
-
-        let cmp = 0;
-        if (typeof valA === 'number' && typeof valB === 'number') {
-          cmp = valA - valB;
-        } else {
-          valA = valA.toString().toLowerCase();
-          valB = valB.toString().toLowerCase();
-          if (valA < valB) cmp = -1;
-          else if (valA > valB) cmp = 1;
-        }
-
-        if (cmp !== 0) {
-          return criterio.ascendente ? cmp : -cmp;
-        }
-      }
-      return 0;
-    });
+    // Ordenar respetando el orden natural/insertado de las filas
+    return list;
   }
 
   get erroresOrdenados(): ArchivoCargaErrorItem[] {
@@ -1196,17 +1177,204 @@ export class VentasDetalleComponent implements OnInit {
     URL.revokeObjectURL(url);
   }
 
-  // Registros marcados para eliminación (FrontEnd)
+  // Registros marcados para eliminación y nuevos registros editables (FrontEnd)
   idsParaEliminar: string[] = [];
   guardandoCambios: boolean = false;
 
-  async eliminarFilaVisual(venta: VentaItem, event?: Event): Promise<void> {
+  obtenerFechaDefecto(): string {
+    const periodo = this.periodoParam || this.carga?.periodo || '';
+    if (periodo.length === 6) {
+      const a = periodo.substring(0, 4);
+      const m = periodo.substring(4, 6);
+      return `${a}-${m}-01`;
+    }
+    const d = new Date();
+    return d.toISOString().substring(0, 10);
+  }
+
+  insertarFilaVisual(referenciaVentaOIndice: VentaItem | number, event?: Event): void {
     if (event) event.stopPropagation();
+
+    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const fechaDefecto = this.obtenerFechaDefecto();
+
+    const nuevaFila: VentaItem & { esNuevo?: boolean } = {
+      idVenta: tempId,
+      carSunat: '',
+      codigoTipoCp: '01',
+      serie: 'F001',
+      numero: '',
+      fechaEmision: fechaDefecto,
+      codigoTipoDocIdentidad: '6',
+      nroDocIdentidad: '',
+      razonSocial: '',
+      biGravada: 0,
+      igvIpm: 0,
+      totalCp: 0,
+      codigoMoneda: 'PEN',
+      tipoCambio: 1.0,
+      codigoEstadoComprobante: '1',
+      esNuevo: true
+    };
+
+    if (typeof referenciaVentaOIndice === 'number') {
+      if (referenciaVentaOIndice <= 0) {
+        this.ventas.unshift(nuevaFila);
+      } else if (referenciaVentaOIndice >= this.ventas.length) {
+        this.ventas.push(nuevaFila);
+      } else {
+        this.ventas.splice(referenciaVentaOIndice, 0, nuevaFila);
+      }
+    } else {
+      const idx = this.ventas.indexOf(referenciaVentaOIndice);
+      if (idx >= 0) {
+        this.ventas.splice(idx, 0, nuevaFila);
+      } else {
+        this.ventas.unshift(nuevaFila);
+      }
+    }
+
+    this.recalcularTotales();
+    this.cdr.detectChanges();
+  }
+
+  formatearFechaInput(fechaStr: string | null | undefined): string {
+    if (!fechaStr) return this.obtenerFechaDefecto();
+    // Si viene como "2026-05-02T00:00:00" o "2026-05-02"
+    if (fechaStr.includes('T')) {
+      return fechaStr.split('T')[0];
+    }
+    if (fechaStr.length >= 10 && fechaStr.includes('-')) {
+      return fechaStr.substring(0, 10);
+    }
+    // Si viene en formato dd/MM/yyyy
+    if (fechaStr.includes('/')) {
+      const partes = fechaStr.split('/');
+      if (partes.length === 3) {
+        const dia = partes[0].padStart(2, '0');
+        const mes = partes[1].padStart(2, '0');
+        const anio = partes[2];
+        return `${anio}-${mes}-${dia}`;
+      }
+    }
+    return fechaStr;
+  }
+
+  iniciarEdicionFila(venta: VentaItem, event?: Event): void {
+    if (event) event.stopPropagation();
+
+    // Si ya había otra fila en edición, desenfocarla
+    this.ventas.forEach(v => {
+      if (v !== venta && v.editando) {
+        v.editando = false;
+      }
+    });
+
+    if (venta.fechaEmision) {
+      venta.fechaEmision = this.formatearFechaInput(venta.fechaEmision);
+    }
+
+    // Guardar copia original para detectar cambios reales
+    if (!(venta as any)._original) {
+      (venta as any)._original = {
+        fechaEmision: venta.fechaEmision,
+        codigoTipoCp: venta.codigoTipoCp,
+        serie: venta.serie,
+        numero: venta.numero,
+        codigoTipoDocIdentidad: venta.codigoTipoDocIdentidad,
+        nroDocIdentidad: venta.nroDocIdentidad,
+        razonSocial: venta.razonSocial,
+        biGravada: Number(venta.biGravada) || 0,
+        igvIpm: Number(venta.igvIpm) || 0,
+        totalCp: Number(venta.totalCp) || 0,
+        codigoEstadoComprobante: venta.codigoEstadoComprobante
+      };
+    }
+
+    venta.editando = true;
+    this.cdr.detectChanges();
+  }
+
+  verificarYMarcarModificacion(venta: VentaItem): void {
+    if (venta.esNuevo) return;
+
+    const orig = (venta as any)._original;
+    if (!orig) return;
+
+    const cambioFecha = (venta.fechaEmision || '') !== (orig.fechaEmision || '');
+    const cambioTipoCp = (venta.codigoTipoCp || '') !== (orig.codigoTipoCp || '');
+    const cambioSerie = (venta.serie || '').trim().toUpperCase() !== (orig.serie || '').trim().toUpperCase();
+    const cambioNumero = (venta.numero || '').trim() !== (orig.numero || '').trim();
+    const cambioTipoDoc = (venta.codigoTipoDocIdentidad || '') !== (orig.codigoTipoDocIdentidad || '');
+    const cambioNroDoc = (venta.nroDocIdentidad || '').trim() !== (orig.nroDocIdentidad || '').trim();
+    const cambioRazon = (venta.razonSocial || '').trim().toUpperCase() !== (orig.razonSocial || '').trim().toUpperCase();
+    const cambioBi = (Number(venta.biGravada) || 0) !== (Number(orig.biGravada) || 0);
+    const cambioIgv = (Number(venta.igvIpm) || 0) !== (Number(orig.igvIpm) || 0);
+    const cambioTotal = (Number(venta.totalCp) || 0) !== (Number(orig.totalCp) || 0);
+    const cambioEstado = (venta.codigoEstadoComprobante || '') !== (orig.codigoEstadoComprobante || '');
+
+    const haCambiado = cambioFecha || cambioTipoCp || cambioSerie || cambioNumero ||
+                       cambioTipoDoc || cambioNroDoc || cambioRazon ||
+                       cambioBi || cambioIgv || cambioTotal || cambioEstado;
+
+    venta.modificado = haCambiado;
+  }
+
+  marcarFilaModificada(venta: VentaItem): void {
+    this.verificarYMarcarModificacion(venta);
+  }
+
+  finalizarEdicionFila(venta: VentaItem): void {
+    this.verificarYMarcarModificacion(venta);
+    venta.editando = false;
+    this.cdr.detectChanges();
+  }
+
+  onBiGravadaCambio(venta: any): void {
+    const bi = parseFloat(venta.biGravada) || 0;
+    venta.igvIpm = parseFloat((bi * 0.18).toFixed(2));
+    venta.totalCp = parseFloat((bi + venta.igvIpm).toFixed(2));
+    this.verificarYMarcarModificacion(venta);
+    this.recalcularTotales();
+  }
+
+  onIgvCambio(venta: any): void {
+    const bi = parseFloat(venta.biGravada) || 0;
+    const igv = parseFloat(venta.igvIpm) || 0;
+    venta.totalCp = parseFloat((bi + igv).toFixed(2));
+    this.verificarYMarcarModificacion(venta);
+    this.recalcularTotales();
+  }
+
+  get filasNuevas(): (VentaItem & { esNuevo?: boolean })[] {
+    return (this.ventas as any[]).filter(v => v.esNuevo === true || (v.idVenta && v.idVenta.startsWith('temp_')));
+  }
+
+  get filasModificadas(): VentaItem[] {
+    return (this.ventas as any[]).filter(v => !v.esNuevo && (!v.idVenta || !v.idVenta.startsWith('temp_')) && v.modificado === true);
+  }
+
+  get totalCambiosPendientes(): number {
+    return this.idsParaEliminar.length + this.filasNuevas.length + this.filasModificadas.length;
+  }
+
+  async eliminarFilaVisual(venta: VentaItem & { esNuevo?: boolean }, event?: Event): Promise<void> {
+    if (event) event.stopPropagation();
+
+    const esNueva = venta.esNuevo || (venta.idVenta && venta.idVenta.startsWith('temp_'));
+
+    if (esNueva) {
+      // Si es una fila nueva no persistida, solo se descarta
+      this.ventas = this.ventas.filter(v => v !== venta && v.idVenta !== venta.idVenta);
+      this.recalcularTotales();
+      this.cdr.detectChanges();
+      return;
+    }
 
     const confirmado = await this.modalService.open({
       type: 'confirm',
       title: 'Eliminar Registro de Venta',
-      message: `¿Está seguro de quitar el comprobante ${venta.serie}-${venta.numero} (${venta.razonSocial}) de la lista? Este cambio se aplicará definitivamente al presionar "Guardar Cambios".`,
+      message: `¿Está seguro de quitar el comprobante ${venta.serie}-${venta.numero} (${venta.razonSocial || 'Sin Razón Social'}) de la lista? Este cambio se aplicará definitivamente al presionar "Guardar Cambios".`,
       confirmText: 'Sí, quitar',
       cancelText: 'Cancelar'
     });
@@ -1228,14 +1396,117 @@ export class VentasDetalleComponent implements OnInit {
   async guardarCambios(): Promise<void> {
     if (!this.idCarga || this.esNuevaCarga) return;
 
-    if (this.idsParaEliminar.length === 0) {
+    const nuevas = this.filasNuevas;
+    const modificadas = this.filasModificadas;
+    const eliminados = this.idsParaEliminar;
+
+    if (nuevas.length === 0 && modificadas.length === 0 && eliminados.length === 0) {
       return;
     }
+
+    // 1. Validar campos obligatorios de cada fila nueva
+    for (let i = 0; i < nuevas.length; i++) {
+      const f = nuevas[i];
+      const numFila = i + 1;
+      if (!f.fechaEmision) {
+        await this.modalService.open({
+          type: 'alert',
+          title: 'Dato Requerido',
+          message: `En la nueva fila #${numFila}, la Fecha de Emisión es obligatoria.`
+        });
+        return;
+      }
+      if (!f.codigoTipoCp) {
+        await this.modalService.open({
+          type: 'alert',
+          title: 'Dato Requerido',
+          message: `En la nueva fila #${numFila}, seleccione el Tipo de Comprobante.`
+        });
+        return;
+      }
+      if (!f.serie || !f.serie.trim()) {
+        await this.modalService.open({
+          type: 'alert',
+          title: 'Dato Requerido',
+          message: `En la nueva fila #${numFila}, ingrese la Serie del comprobante.`
+        });
+        return;
+      }
+      if (!f.numero || !f.numero.trim()) {
+        await this.modalService.open({
+          type: 'alert',
+          title: 'Dato Requerido',
+          message: `En la nueva fila #${numFila}, ingrese el Número del comprobante.`
+        });
+        return;
+      }
+      if (!f.codigoTipoDocIdentidad) {
+        await this.modalService.open({
+          type: 'alert',
+          title: 'Dato Requerido',
+          message: `En la nueva fila #${numFila}, seleccione el Tipo de Documento de Identidad.`
+        });
+        return;
+      }
+      if (!f.nroDocIdentidad || !f.nroDocIdentidad.trim()) {
+        await this.modalService.open({
+          type: 'alert',
+          title: 'Dato Requerido',
+          message: `En la nueva fila #${numFila}, ingrese el Número de Documento del cliente.`
+        });
+        return;
+      }
+      if (!f.razonSocial || !f.razonSocial.trim()) {
+        await this.modalService.open({
+          type: 'alert',
+          title: 'Dato Requerido',
+          message: `En la nueva fila #${numFila}, ingrese la Razón Social o Nombre del cliente.`
+        });
+        return;
+      }
+    }
+
+    // 1.1 Validar campos obligatorios de comprobantes modificados
+    for (let i = 0; i < modificadas.length; i++) {
+      const m = modificadas[i];
+      if (!m.fechaEmision) {
+        await this.modalService.open({
+          type: 'alert',
+          title: 'Dato Requerido',
+          message: `El comprobante modificado ${m.serie}-${m.numero} requiere Fecha de Emisión.`
+        });
+        return;
+      }
+      if (!m.serie || !m.serie.trim() || !m.numero || !m.numero.trim()) {
+        await this.modalService.open({
+          type: 'alert',
+          title: 'Dato Requerido',
+          message: `El comprobante modificado requiere Serie y Número válidos.`
+        });
+        return;
+      }
+      if (!m.nroDocIdentidad || !m.nroDocIdentidad.trim() || !m.razonSocial || !m.razonSocial.trim()) {
+        await this.modalService.open({
+          type: 'alert',
+          title: 'Dato Requerido',
+          message: `El comprobante modificado ${m.serie}-${m.numero} requiere Documento y Razón Social del cliente.`
+        });
+        return;
+      }
+    }
+
+    // 2. Armar resumen de mensaje de confirmación
+    const partesDetalle: string[] = [];
+    if (eliminados.length > 0) partesDetalle.push(`eliminar ${eliminados.length} comprobante(s)`);
+    if (nuevas.length > 0) partesDetalle.push(`insertar ${nuevas.length} nuevo(s) registro(s)`);
+    if (modificadas.length > 0) partesDetalle.push(`actualizar ${modificadas.length} registro(s) editado(s)`);
+
+    const detalleAcciones = `Se procederá a ${partesDetalle.join(', ')} en la base de datos.`;
 
     const confirmado = await this.modalService.open({
       type: 'confirm',
       title: 'Confirmar Guardado de Cambios',
-      message: `Se eliminarán permanentemente ${this.idsParaEliminar.length} comprobante(s) de la base de datos y se revalidarán todas las correlatividades y observaciones. ¿Desea continuar?`,
+      message: `${detalleAcciones} Se revalidarán automáticamente todas las correlatividades y observaciones. ¿Desea continuar?`,
       confirmText: 'Guardar',
       cancelText: 'Cancelar'
     });
@@ -1244,11 +1515,46 @@ export class VentasDetalleComponent implements OnInit {
 
     this.guardandoCambios = true;
     this.loadingService.show();
-    this.mensajeError = null;
-    this.mensajeExito = null;
     this.cdr.detectChanges();
 
-    this.operacionesService.actualizarVentas(this.idCarga, this.idsParaEliminar).subscribe({
+    // 3. Preparar payload de nuevos registros
+    const nuevosPayload = nuevas.map(n => ({
+      codigoTipoCp: n.codigoTipoCp,
+      serie: n.serie?.trim().toUpperCase(),
+      numero: n.numero?.trim(),
+      fechaEmision: n.fechaEmision,
+      codigoTipoDocIdentidad: n.codigoTipoDocIdentidad || '6',
+      nroDocIdentidad: n.nroDocIdentidad?.trim(),
+      razonSocial: n.razonSocial?.trim().toUpperCase(),
+      biGravada: Number(n.biGravada) || 0,
+      igvIpm: Number(n.igvIpm) || 0,
+      totalCp: Number(n.totalCp) || 0,
+      codigoMoneda: n.codigoMoneda || 'PEN',
+      tipoCambio: Number(n.tipoCambio) || 1.0,
+      codigoEstadoComprobante: n.codigoEstadoComprobante || '1',
+      carSunat: n.carSunat
+    }));
+
+    // 3.1 Preparar payload de modificados
+    const modificadosPayload = modificadas.map(m => ({
+      idVenta: m.idVenta,
+      codigoTipoCp: m.codigoTipoCp,
+      serie: m.serie?.trim().toUpperCase(),
+      numero: m.numero?.trim(),
+      fechaEmision: m.fechaEmision,
+      codigoTipoDocIdentidad: m.codigoTipoDocIdentidad || '6',
+      nroDocIdentidad: m.nroDocIdentidad?.trim(),
+      razonSocial: m.razonSocial?.trim().toUpperCase(),
+      biGravada: Number(m.biGravada) || 0,
+      igvIpm: Number(m.igvIpm) || 0,
+      totalCp: Number(m.totalCp) || 0,
+      codigoMoneda: m.codigoMoneda || 'PEN',
+      tipoCambio: Number(m.tipoCambio) || 1.0,
+      codigoEstadoComprobante: m.codigoEstadoComprobante || '1',
+      carSunat: m.carSunat
+    }));
+
+    this.operacionesService.actualizarVentas(this.idCarga, eliminados, nuevosPayload, modificadosPayload).subscribe({
       next: async (res) => {
         this.guardandoCambios = false;
         this.loadingService.hide();
@@ -1286,15 +1592,15 @@ export class VentasDetalleComponent implements OnInit {
 
   recalcularTotales(): void {
     const lista = this.ventasFiltradas;
-    this.totalBaseImponible = lista.reduce((acc, v) => acc + (v.biGravada || 0), 0);
-    this.totalIgv = lista.reduce((acc, v) => acc + (v.igvIpm || 0), 0);
-    this.totalGeneral = lista.reduce((acc, v) => acc + (v.totalCp || 0), 0);
+    this.totalBaseImponible = lista.reduce((acc, v) => acc + (Number(v.biGravada) || 0), 0);
+    this.totalIgv = lista.reduce((acc, v) => acc + (Number(v.igvIpm) || 0), 0);
+    this.totalGeneral = lista.reduce((acc, v) => acc + (Number(v.totalCp) || 0), 0);
     this.cdr.detectChanges();
   }
 
   private calcularTotales(ventas: VentaItem[]): void {
-    this.totalBaseImponible = ventas.reduce((acc, v) => acc + (v.biGravada || 0), 0);
-    this.totalIgv = ventas.reduce((acc, v) => acc + (v.igvIpm || 0), 0);
-    this.totalGeneral = ventas.reduce((acc, v) => acc + (v.totalCp || 0), 0);
+    this.totalBaseImponible = ventas.reduce((acc, v) => acc + (Number(v.biGravada) || 0), 0);
+    this.totalIgv = ventas.reduce((acc, v) => acc + (Number(v.igvIpm) || 0), 0);
+    this.totalGeneral = ventas.reduce((acc, v) => acc + (Number(v.totalCp) || 0), 0);
   }
 }
