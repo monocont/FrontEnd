@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EmpresaService, Empresa } from '../../../../empresa/services/empresa.service';
 import { OperacionesService, ArchivoCargaItem } from '../../../services/operaciones.service';
 import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
+import { ModalService } from '../../../../../../shared/ui/modal/modal.service';
 
 @Component({
   selector: 'app-ventas-list',
@@ -19,6 +20,7 @@ export class VentasListComponent implements OnInit {
   private empresaService = inject(EmpresaService);
   private operacionesService = inject(OperacionesService);
   private loadingService = inject(LoadingService);
+  private modalService = inject(ModalService);
   private cdr = inject(ChangeDetectorRef);
 
   ruc: string = '';
@@ -210,5 +212,41 @@ export class VentasListComponent implements OnInit {
 
   verDetalleCarga(carga: ArchivoCargaItem): void {
     this.router.navigate(['/home/contabilidad/empresa', this.ruc, 'ventas', carga.idCarga]);
+  }
+
+  async confirmarEliminarCarga(carga: ArchivoCargaItem, event?: Event): Promise<void> {
+    if (event) event.stopPropagation();
+
+    const confirmado = await this.modalService.open({
+      type: 'confirm',
+      title: 'Eliminar Archivo de Ventas',
+      message: `¿Está seguro de que desea eliminar definitivamente el archivo "${carga.nombreOriginal}" del periodo ${this.formatearPeriodo(carga.periodo)}? Se eliminarán todos los comprobantes y observaciones vinculadas. Esta acción no se puede deshacer.`,
+      confirmText: 'Sí, eliminar archivo',
+      cancelText: 'Cancelar'
+    });
+
+    if (!confirmado) return;
+
+    this.loadingService.show();
+    this.operacionesService.eliminarCarga(carga.idCarga).subscribe({
+      next: (exito) => {
+        this.loadingService.hide();
+        this.modalService.open({
+          type: 'info',
+          title: 'Archivo Eliminado',
+          message: `El archivo "${carga.nombreOriginal}" y todos sus registros han sido eliminados correctamente.`
+        });
+        this.cargarCargasVentas();
+      },
+      error: (err) => {
+        this.loadingService.hide();
+        const msg = err?.error?.message || err?.error?.Mensaje || 'No se pudo eliminar el archivo de ventas.';
+        this.modalService.open({
+          type: 'error',
+          title: 'Error al Eliminar',
+          message: msg
+        });
+      }
+    });
   }
 }

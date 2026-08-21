@@ -14,6 +14,9 @@ export interface CargarArchivoSunatDTO {
   numRegistros: number;
   numRegistrosValidos: number;
   numRegistrosError: number;
+  totalBaseImponible?: number;
+  totalIgv?: number;
+  totalGeneral?: number;
   observaciones?: string;
 }
 
@@ -27,7 +30,9 @@ export interface ArchivoCargaItem {
   numRegistros: number;
   numRegistrosValidos: number;
   numRegistrosError: number;
-  numObservaciones: number;
+  totalBaseImponible?: number;
+  totalIgv?: number;
+  totalGeneral?: number;
   estado: string;
   observaciones?: string;
   creadoPor?: string;
@@ -204,5 +209,11 @@ export class OperacionesService {
     return this.http
       .post<any>(`${this.baseUrl}/cargas/${idCarga}/actualizar-ventas`, body, { withCredentials: true })
       .pipe(map(res => this.extractData<any>(res)));
+  }
+
+  eliminarCarga(idCarga: string): Observable<boolean> {
+    return this.http
+      .delete<any>(`${this.baseUrl}/cargas/${idCarga}`, { withCredentials: true })
+      .pipe(map(res => this.extractData<boolean>(res)));
   }
 }

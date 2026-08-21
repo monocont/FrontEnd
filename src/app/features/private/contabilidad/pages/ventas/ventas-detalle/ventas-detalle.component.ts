@@ -753,6 +753,11 @@ export class VentasDetalleComponent implements OnInit {
       const cmpTipo = tipoA.localeCompare(tipoB);
       if (cmpTipo !== 0) return cmpTipo;
 
+      const campoA = (a.campoError || '').toLowerCase();
+      const campoB = (b.campoError || '').toLowerCase();
+      const cmpCampo = campoA.localeCompare(campoB);
+      if (cmpCampo !== 0) return cmpCampo;
+
       return a.numeroLinea - b.numeroLinea;
     });
   }
@@ -911,10 +916,15 @@ export class VentasDetalleComponent implements OnInit {
     this.mensajeError = null;
     this.cdr.detectChanges();
 
-    // 1. Obtener datos de cabecera de carga
+    // 1. Obtener datos de cabecera de carga (incluyendo totales consolidados)
     this.operacionesService.obtenerCargaPorId(idCarga).subscribe({
       next: (c: ArchivoCargaItem) => {
         this.carga = c;
+        if (c) {
+          this.totalBaseImponible = Number(c.totalBaseImponible) || 0;
+          this.totalIgv = Number(c.totalIgv) || 0;
+          this.totalGeneral = Number(c.totalGeneral) || 0;
+        }
         this.cdr.detectChanges();
       }
     });
@@ -932,7 +942,6 @@ export class VentasDetalleComponent implements OnInit {
       next: (v: VentaItem[]) => {
         this.cargandoDatos = false;
         this.ventas = v || [];
-        this.calcularTotales(this.ventas);
         this.cdr.detectChanges();
       },
       error: () => {
@@ -1324,24 +1333,109 @@ export class VentasDetalleComponent implements OnInit {
     this.verificarYMarcarModificacion(venta);
   }
 
+  obtenerLongitudMaxDocIdentidad(tipoDoc: string | null | undefined): number {
+    const t = (tipoDoc || '').trim();
+    if (t === '1') return 8;   // DNI
+    if (t === '6') return 11;  // RUC
+    return 15;                // Otros
+  }
+
+  obtenerPlaceholderDocIdentidad(tipoDoc: string | null | undefined): string {
+    const t = (tipoDoc || '').trim();
+    if (t === '1') return 'DNI (8 dígitos)';
+    if (t === '6') return 'RUC (20/10...)';
+    return 'Nro Documento';
+  }
+
+  onTipoDocIdentidadCambio(venta: VentaItem): void {
+    this.sanitizarNroDocIdentidad(venta);
+    this.verificarYMarcarModificacion(venta);
+  }
+
+  onNroDocIdentidadInput(venta: VentaItem): void {
+    this.sanitizarNroDocIdentidad(venta);
+    this.verificarYMarcarModificacion(venta);
+  }
+
+  sanitizarNroDocIdentidad(venta: VentaItem): void {
+    if (!venta.nroDocIdentidad) return;
+
+    let valor = venta.nroDocIdentidad.toString();
+
+    // Eliminar espacios, tildes y caracteres especiales
+    valor = valor.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // quitar tildes
+    valor = valor.replace(/\s+/g, ''); // quitar espacios
+
+    const tipo = (venta.codigoTipoDocIdentidad || '').trim();
+
+    if (tipo === '1' || tipo === '6') {
+      // DNI o RUC: Solo dígitos numéricos
+      valor = valor.replace(/\D/g, '');
+      const maxLen = tipo === '1' ? 8 : 11;
+      if (valor.length > maxLen) {
+        valor = valor.substring(0, maxLen);
+      }
+    } else {
+      // Otros: Solo alfanuméricos
+      valor = valor.replace(/[^a-zA-Z0-9]/g, '');
+      if (valor.length > 15) {
+        valor = valor.substring(0, 15);
+      }
+    }
+
+    venta.nroDocIdentidad = valor;
+  }
+
+  validarDocIdentidad(tipoDoc: string | null | undefined, nroDoc: string | null | undefined): { valido: boolean; mensaje?: string } {
+    const tipo = (tipoDoc || '').trim();
+    const doc = (nroDoc || '').trim();
+
+    if (!doc) {
+      return { valido: false, mensaje: 'El número de documento es obligatorio.' };
+    }
+
+    if (tipo === '1') {
+      // DNI: Exactamente 8 dígitos numéricos
+      if (!/^\d{8}$/.test(doc)) {
+        return { valido: false, mensaje: `El DNI '${doc}' debe tener exactamente 8 dígitos numéricos.` };
+      }
+    } else if (tipo === '6') {
+      // RUC: Exactamente 11 dígitos numéricos que comiencen con 10, 20, 15 o 17
+      if (!/^\d{11}$/.test(doc)) {
+        return { valido: false, mensaje: `El RUC '${doc}' debe tener exactamente 11 dígitos numéricos.` };
+      }
+      const prefijo = doc.substring(0, 2);
+      if (!['10', '20', '15', '17'].includes(prefijo)) {
+        return { valido: false, mensaje: `El RUC '${doc}' es inválido. Debe iniciar con 10, 20, 15 o 17.` };
+      }
+    } else {
+      // Otros: Alfanumérico hasta 15 caracteres
+      if (!/^[a-zA-Z0-9]{1,15}$/.test(doc)) {
+        return { valido: false, mensaje: `El documento '${doc}' contiene caracteres no permitidos (máx. 15 alfanuméricos).` };
+      }
+    }
+
+    return { valido: true };
+  }
+
+  esDocIdentidadInvalido(venta: VentaItem): boolean {
+    if (!venta.nroDocIdentidad && !venta.esNuevo && !venta.editando) return false;
+    return !this.validarDocIdentidad(venta.codigoTipoDocIdentidad, venta.nroDocIdentidad).valido;
+  }
+
   finalizarEdicionFila(venta: VentaItem): void {
+    this.sanitizarNroDocIdentidad(venta);
     this.verificarYMarcarModificacion(venta);
     venta.editando = false;
     this.cdr.detectChanges();
   }
 
   onBiGravadaCambio(venta: any): void {
-    const bi = parseFloat(venta.biGravada) || 0;
-    venta.igvIpm = parseFloat((bi * 0.18).toFixed(2));
-    venta.totalCp = parseFloat((bi + venta.igvIpm).toFixed(2));
     this.verificarYMarcarModificacion(venta);
     this.recalcularTotales();
   }
 
   onIgvCambio(venta: any): void {
-    const bi = parseFloat(venta.biGravada) || 0;
-    const igv = parseFloat(venta.igvIpm) || 0;
-    venta.totalCp = parseFloat((bi + igv).toFixed(2));
     this.verificarYMarcarModificacion(venta);
     this.recalcularTotales();
   }
@@ -1456,6 +1550,18 @@ export class VentasDetalleComponent implements OnInit {
         });
         return;
       }
+
+      // Validación estricta de formato según Tipo de Documento (DNI: 8 dígitos, RUC: 11 dígitos que inicien con 10/20/15/17)
+      const resValDoc = this.validarDocIdentidad(f.codigoTipoDocIdentidad, f.nroDocIdentidad);
+      if (!resValDoc.valido) {
+        await this.modalService.open({
+          type: 'alert',
+          title: 'Documento Inválido',
+          message: `En la nueva fila #${numFila}: ${resValDoc.mensaje}`
+        });
+        return;
+      }
+
       if (!f.razonSocial || !f.razonSocial.trim()) {
         await this.modalService.open({
           type: 'alert',
@@ -1490,6 +1596,17 @@ export class VentasDetalleComponent implements OnInit {
           type: 'alert',
           title: 'Dato Requerido',
           message: `El comprobante modificado ${m.serie}-${m.numero} requiere Documento y Razón Social del cliente.`
+        });
+        return;
+      }
+
+      // Validación estricta de formato según Tipo de Documento en filas modificadas
+      const resValDocMod = this.validarDocIdentidad(m.codigoTipoDocIdentidad, m.nroDocIdentidad);
+      if (!resValDocMod.valido) {
+        await this.modalService.open({
+          type: 'alert',
+          title: 'Documento Inválido',
+          message: `En el comprobante ${m.serie}-${m.numero}: ${resValDocMod.mensaje}`
         });
         return;
       }
