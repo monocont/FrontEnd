@@ -112,7 +112,7 @@ export class ContabilidadEmpresaListComponent implements OnInit {
   }
 
   ingresarOperaciones(empresa: Empresa): void {
-    this.router.navigate(['/home/contabilidad/empresa', empresa.ruc]);
+    this.router.navigate(['/home/contabilidad/empresa', empresa.idEmpresa]);
   }
 
   obtenerNombreRegimen(codigo: string): string {

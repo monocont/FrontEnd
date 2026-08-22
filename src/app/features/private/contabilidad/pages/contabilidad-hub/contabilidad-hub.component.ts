@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { EmpresaContextService } from '../../../../../core/services/empresa-context.service';
 import { EmpresaService, Empresa } from '../../../empresa/services/empresa.service';
 
 interface ModuloOperacion {
@@ -30,8 +31,10 @@ export class ContabilidadHubComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private empresaService = inject(EmpresaService);
+  private empresaContext = inject(EmpresaContextService);
   private cdr = inject(ChangeDetectorRef);
 
+  idEmpresa: string = '';
   ruc: string = '';
   empresa: Empresa | null = null;
   cargando: boolean = true;
@@ -101,28 +104,30 @@ export class ContabilidadHubComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
-      this.ruc = params.get('ruc') || '';
-      if (this.ruc) {
+      this.idEmpresa = params.get('idEmpresa') || '';
+      if (this.idEmpresa) {
         this.cargarDatosEmpresa();
       }
     });
   }
 
   cargarDatosEmpresa(): void {
+    // Empresa ya validada por el guard: disponible sin espera (breadcrumb correcto al instante)
+    const delContexto = this.empresaContext.empresa();
+    if (delContexto && delContexto.idEmpresa === this.idEmpresa) {
+      this.empresa = delContexto;
+      this.ruc = delContexto.ruc || '';
+    }
+
     this.cargando = true;
     this.mensajeError = null;
     this.cdr.detectChanges();
 
-    this.empresaService.listar({ ruc: this.ruc, pageSize: 1 }).subscribe({
-      next: (res: any) => {
+    this.empresaService.obtenerPorId(this.idEmpresa).subscribe({
+      next: (empresa) => {
         this.cargando = false;
-        const data = res?.data || res?.Data || res;
-        const items = data?.items || (Array.isArray(data) ? data : res?.items) || [];
-        if (items.length > 0) {
-          this.empresa = items[0];
-        } else {
-          this.mensajeError = `No se encontró la empresa con RUC ${this.ruc}.`;
-        }
+        this.empresa = empresa;
+        this.ruc = empresa?.ruc || '';
         this.cdr.detectChanges();
       },
       error: () => {
@@ -135,6 +140,6 @@ export class ContabilidadHubComponent implements OnInit {
 
   abrirModulo(modulo: ModuloOperacion): void {
     if (!modulo.disponible) return;
-    this.router.navigate(['/home/contabilidad/empresa', this.ruc, modulo.ruta]);
+    this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, modulo.ruta]);
   }
 }

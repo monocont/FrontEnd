@@ -3,11 +3,14 @@
   <div class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-2">
     <!-- Breadcrumb & Metadatos -->
     <div class="flex items-center gap-2 text-xs flex-wrap">
-      <a routerLink="/home/contabilidad" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">Empresas</a>
+      <a routerLink="/home/contabilidad" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+        Empresas
+      </a>
       <span class="text-slate-300">/</span>
-      <a [routerLink]="['/home/contabilidad/empresa', ruc]" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">{{ empresa?.razonSocial || ruc }}</a>
+      <a [routerLink]="['/home/contabilidad/empresa', idEmpresa]" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">{{ empresa?.razonSocial || ruc }}</a>
       <span class="text-slate-300">/</span>
-      <a [routerLink]="['/home/contabilidad/empresa', ruc, 'ventas']" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">Ventas</a>
+      <a [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'ventas']" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">Ventas</a>
       <span class="text-slate-300">/</span>
       <span class="font-semibold text-slate-800 bg-sky-50 text-sky-700 px-2 py-0.5 rounded-md">
         {{ esNuevaCarga ? 'Nueva Carga' : (carga?.nombreOriginal || 'Detalle') }}
@@ -45,7 +48,7 @@
 
       <!-- Botón Volver -->
       <a
-        [routerLink]="['/home/contabilidad/empresa', ruc, 'ventas']"
+        [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'ventas']"
         class="inline-flex items-center gap-1 px-3 py-1 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-colors cursor-pointer"
       >
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>

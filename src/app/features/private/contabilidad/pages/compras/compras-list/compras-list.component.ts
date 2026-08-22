@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { EmpresaContextService } from '../../../../../../core/services/empresa-context.service';
 import { EmpresaService, Empresa } from '../../../../empresa/services/empresa.service';
 import { OperacionesService, ArchivoCargaItem } from '../../../services/operaciones.service';
 import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
@@ -18,11 +19,13 @@ export class ComprasListComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private empresaService = inject(EmpresaService);
+  private empresaContext = inject(EmpresaContextService);
   private operacionesService = inject(OperacionesService);
   private loadingService = inject(LoadingService);
   private modalService = inject(ModalService);
   private cdr = inject(ChangeDetectorRef);
 
+  idEmpresa: string = '';
   ruc: string = '';
   empresa: Empresa | null = null;
   cargas: ArchivoCargaItem[] = [];
@@ -58,10 +61,9 @@ export class ComprasListComponent implements OnInit {
     this.anioSelector = max.anio;
 
     this.route.paramMap.subscribe(params => {
-      this.ruc = params.get('ruc') || '';
-      if (this.ruc) {
+      this.idEmpresa = params.get('idEmpresa') || '';
+      if (this.idEmpresa) {
         this.cargarDatosEmpresa();
-        this.cargarCargasCompras();
       }
     });
   }
@@ -143,14 +145,19 @@ export class ComprasListComponent implements OnInit {
   }
 
   cargarDatosEmpresa(): void {
-    this.empresaService.listar({ ruc: this.ruc, pageSize: 1 }).subscribe({
-      next: (res: any) => {
-        const data = res?.data || res?.Data || res;
-        const items = data?.items || (Array.isArray(data) ? data : res?.items) || [];
-        if (items.length > 0) {
-          this.empresa = items[0];
-          this.cdr.detectChanges();
-        }
+    // Empresa ya validada por el guard: disponible sin espera (breadcrumb correcto al instante)
+    const delContexto = this.empresaContext.empresa();
+    if (delContexto && delContexto.idEmpresa === this.idEmpresa) {
+      this.empresa = delContexto;
+      this.ruc = delContexto.ruc || '';
+    }
+
+    this.empresaService.obtenerPorId(this.idEmpresa).subscribe({
+      next: (empresa) => {
+        this.empresa = empresa;
+        this.ruc = empresa?.ruc || '';
+        this.cdr.detectChanges();
+        this.cargarCargasCompras();
       }
     });
   }
@@ -194,7 +201,7 @@ export class ComprasListComponent implements OnInit {
   }
 
   irNuevaCarga(): void {
-    this.router.navigate(['/home/contabilidad/empresa', this.ruc, 'compras', 'nueva']);
+    this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'compras', 'nueva']);
   }
 
   formatearPeriodo(periodo: string | number): string {
@@ -211,7 +218,7 @@ export class ComprasListComponent implements OnInit {
   }
 
   verDetalleCarga(carga: ArchivoCargaItem): void {
-    this.router.navigate(['/home/contabilidad/empresa', this.ruc, 'compras', carga.idCarga]);
+    this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'compras', carga.idCarga]);
   }
 
   async confirmarEliminarCarga(carga: ArchivoCargaItem, event?: Event): Promise<void> {

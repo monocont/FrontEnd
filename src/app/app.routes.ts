@@ -57,7 +57,7 @@ export const routes: Routes = [
               ),
           },
           {
-            path: 'empresa/:ruc',
+            path: 'empresa/:idEmpresa',
             canActivate: [empresaRucGuard],
             loadComponent: () =>
               import('./features/private/contabilidad/pages/contabilidad-hub/contabilidad-hub.component').then(
@@ -65,7 +65,7 @@ export const routes: Routes = [
               ),
           },
           {
-            path: 'empresa/:ruc/ventas',
+            path: 'empresa/:idEmpresa/ventas',
             canActivate: [empresaRucGuard],
             loadComponent: () =>
               import('./features/private/contabilidad/pages/ventas/ventas-list/ventas-list.component').then(
@@ -73,7 +73,7 @@ export const routes: Routes = [
               ),
           },
           {
-            path: 'empresa/:ruc/ventas/nueva',
+            path: 'empresa/:idEmpresa/ventas/nueva',
             canActivate: [empresaRucGuard],
             loadComponent: () =>
               import('./features/private/contabilidad/pages/ventas/ventas-detalle/ventas-detalle.component').then(
@@ -81,7 +81,7 @@ export const routes: Routes = [
               ),
           },
           {
-            path: 'empresa/:ruc/ventas/:idCarga',
+            path: 'empresa/:idEmpresa/ventas/:idCarga',
             canActivate: [empresaRucGuard, cargaGuard],
             loadComponent: () =>
               import('./features/private/contabilidad/pages/ventas/ventas-detalle/ventas-detalle.component').then(
@@ -89,7 +89,7 @@ export const routes: Routes = [
               ),
           },
           {
-            path: 'empresa/:ruc/compras',
+            path: 'empresa/:idEmpresa/compras',
             canActivate: [empresaRucGuard],
             loadComponent: () =>
               import('./features/private/contabilidad/pages/compras/compras-list/compras-list.component').then(
@@ -97,7 +97,7 @@ export const routes: Routes = [
               ),
           },
           {
-            path: 'empresa/:ruc/compras/nueva',
+            path: 'empresa/:idEmpresa/compras/nueva',
             canActivate: [empresaRucGuard],
             loadComponent: () =>
               import('./features/private/contabilidad/pages/compras/compras-detalle/compras-detalle.component').then(
@@ -105,7 +105,7 @@ export const routes: Routes = [
               ),
           },
           {
-            path: 'empresa/:ruc/compras/:idCarga',
+            path: 'empresa/:idEmpresa/compras/:idCarga',
             canActivate: [empresaRucGuard, cargaGuard],
             loadComponent: () =>
               import('./features/private/contabilidad/pages/compras/compras-detalle/compras-detalle.component').then(

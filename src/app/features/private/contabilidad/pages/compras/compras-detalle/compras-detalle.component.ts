@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { EmpresaContextService } from '../../../../../../core/services/empresa-context.service';
 import { EmpresaService, Empresa } from '../../../../empresa/services/empresa.service';
 import {
   OperacionesService,
@@ -30,6 +31,7 @@ export class ComprasDetalleComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private empresaService = inject(EmpresaService);
+  private empresaContext = inject(EmpresaContextService);
   private operacionesService = inject(OperacionesService);
   private catalogoSunatService = inject(CatalogoSunatService);
   private modalService = inject(ModalService);
@@ -41,6 +43,7 @@ export class ComprasDetalleComponent implements OnInit {
   tiposDocIdentidad: TipoDocIdentidadCatalogo[] = [];
   estadosComprobante: EstadoComprobanteCatalogo[] = [];
 
+  idEmpresa: string = '';
   ruc: string = '';
   idCarga: string | null = null;
   esNuevaCarga: boolean = false;
@@ -769,7 +772,7 @@ export class ComprasDetalleComponent implements OnInit {
     this.anioSelector = max.anio;
 
     this.route.paramMap.subscribe(params => {
-      this.ruc = params.get('ruc') || '';
+      this.idEmpresa = params.get('idEmpresa') || '';
       this.idCarga = params.get('idCarga');
       this.esNuevaCarga = this.route.snapshot.url.some(segment => segment.path === 'nueva');
 
@@ -780,7 +783,7 @@ export class ComprasDetalleComponent implements OnInit {
         }
       });
 
-      if (this.ruc) {
+      if (this.idEmpresa) {
         this.cargarDatosEmpresa();
         if (this.idCarga && !this.esNuevaCarga) {
           this.cargarDetalleExistente(this.idCarga);
@@ -900,14 +903,18 @@ export class ComprasDetalleComponent implements OnInit {
   }
 
   cargarDatosEmpresa(): void {
-    this.empresaService.listar({ ruc: this.ruc, pageSize: 1 }).subscribe({
-      next: (res: any) => {
-        const data = res?.data || res?.Data || res;
-        const items = data?.items || (Array.isArray(data) ? data : res?.items) || [];
-        if (items.length > 0) {
-          this.empresa = items[0];
-          this.cdr.detectChanges();
-        }
+    // Empresa ya validada por el guard: disponible sin espera (breadcrumb correcto al instante)
+    const delContexto = this.empresaContext.empresa();
+    if (delContexto && delContexto.idEmpresa === this.idEmpresa) {
+      this.empresa = delContexto;
+      this.ruc = delContexto.ruc || '';
+    }
+
+    this.empresaService.obtenerPorId(this.idEmpresa).subscribe({
+      next: (empresa) => {
+        this.empresa = empresa;
+        this.ruc = empresa?.ruc || '';
+        this.cdr.detectChanges();
       }
     });
   }
@@ -1105,7 +1112,7 @@ export class ComprasDetalleComponent implements OnInit {
         if (res.idCarga) {
           this.idCarga = res.idCarga;
           this.esNuevaCarga = false;
-          this.router.navigate(['/home/contabilidad/empresa', this.ruc, 'compras', res.idCarga]);
+          this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'compras', res.idCarga]);
           this.cargarDetalleExistente(res.idCarga);
         }
         this.cdr.detectChanges();

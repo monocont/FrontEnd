@@ -5,6 +5,7 @@ import { EmpresaService } from '../../features/private/empresa/services/empresa.
 import { ModalService } from '../../shared/ui/modal/modal.service';
 import { NavigationHistoryService } from '../services/navigation-history.service';
 import { extraerMensajeError } from '../services/extract-error-message';
+import { EmpresaContextService } from '../services/empresa-context.service';
 
 /**
  * Valida que el :ruc de la ruta exista (para el usuario autenticado) antes de
@@ -18,23 +19,24 @@ export const empresaRucGuard: CanActivateFn = (
   const router = inject(Router);
   const modalService = inject(ModalService);
   const history = inject(NavigationHistoryService);
+  const empresaContext = inject(EmpresaContextService);
 
-  const ruc = route.paramMap.get('ruc') || '';
+  const idEmpresa = route.paramMap.get('idEmpresa') || '';
   const volver = (): UrlTree => {
     const destino = history.anterior(router.getCurrentNavigation()?.finalUrl?.toString() ?? route.url.map((s) => s.path).join('/'));
     modalService.open({
       type: 'error',
       title: 'Empresa no encontrada',
-      message: `No se encontró la empresa con RUC ${ruc}.`,
+      message: `No se encontró la empresa o no tiene acceso a ella.`,
       confirmText: 'Volver',
     });
     return router.parseUrl(destino);
   };
 
-  return empresaService.listar({ ruc, pageSize: 1 }).pipe(
-    map((res: any) => {
-      const items = res?.items || [];
-      return items.length > 0 ? true : volver();
+  return empresaService.obtenerPorId(idEmpresa).pipe(
+    map((empresa) => {
+      empresaContext.setEmpresa(empresa ?? null);
+      return true;
     }),
     catchError((err) => {
       modalService.open({
