@@ -1,13 +1,11 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { AuthService, AuthResponse } from '../auth/auth.service';
-import { ApiRegistry } from '../config/api.registry';
+import { AuthService } from '../auth/auth.service';
 import { ModalService } from '../../shared/ui/modal/modal.service';
 import { catchError, switchMap, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  const apiRegistry = inject(ApiRegistry);
   const modalService = inject(ModalService);
   let token = authService.getAccessToken();
 
@@ -22,19 +20,21 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       const isAuthEndpoint = req.url.includes('/auth/login') || req.url.includes('/auth/federated-login') || req.url.includes('/auth/registro') || req.url.includes('/auth/refresh');
       if (error.status === 401 && !isAuthEndpoint) {
-        const baseUrl = apiRegistry.get('seguridad');
-        return authService.refreshToken(baseUrl).pipe(
+        // Si otra petición ya refrescó el token mientras esta estaba en vuelo, reintenta directo.
+        const currentToken = authService.getAccessToken();
+        if (currentToken && currentToken !== token) {
+          return next(req.clone({ setHeaders: { Authorization: `Bearer ${currentToken}` } }));
+        }
+
+        // refreshSession() comparte un único refresh entre todas las peticiones en cola.
+        return authService.refreshSession().pipe(
           switchMap((response) => {
-            authService.setTokens(response.accessToken);
             const clonedReq = req.clone({
               setHeaders: { Authorization: `Bearer ${response.accessToken}` },
             });
             return next(clonedReq);
           }),
-          catchError(() => {
-            authService.clearSession();
-            return throwError(() => error);
-          })
+          catchError(() => throwError(() => error))
         );
       } else if (error.status === 0 || error.status >= 500) {
         modalService.open({

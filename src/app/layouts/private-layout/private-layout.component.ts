@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
+import { IdleTimeoutService } from '../../core/auth/idle-timeout.service';
 
 @Component({
   selector: 'app-private-layout',
@@ -11,9 +12,10 @@ import { AuthService } from '../../core/auth/auth.service';
   templateUrl: './private-layout.component.html',
   styleUrl: './private-layout.component.css',
 })
-export class PrivateLayoutComponent {
+export class PrivateLayoutComponent implements OnDestroy {
   private router = inject(Router);
   authService = inject(AuthService);
+  private idleTimeoutService = inject(IdleTimeoutService);
 
   esVistaDetalleCompleta: boolean = false;
   sidebarColapsado: boolean = false;
@@ -23,6 +25,7 @@ export class PrivateLayoutComponent {
   }
 
   constructor() {
+    this.idleTimeoutService.start();
     this.evaluarRuta(this.router.url);
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
@@ -38,5 +41,9 @@ export class PrivateLayoutComponent {
 
   cerrarSesion(): void {
     this.authService.logout();
+  }
+
+  ngOnDestroy(): void {
+    this.idleTimeoutService.stop();
   }
 }

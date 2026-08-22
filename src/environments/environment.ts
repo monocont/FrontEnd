@@ -2,6 +2,10 @@ export const environment = {
   production: true,
   timeout: 30000,
   googleClientId: '1013839615049-tmancmmvbjhlsbmb0h601a5469n3sr4p',
+  sesion: {
+    inactividadMs: 30 * 60 * 1000,
+    avisoMs: 2 * 60 * 1000
+  },
   microservicios: {
     seguridad:   'http://localhost:5000/api/v1',
     empresa:     'http://localhost:5001/api/v1',

@@ -1,6 +1,9 @@
 import { Routes } from '@angular/router';
 import { guestGuard } from './core/guards/guest.guard';
 import { authGuard } from './core/guards/auth.guard';
+import { empresaRucGuard } from './core/guards/empresa-ruc.guard';
+import { cargaGuard } from './core/guards/carga.guard';
+import { empresaIdGuard } from './core/guards/empresa-id.guard';
 
 export const routes: Routes = [
   {
@@ -38,6 +41,7 @@ export const routes: Routes = [
           },
           {
             path: ':id',
+            canActivate: [empresaIdGuard],
             loadComponent: () => import('./features/private/empresa/pages/empresa-form/empresa-form.component').then((m) => m.EmpresaFormComponent),
           },
         ],
@@ -54,6 +58,7 @@ export const routes: Routes = [
           },
           {
             path: 'empresa/:ruc',
+            canActivate: [empresaRucGuard],
             loadComponent: () =>
               import('./features/private/contabilidad/pages/contabilidad-hub/contabilidad-hub.component').then(
                 (m) => m.ContabilidadHubComponent
@@ -61,6 +66,7 @@ export const routes: Routes = [
           },
           {
             path: 'empresa/:ruc/ventas',
+            canActivate: [empresaRucGuard],
             loadComponent: () =>
               import('./features/private/contabilidad/pages/ventas/ventas-list/ventas-list.component').then(
                 (m) => m.VentasListComponent
@@ -68,6 +74,7 @@ export const routes: Routes = [
           },
           {
             path: 'empresa/:ruc/ventas/nueva',
+            canActivate: [empresaRucGuard],
             loadComponent: () =>
               import('./features/private/contabilidad/pages/ventas/ventas-detalle/ventas-detalle.component').then(
                 (m) => m.VentasDetalleComponent
@@ -75,6 +82,7 @@ export const routes: Routes = [
           },
           {
             path: 'empresa/:ruc/ventas/:idCarga',
+            canActivate: [empresaRucGuard, cargaGuard],
             loadComponent: () =>
               import('./features/private/contabilidad/pages/ventas/ventas-detalle/ventas-detalle.component').then(
                 (m) => m.VentasDetalleComponent
@@ -82,6 +90,7 @@ export const routes: Routes = [
           },
           {
             path: 'empresa/:ruc/compras',
+            canActivate: [empresaRucGuard],
             loadComponent: () =>
               import('./features/private/contabilidad/pages/compras/compras-list/compras-list.component').then(
                 (m) => m.ComprasListComponent
@@ -89,6 +98,7 @@ export const routes: Routes = [
           },
           {
             path: 'empresa/:ruc/compras/nueva',
+            canActivate: [empresaRucGuard],
             loadComponent: () =>
               import('./features/private/contabilidad/pages/compras/compras-detalle/compras-detalle.component').then(
                 (m) => m.ComprasDetalleComponent
@@ -96,6 +106,7 @@ export const routes: Routes = [
           },
           {
             path: 'empresa/:ruc/compras/:idCarga',
+            canActivate: [empresaRucGuard, cargaGuard],
             loadComponent: () =>
               import('./features/private/contabilidad/pages/compras/compras-detalle/compras-detalle.component').then(
                 (m) => m.ComprasDetalleComponent
@@ -108,6 +119,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/private/fiscal/fiscal.component').then((m) => m.FiscalComponent),
       },
       { path: '', redirectTo: 'empresa', pathMatch: 'full' },
+      {
+        path: '**',
+        loadComponent: () =>
+          import('./features/private/ruta-no-encontrada/ruta-no-encontrada.component').then(
+            (m) => m.RutaNoEncontradaComponent
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

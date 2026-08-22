@@ -4,7 +4,7 @@ import { jwtDecode } from 'jwt-decode';
 import { Router } from '@angular/router';
 import { ApiService } from '../services/api.service';
 import { ApiRegistry } from '../config/api.registry';
-import { tap, finalize, of, Observable } from 'rxjs';
+import { tap, finalize, of, Observable, map, share } from 'rxjs';
 import { ModalService } from '../../shared/ui/modal/modal.service';
 import { LoadingService } from '../../shared/ui/loading/loading.service';
 
@@ -50,6 +50,7 @@ export class AuthService {
 
   constructor() {
     this.restaurarSesion();
+    this.escucharLogoutDeOtrasPestanas();
   }
 
   private get api(): ApiService {
@@ -58,7 +59,7 @@ export class AuthService {
 
   private restaurarSesion(): void {
     const token = sessionStorage.getItem('accessToken');
-    if (token) {
+    if (token && token !== 'undefined' && token !== 'null') {
       this.accessToken.set(token);
     }
   }
@@ -66,8 +67,21 @@ export class AuthService {
   inicializarSesion(): Promise<void> {
     return new Promise((resolve) => {
       const token = sessionStorage.getItem('accessToken');
-      if (!token) {
-        resolve();
+
+      // Sin access token: la cookie de refresh (7 días) puede seguir vigente, se intenta refresh.
+      if (!token || token === 'undefined' || token === 'null') {
+        const baseUrl = this.apiRegistry.get('seguridad');
+        this.refreshToken(baseUrl).subscribe({
+          next: (response) => {
+            this.setTokens(response.accessToken);
+            this.obtenerPerfilUsuario();
+            resolve();
+          },
+          error: () => {
+            this.clearTokens();
+            resolve();
+          },
+        });
         return;
       }
 
@@ -78,6 +92,7 @@ export class AuthService {
         this.refreshToken(baseUrl).subscribe({
           next: (response) => {
             this.setTokens(response.accessToken);
+            this.obtenerPerfilUsuario();
             resolve();
           },
           error: () => {
@@ -93,7 +108,29 @@ export class AuthService {
   }
 
   refreshToken(baseUrl: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${baseUrl}/seguridad/auth/refresh`, {}, { withCredentials: true });
+    return this.http.post<any>(`${baseUrl}/seguridad/auth/refresh`, {}, { withCredentials: true }).pipe(
+      // El backend envuelve toda respuesta en ApiResponse { success, data }; el token está en data.
+      map((response) => (response?.data ?? response) as AuthResponse)
+    );
+  }
+
+  // Refresh compartido: si varias peticiones reciben 401 a la vez, todas se
+  // suscriben al mismo refresco para no rotar el refresh token varias veces.
+  private refreshShared$?: Observable<AuthResponse>;
+
+  refreshSession(): Observable<AuthResponse> {
+    const baseUrl = this.apiRegistry.get('seguridad');
+    if (!this.refreshShared$) {
+      this.refreshShared$ = this.refreshToken(baseUrl).pipe(
+        tap({
+          next: (response) => this.setTokens(response.accessToken),
+          error: () => this.clearSession(),
+        }),
+        finalize(() => (this.refreshShared$ = undefined)),
+        share()
+      );
+    }
+    return this.refreshShared$;
   }
 
   loginConGoogle(credential: string): void {
@@ -301,6 +338,8 @@ export class AuthService {
   }
 
   logout(): void {
+    // Notifica a otras pestañas antes de limpiar (ver listener en el constructor).
+    try { localStorage.setItem('sesion_cerrada', String(Date.now())); } catch {}
     this.api.post('/seguridad/auth/logout', {}).subscribe({
       next: () => this.clearSession(),
       error: () => this.clearSession(),
@@ -313,7 +352,18 @@ export class AuthService {
     this.router.navigate(['/auth/login']);
   }
 
+  private escucharLogoutDeOtrasPestanas(): void {
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'sesion_cerrada') {
+        this.clearTokens();
+        this.usuarioActual.set(null);
+        this.router.navigate(['/auth/login']);
+      }
+    });
+  }
+
   setTokens(accessToken: string): void {
+    if (!accessToken) return;
     this.accessToken.set(accessToken);
     sessionStorage.setItem('accessToken', accessToken);
   }
