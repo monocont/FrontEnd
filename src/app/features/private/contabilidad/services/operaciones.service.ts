@@ -67,6 +67,10 @@ export interface CompraItem {
   codigoMoneda: string;
   tipoCambio: number;
   codigoEstadoComprobante: string;
+  detraccion?: string;
+  esNuevo?: boolean;
+  editando?: boolean;
+  modificado?: boolean;
 }
 
 export interface VentaItem {
@@ -208,6 +212,18 @@ export class OperacionesService {
     const body = { eliminadosIds, nuevos, modificados };
     return this.http
       .post<any>(`${this.baseUrl}/cargas/${idCarga}/actualizar-ventas`, body, { withCredentials: true })
+      .pipe(map(res => this.extractData<any>(res)));
+  }
+
+  actualizarCompras(
+    idCarga: string,
+    eliminadosIds: string[] = [],
+    nuevos: any[] = [],
+    modificados: any[] = []
+  ): Observable<{ exito: boolean; mensaje: string; numRegistros: number; numObservaciones: number }> {
+    const body = { eliminadosIds, nuevos, modificados };
+    return this.http
+      .post<any>(`${this.baseUrl}/cargas/${idCarga}/actualizar-compras`, body, { withCredentials: true })
       .pipe(map(res => this.extractData<any>(res)));
   }
 
