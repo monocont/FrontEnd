@@ -5,8 +5,15 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EmpresaContextService } from '../../../../../../core/services/empresa-context.service';
 import { EmpresaService, Empresa } from '../../../../empresa/services/empresa.service';
 import { OperacionesService, ArchivoCargaItem } from '../../../services/operaciones.service';
+import {
+  VentasWorkspaceService,
+  CargaEmpresaItem,
+  PanelMatchItem
+} from '../../../services/ventas-workspace.service';
 import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
 import { ModalService } from '../../../../../../shared/ui/modal/modal.service';
+
+type TabActiva = 'sire' | 'empresa' | 'match';
 
 @Component({
   selector: 'app-ventas-list',
@@ -21,6 +28,7 @@ export class VentasListComponent implements OnInit {
   private empresaService = inject(EmpresaService);
   private empresaContext = inject(EmpresaContextService);
   private operacionesService = inject(OperacionesService);
+  private workspaceService = inject(VentasWorkspaceService);
   private loadingService = inject(LoadingService);
   private modalService = inject(ModalService);
   private cdr = inject(ChangeDetectorRef);
@@ -28,18 +36,40 @@ export class VentasListComponent implements OnInit {
   idEmpresa: string = '';
   ruc: string = '';
   empresa: Empresa | null = null;
+
+  // ------------------------------------------------------------------
+  // Workspace: pestaña activa (?tab=sire|empresa|match)
+  // ------------------------------------------------------------------
+  tabActiva: TabActiva = 'sire';
+
+  // ------------------------------------------------------------------
+  // Pestaña 1 — Historial SIRE (existente)
+  // ------------------------------------------------------------------
   cargas: ArchivoCargaItem[] = [];
   cargando: boolean = true;
   mensajeError: string | null = null;
-
   totalArchivos: number = 0;
 
   // Selector de Periodo tipo Calendario (Popup Mes / Año)
-  periodoSeleccionado: string = ''; // formato "YYYYMM" o vacio
+  periodoSeleccionado: string = '';
   mostrarSelector: boolean = false;
   anioSelector: number = new Date().getFullYear();
   mesSeleccionado: number | null = null;
   anioSeleccionado: number | null = null;
+
+  // ------------------------------------------------------------------
+  // Pestaña 2 — Datos de la Empresa (maqueta mock)
+  // ------------------------------------------------------------------
+  cargasEmpresa: CargaEmpresaItem[] = [];
+  cargandoEmpresa: boolean = true;
+  mensajeErrorEmpresa: string | null = null;
+
+  // ------------------------------------------------------------------
+  // Pestaña 3 — Match de Información (maqueta mock)
+  // ------------------------------------------------------------------
+  panelMatch: PanelMatchItem[] = [];
+  cargandoMatch: boolean = true;
+  mensajeErrorMatch: string | null = null;
 
   listaMeses = [
     { value: 1, nombre: 'Ene', nombreCompleto: 'Enero' },
@@ -66,7 +96,46 @@ export class VentasListComponent implements OnInit {
         this.cargarDatosEmpresa();
       }
     });
+
+    this.route.queryParamMap.subscribe(q => {
+      const tab = q.get('tab');
+      this.tabActiva = tab === 'empresa' || tab === 'match' ? tab : 'sire';
+      this.cdr.detectChanges();
+    });
   }
+
+  cambiarTab(tab: TabActiva): void {
+    if (this.tabActiva === tab) return;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  cargarDatosEmpresa(): void {
+    // Empresa ya validada por el guard: disponible sin espera (breadcrumb correcto al instante)
+    const delContexto = this.empresaContext.empresa();
+    if (delContexto && delContexto.idEmpresa === this.idEmpresa) {
+      this.empresa = delContexto;
+      this.ruc = delContexto.ruc || '';
+    }
+
+    this.empresaService.obtenerPorId(this.idEmpresa).subscribe({
+      next: (empresa) => {
+        this.empresa = empresa;
+        this.ruc = empresa?.ruc || '';
+        this.cdr.detectChanges();
+        this.cargarCargasVentas();
+        this.cargarCargasEmpresa();
+        this.cargarPanelMatch();
+      }
+    });
+  }
+
+  // ------------------------------------------------------------------
+  // Pestaña 1 — SIRE (existente)
+  // ------------------------------------------------------------------
 
   obtenerMesAnterior(): { anio: number; mes: number } {
     const ahora = new Date();
@@ -142,24 +211,6 @@ export class VentasListComponent implements OnInit {
     }
     const mesObj = this.listaMeses.find(m => m.value === this.mesSeleccionado);
     return `${mesObj?.nombreCompleto || ''} ${this.anioSeleccionado}`;
-  }
-
-  cargarDatosEmpresa(): void {
-    // Empresa ya validada por el guard: disponible sin espera (breadcrumb correcto al instante)
-    const delContexto = this.empresaContext.empresa();
-    if (delContexto && delContexto.idEmpresa === this.idEmpresa) {
-      this.empresa = delContexto;
-      this.ruc = delContexto.ruc || '';
-    }
-
-    this.empresaService.obtenerPorId(this.idEmpresa).subscribe({
-      next: (empresa) => {
-        this.empresa = empresa;
-        this.ruc = empresa?.ruc || '';
-        this.cdr.detectChanges();
-        this.cargarCargasVentas();
-      }
-    });
   }
 
   cargarCargasVentas(): void {
@@ -255,5 +306,130 @@ export class VentasListComponent implements OnInit {
         });
       }
     });
+  }
+
+  // ------------------------------------------------------------------
+  // Pestaña 2 — Datos de la Empresa (mock)
+  // ------------------------------------------------------------------
+
+  cargarCargasEmpresa(): void {
+    this.cargandoEmpresa = true;
+    this.mensajeErrorEmpresa = null;
+    this.cdr.detectChanges();
+    this.workspaceService.obtenerCargasEmpresa().subscribe({
+      next: (items) => {
+        this.cargasEmpresa = items;
+        this.cargandoEmpresa = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cargandoEmpresa = false;
+        this.mensajeErrorEmpresa = 'No se pudo cargar el historial de archivos de la empresa.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  irCargarDatosEmpresa(): void {
+    this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'ventas', 'empresa', 'nueva']);
+  }
+
+  verDatosEmpresa(carga: CargaEmpresaItem): void {
+    this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'ventas', 'empresa', carga.idCargaEmpresa]);
+  }
+
+  async eliminarCargaEmpresa(carga: CargaEmpresaItem): Promise<void> {
+    const confirmado = await this.modalService.open({
+      type: 'confirm',
+      title: 'Eliminar Datos de la Empresa',
+      message: `¿Eliminar definitivamente el archivo "${carga.nombreOriginal}" del periodo ${this.formatearPeriodo(carga.periodo)}? Se eliminarán sus registros y observaciones, y el match del periodo quedará invalidado.`,
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Cancelar'
+    });
+    if (!confirmado) return;
+
+    this.loadingService.show();
+    this.workspaceService.eliminarCargaEmpresa(carga.idCargaEmpresa).subscribe({
+      next: () => {
+        this.loadingService.hide();
+        this.modalService.open({
+          type: 'info',
+          title: 'Archivo Eliminado',
+          message: `El archivo "${carga.nombreOriginal}" fue eliminado correctamente.`
+        });
+        this.cargarCargasEmpresa();
+        this.cargarPanelMatch();
+      },
+      error: (err) => {
+        this.loadingService.hide();
+        this.modalService.open({ type: 'error', title: 'Error', message: err?.message || 'No se pudo eliminar el archivo.' });
+      }
+    });
+  }
+
+  // ------------------------------------------------------------------
+  // Pestaña 3 — Match de Información (mock)
+  // ------------------------------------------------------------------
+
+  cargarPanelMatch(): void {
+    this.cargandoMatch = true;
+    this.mensajeErrorMatch = null;
+    this.cdr.detectChanges();
+    this.workspaceService.obtenerPanelMatch().subscribe({
+      next: (items) => {
+        this.panelMatch = items;
+        this.cargandoMatch = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cargandoMatch = false;
+        this.mensajeErrorMatch = 'No se pudo cargar el estado del match por periodo.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  puedeEjecutarMatch(item: PanelMatchItem): boolean {
+    return item.sireCargado && item.empresaCargada;
+  }
+
+  async ejecutarMatch(item: PanelMatchItem): Promise<void> {
+    if (!this.puedeEjecutarMatch(item)) return;
+
+    const confirmado = await this.modalService.open({
+      type: 'confirm',
+      title: item.match ? 'Re-ejecutar Match' : 'Ejecutar Match',
+      message: `Se cruzarán los comprobantes de SIRE contra los datos de la empresa para ${this.formatearPeriodo(item.periodo)}.${item.match ? ' El match anterior será reemplazado y se perderán las ediciones del consolidado.' : ''} ¿Desea continuar?`,
+      confirmText: 'Sí, ejecutar',
+      cancelText: 'Cancelar'
+    });
+    if (!confirmado) return;
+
+    this.loadingService.show();
+    this.workspaceService.ejecutarMatch(item.periodo).subscribe({
+      next: (resumen) => {
+        this.loadingService.hide();
+        this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'ventas', 'match', resumen.idMatch]);
+      },
+      error: async (err) => {
+        this.loadingService.hide();
+        await this.modalService.open({
+          type: 'error',
+          title: 'No se pudo ejecutar el match',
+          message: err?.message || 'Ocurrió un error al cruzar la información.',
+          confirmText: 'Volver'
+        });
+      }
+    });
+  }
+
+  verMatch(item: PanelMatchItem): void {
+    if (!item.match) return;
+    this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'ventas', 'match', item.match.idMatch]);
+  }
+
+  formatearFecha(iso: string | undefined): string {
+    if (!iso) return '-';
+    return new Date(iso).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 }

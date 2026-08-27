@@ -1,0 +1,538 @@
+<div
+  class="min-h-full pb-10"
+  [style.--acento]="colorAcento()"
+  [style.--acento-suave]="acentoSuave"
+  [style.--acento-sombra]="acentoSombra"
+>
+  <!-- ============ ESTADO: VACÍO / SELECCIÓN ============ -->
+  @if (estado() === 'vacio') {
+    <div class="max-w-2xl mx-auto pt-6">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-slate-800">Visor de Comprobantes Electrónicos</h2>
+        <p class="text-sm text-slate-500 mt-2">
+          Carga el archivo de tu comprobante y visualízalo al instante, sin registros ni envíos.
+        </p>
+      </div>
+
+      <div
+        class="bg-white rounded-3xl p-8 border border-slate-100 dropzone"
+        [class.dropzone-activa]="arrastrando()"
+        (dragover)="alArrastrarSobre($event)"
+        (dragleave)="alSalirDelArrastre()"
+        (drop)="alSoltar($event)"
+      >
+        <div class="flex flex-col items-center text-center gap-4">
+          <div
+            class="w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-300"
+            style="background: var(--acento-suave)"
+          >
+            <svg
+              class="w-10 h-10"
+              style="color: var(--acento)"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
+          </div>
+
+          @if (!nombreArchivo()) {
+            <div>
+              <p class="text-slate-700 font-medium">Arrastra tu archivo aquí</p>
+              <p class="text-xs text-slate-400 mt-1">Formatos compatibles: .XML o .ZIP (RPOS)</p>
+            </div>
+            <div class="flex items-center gap-3 w-full">
+              <span class="flex-1 h-px bg-slate-100"></span>
+              <span class="text-xs text-slate-400">o</span>
+              <span class="flex-1 h-px bg-slate-100"></span>
+            </div>
+          } @else {
+            <div
+              class="w-full flex items-center justify-between gap-3 bg-slate-50 rounded-2xl px-4 py-3 border border-slate-100"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                <div
+                  class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style="background: var(--acento-suave)"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    style="color: var(--acento)"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-slate-700 truncate" [title]="nombreArchivo()">
+                    {{ nombreArchivo() }}
+                  </p>
+                  <p class="text-xs text-slate-400">Archivo listo para visualizar</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                (click)="reiniciar()"
+                class="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                title="Quitar archivo"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          }
+
+          <input
+            #inputArchivo
+            type="file"
+            accept=".xml,.zip"
+            class="hidden"
+            (change)="alSeleccionar(inputArchivo)"
+          />
+
+          <div class="flex flex-col sm:flex-row items-center gap-3 w-full justify-center">
+            <button
+              type="button"
+              (click)="inputArchivo.click()"
+              class="px-6 py-3 rounded-2xl border border-slate-200 text-slate-600 text-sm font-medium hover:border-slate-300 hover:bg-slate-50 transition-all duration-300"
+            >
+              {{ nombreArchivo() ? 'Elegir otro archivo' : 'Seleccionar archivo' }}
+            </button>
+            <button
+              type="button"
+              (click)="visualizar()"
+              [disabled]="!nombreArchivo()"
+              class="boton-acento px-8 py-3 rounded-2xl text-white text-sm font-semibold transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              Visualizar comprobante
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3 mt-6">
+        <div class="bg-white rounded-2xl border border-slate-100 px-4 py-3 text-center">
+          <p class="text-xs font-semibold text-slate-600">100% local</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Tus archivos no salen del navegador</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-100 px-4 py-3 text-center">
+          <p class="text-xs font-semibold text-slate-600">Universal</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Facturas, boletas, notas y CDR</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-100 px-4 py-3 text-center">
+          <p class="text-xs font-semibold text-slate-600">Instantáneo</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Visualización sin esperas</p>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ============ ESTADO: ANALIZANDO ============ -->
+  @if (estado() === 'analizando') {
+    <div class="max-w-2xl mx-auto pt-24 flex flex-col items-center gap-5">
+      <div class="spinner-acento w-12 h-12 rounded-full"></div>
+      <div class="text-center">
+        <p class="text-slate-700 font-medium">Procesando tu documento…</p>
+        <p class="text-xs text-slate-400 mt-1">{{ nombreArchivo() }}</p>
+      </div>
+    </div>
+  }
+
+  <!-- ============ ESTADO: ERROR ============ -->
+  @if (estado() === 'error') {
+    <div class="max-w-md mx-auto pt-24">
+      <div class="bg-white rounded-3xl p-8 border border-slate-100 text-center shadow-soft">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-rose-50 flex items-center justify-center mb-5">
+          <svg class="w-8 h-8 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+            />
+          </svg>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800">No pudimos procesar tu archivo</h3>
+        <p class="text-sm text-slate-500 mt-2 leading-relaxed">
+          Asegúrate de haber cargado un comprobante electrónico válido en formato .XML o .ZIP e
+          inténtalo nuevamente.
+        </p>
+        <button
+          type="button"
+          (click)="reiniciar()"
+          class="mt-6 px-6 py-3 rounded-2xl bg-slate-800 text-white text-sm font-medium hover:bg-slate-700 transition-all duration-300"
+        >
+          Intentar con otro archivo
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ============ ESTADO: LISTO — COMPROBANTE COMERCIAL ============ -->
+  @if (estado() === 'listo' && comprobante(); as comp) {
+    <div class="max-w-3xl mx-auto pt-3 px-3">
+      <div class="flex items-center justify-between mb-2">
+        <button
+          type="button"
+          (click)="reiniciar()"
+          class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+          Cargar otro documento
+        </button>
+        <p class="text-[11px] text-slate-400">{{ nombreArchivo() }}</p>
+      </div>
+
+      <div
+        class="bg-white rounded-xl border border-slate-200 borde-acento overflow-hidden sombra-acento"
+      >
+        <!-- Cabecera tipo representación impresa -->
+        <div class="flex flex-wrap items-start justify-between gap-4 px-4 sm:px-5 py-4">
+          <div class="min-w-0">
+            <p class="text-sm sm:text-base font-extrabold text-slate-800 leading-tight">
+              {{ comp.emisorNombre || '—' }}
+            </p>
+            <p class="text-xs mt-1">
+              <span class="text-slate-400">RUC:</span>
+              <span class="font-extrabold text-slate-800 tracking-wide">{{
+                comp.emisorRuc || '—'
+              }}</span>
+            </p>
+            @if (comp.emisorDireccion) {
+              <p class="text-[11px] text-slate-400 mt-0.5 max-w-xs">{{ comp.emisorDireccion }}</p>
+            }
+          </div>
+          <div class="text-right shrink-0">
+            <div class="caja-acento inline-block rounded-lg bg-white px-4 py-2 text-right">
+              <p
+                class="text-[9px] uppercase tracking-widest font-bold"
+                style="color: var(--acento)"
+              >
+                {{ comp.tipoDocumento }}
+              </p>
+              <p class="text-xl font-extrabold text-slate-800 tracking-tight leading-tight">
+                {{ comp.comprobanteId }}
+              </p>
+            </div>
+            <div class="mt-2 space-y-0.5 text-[10px] text-slate-500">
+              @if (comp.fechaEmision) {
+                <p>
+                  Emisión:
+                  <span class="font-semibold text-slate-700">
+                    {{ comp.fechaEmision | date: 'dd/MM/yyyy' }}
+                    @if (comp.horaEmision) {
+                      {{ comp.horaEmision | slice: 0 : 8 }}
+                    }
+                  </span>
+                </p>
+              }
+              <p>
+                Moneda:
+                <span class="font-semibold text-slate-700"
+                  >{{ comp.monedaCodigo || 'PEN' }} ({{ simboloMoneda(comp.monedaCodigo) }})</span
+                >
+              </p>
+              <p>
+                Código SUNAT:
+                <span class="font-semibold text-slate-700">{{ comp.codigoSunat }}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rejilla de datos del cliente -->
+        <table class="w-full border-collapse">
+          <tbody>
+            <tr>
+              <td class="celda-rejilla w-2/5">
+                <span class="etiqueta-rejilla">Cliente</span>
+                <p
+                  class="font-semibold text-slate-700 text-xs truncate"
+                  [title]="comp.clienteNombre"
+                >
+                  {{ comp.clienteNombre || '—' }}
+                </p>
+              </td>
+              <td class="celda-rejilla w-1/5">
+                <span class="etiqueta-rejilla">Doc. Identidad</span>
+                <p class="font-semibold text-slate-700 text-xs">
+                  {{ comp.clienteDocumento || '—' }}
+                </p>
+              </td>
+              <td class="celda-rejilla w-2/5">
+                <span class="etiqueta-rejilla">Condición de venta</span>
+                <p class="font-semibold text-slate-700 text-xs">CONTADO</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="celda-rejilla">
+                <span class="etiqueta-rejilla">Establecimiento / Dirección</span>
+                <p
+                  class="font-semibold text-slate-700 text-xs truncate"
+                  [title]="comp.clienteDireccion"
+                >
+                  {{ comp.clienteDireccion || '—' }}
+                </p>
+              </td>
+              <td class="celda-rejilla">
+                <span class="etiqueta-rejilla">Moneda</span>
+                <p class="font-semibold text-slate-700 text-xs">
+                  {{ simboloMoneda(comp.monedaCodigo) }} {{ comp.monedaCodigo || 'PEN' }}
+                </p>
+              </td>
+              <td class="celda-rejilla">
+                <span class="etiqueta-rejilla">Fecha de emisión</span>
+                <p class="font-semibold text-slate-700 text-xs">
+                  {{ comp.fechaEmision ? (comp.fechaEmision | date: 'dd/MM/yyyy') : '—' }}
+                </p>
+              </td>
+            </tr>
+            @if (esNota) {
+              <tr>
+                <td class="celda-rejilla">
+                  <span class="etiqueta-rejilla" style="color: var(--acento)"
+                    >Documento que modifica</span
+                  >
+                  <p class="font-extrabold text-xs" style="color: var(--acento)">
+                    {{ comp.docModificadoId || '—' }}
+                  </p>
+                </td>
+                <td class="celda-rejilla" colspan="2">
+                  <span class="etiqueta-rejilla">Motivo de la nota</span>
+                  <p class="font-semibold text-slate-700 text-xs">
+                    {{ comp.motivoSustento || '—' }}
+                  </p>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <div>
+          <!-- Tabla de items estilo impresión fiscal -->
+          @if (comp.items.length > 0) {
+            <div class="overflow-x-auto px-2 sm:px-3 pt-2">
+              <table class="w-full border-collapse text-[11px]">
+                <thead>
+                  <tr>
+                    <th class="celda-lista th-acento w-8 text-center">N°</th>
+                    <th class="celda-lista th-acento text-left">Descripción</th>
+                    <th class="celda-lista th-acento w-12 text-center">U.M.</th>
+                    <th class="celda-lista th-acento w-14 text-right">Cant.</th>
+                    <th class="celda-lista th-acento w-20 text-right">V. Unit.</th>
+                    <th class="celda-lista th-acento w-24 text-right">Importe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of comp.items; track $index) {
+                    <tr class="odd:bg-slate-50/60">
+                      <td class="celda-lista text-center text-slate-400">{{ $index + 1 }}</td>
+                      <td class="celda-lista text-slate-700">{{ item.descripcion || '—' }}</td>
+                      <td class="celda-lista text-center text-slate-500">
+                        {{ item.unidadMedida || '—' }}
+                      </td>
+                      <td class="celda-lista text-right text-slate-600 whitespace-nowrap">
+                        {{ item.cantidad ?? '—' }}
+                      </td>
+                      <td class="celda-lista text-right text-slate-600 whitespace-nowrap">
+                        {{ item.precioUnitario | number: '1.2-2' }}
+                      </td>
+                      <td
+                        class="celda-lista text-right font-semibold text-slate-800 whitespace-nowrap"
+                      >
+                        {{ item.totalLinea | number: '1.2-2' }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          <!-- Totales -->
+          <div class="px-4 sm:px-5 py-3 flex justify-end">
+            <div class="w-full sm:w-72">
+              <div class="flex justify-between text-[11px] py-1">
+                <span class="text-slate-500 uppercase tracking-wide">Suma operaciones</span>
+                <span class="font-semibold text-slate-700">
+                  {{ simboloMoneda(comp.monedaCodigo) }}
+                  {{ sumaOperaciones(comp) ?? 0 | number: '1.2-2' }}
+                </span>
+              </div>
+              <div
+                class="flex justify-between text-[11px] py-1 border-t border-dashed border-slate-200"
+              >
+                <span class="text-slate-500 uppercase tracking-wide">IGV</span>
+                <span class="font-semibold text-slate-700">
+                  {{ simboloMoneda(comp.monedaCodigo) }} {{ comp.totalIgv ?? 0 | number: '1.2-2' }}
+                </span>
+              </div>
+              <div
+                class="barra-total mt-1.5 rounded-md px-3 py-2 flex justify-between items-center"
+              >
+                <span class="text-[10px] font-bold uppercase tracking-widest text-white"
+                  >Importe total</span
+                >
+                <span class="text-base font-extrabold text-white">
+                  {{ simboloMoneda(comp.monedaCodigo) }}
+                  {{ comp.totalPagar ?? 0 | number: '1.2-2' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pie de la hoja -->
+          <div
+            class="px-4 sm:px-5 py-2 border-t border-slate-100 flex justify-between text-[9px] uppercase tracking-widest text-slate-400"
+          >
+            <span>Representación impresa — visualizador local</span>
+            <span>{{ comp.items.length }} {{ comp.items.length === 1 ? 'item' : 'items' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ============ ESTADO: LISTO — FICHA CDR ============ -->
+  @if (estado() === 'listo' && cdr(); as constancia) {
+    <div class="max-w-lg mx-auto pt-6">
+      <div class="flex items-center justify-between mb-5">
+        <button
+          type="button"
+          (click)="reiniciar()"
+          class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+          Cargar otro documento
+        </button>
+        <p class="text-xs text-slate-400">{{ nombreArchivo() }}</p>
+      </div>
+
+      <div
+        class="bg-white rounded-3xl border border-slate-100 borde-acento overflow-hidden sombra-acento"
+      >
+        <div class="p-8 text-center" style="background: var(--acento-suave)">
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-white flex items-center justify-center mb-4">
+            <svg
+              class="w-8 h-8"
+              style="color: var(--acento)"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+              />
+            </svg>
+          </div>
+          <span
+            class="badge-acento inline-block text-[11px] font-bold tracking-wider text-white px-3 py-1 rounded-full"
+          >
+            CONSTANCIA DE RECEPCIÓN (CDR)
+          </span>
+          <p class="text-xs text-slate-500 mt-3">Ficha de certificación fiscal emitida por SUNAT</p>
+        </div>
+
+        <div class="p-8 space-y-4">
+          <div class="rounded-2xl border border-slate-100 px-5 py-4">
+            <p class="text-[11px] text-slate-400 uppercase font-semibold tracking-wider">
+              Comprobante enviado
+            </p>
+            <p class="text-lg font-extrabold text-slate-800 mt-1">
+              {{ constancia.cdrComprobanteAfecto || '—' }}
+            </p>
+            @if (constancia.cdrFechaHora) {
+              <p class="text-xs text-slate-400 mt-1">Procesado: {{ constancia.cdrFechaHora }}</p>
+            }
+          </div>
+
+          <div class="text-center py-2">
+            @if (constancia.aceptado) {
+              <span
+                class="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full px-6 py-2.5 text-sm font-bold"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                ACEPTADO
+              </span>
+            } @else {
+              <span
+                class="inline-flex items-center gap-2 bg-rose-50 text-rose-700 border border-rose-100 rounded-full px-6 py-2.5 text-sm font-bold"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                RECHAZADO / CON ERRORES
+              </span>
+            }
+            <p class="text-[11px] text-slate-400 mt-3">
+              Código de respuesta SUNAT: {{ constancia.cdrCodigoRespuesta || '—' }}
+            </p>
+          </div>
+
+          <div class="rounded-2xl bg-slate-50 border border-slate-100 px-5 py-4">
+            <p class="text-[11px] text-slate-400 uppercase font-semibold tracking-wider mb-1">
+              Mensaje del sistema SUNAT
+            </p>
+            <p class="text-sm text-slate-700 leading-relaxed">
+              {{ constancia.cdrMensajeSunat || 'Sin mensaje.' }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ============ PIE DE PÁGINA ============ -->
+  <p class="text-center text-[11px] text-slate-400 mt-6 px-4">
+    Representación visual generada a partir del archivo cargado en tu navegador. No constituye el
+    documento tributario oficial emitido por SUNAT.
+  </p>
+</div>

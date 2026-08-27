@@ -1146,53 +1146,6 @@ export class VentasDetalleComponent implements OnInit {
     });
   }
 
-  exportarCSV(): void {
-    if (this.ventas.length === 0) return;
-
-    const encabezados = [
-      'CAR SUNAT',
-      'Fecha Emisión',
-      'Tipo CP',
-      'Serie',
-      'Número',
-      'Tipo Doc Identidad',
-      'Nro Doc Identidad',
-      'Razón Social',
-      'Base Imponible',
-      'IGV/IPM',
-      'Total CP',
-      'Moneda',
-      'Tipo Cambio',
-      'Estado'
-    ];
-
-    const filas = this.ventasFiltradas.map(v => [
-      `"${v.carSunat || ''}"`,
-      `"${v.fechaEmision ? v.fechaEmision.substring(0, 10) : ''}"`,
-      `"${v.codigoTipoCp || ''}"`,
-      `"${v.serie || ''}"`,
-      `"${v.numero || ''}"`,
-      `"${v.codigoTipoDocIdentidad || ''}"`,
-      `"${v.nroDocIdentidad || ''}"`,
-      `"${(v.razonSocial || '').replace(/"/g, '""')}"`,
-      v.biGravada ?? 0,
-      v.igvIpm ?? 0,
-      v.totalCp ?? 0,
-      `"${v.codigoMoneda || 'PEN'}"`,
-      v.tipoCambio ?? 1,
-      `"${this.obtenerNombreEstadoComprobante(v.codigoEstadoComprobante)}"`
-    ]);
-
-    const csvContent = '\uFEFF' + [encabezados.join(','), ...filas.map(f => f.join(','))].join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Ventas_${this.ruc}_${this.carga?.periodo || this.periodoParam || 'Periodo'}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   // Registros marcados para eliminación y nuevos registros editables (FrontEnd)
   idsParaEliminar: string[] = [];
   guardandoCambios: boolean = false;

@@ -1,0 +1,147 @@
+<div class="space-y-5 max-w-4xl mx-auto pb-12">
+  <!-- Breadcrumb de Navegación -->
+  <nav class="flex items-center gap-2 text-xs font-medium text-slate-400 flex-wrap">
+    <a routerLink="/home/contabilidad" class="hover:text-indigo-600 transition-colors flex items-center gap-1">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+      Empresas
+    </a>
+    <span>/</span>
+    <a [routerLink]="['/home/contabilidad/empresa', idEmpresa]" class="hover:text-indigo-600 transition-colors">{{ nombreEmpresa }}</a>
+    <span>/</span>
+    <a [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'ventas']" [queryParams]="{ tab: 'empresa' }" class="hover:text-indigo-600 transition-colors">Ventas</a>
+    <span>/</span>
+    <span class="text-slate-700 font-semibold">Datos Empresa · Nueva carga</span>
+  </nav>
+
+  <!-- Hero -->
+  <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+    <div class="space-y-2">
+      <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-50 text-violet-700 text-[11px] font-semibold uppercase tracking-wide border border-violet-100">
+        <span class="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span>
+        Registros internos de la empresa
+      </div>
+      <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Cargar Datos de la Empresa</h1>
+      <p class="text-xs sm:text-sm text-slate-500 max-w-2xl">
+        Sube tus registros internos de ventas en formato XLSX o CSV. El sistema validará los datos,
+        mostrará las observaciones encontradas y te permitirá corregirlos antes del match con SIRE.
+      </p>
+    </div>
+
+    <!-- Instrucciones -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-50/70 border border-slate-100">
+        <span class="w-6 h-6 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center text-[11px] font-bold shrink-0">1</span>
+        <p class="text-[11px] text-slate-500">Descarga la plantilla y llena tus registros de ventas del periodo.</p>
+      </div>
+      <div class="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-50/70 border border-slate-100">
+        <span class="w-6 h-6 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center text-[11px] font-bold shrink-0">2</span>
+        <p class="text-[11px] text-slate-500">Selecciona el periodo contable y el archivo (.xlsx / .csv).</p>
+      </div>
+      <div class="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-50/70 border border-slate-100">
+        <span class="w-6 h-6 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center text-[11px] font-bold shrink-0">3</span>
+        <p class="text-[11px] text-slate-500">Revisa las observaciones y corrige los datos si es necesario.</p>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      (click)="descargarPlantilla()"
+      class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-violet-200 bg-violet-50 hover:bg-violet-100 text-violet-700 text-xs font-bold transition-all shadow-sm cursor-pointer"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+      Descargar plantilla (CSV)
+    </button>
+  </div>
+
+  <!-- Formulario de carga -->
+  <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
+    <!-- Selector de periodo -->
+    <div>
+      <label class="text-xs font-bold text-slate-600 block mb-2">Periodo contable de los datos</label>
+      <div class="relative inline-block">
+        <button
+          type="button"
+          (click)="toggleSelector()"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs transition-all shadow-xs cursor-pointer"
+        >
+          <svg class="w-4 h-4 text-violet-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>
+          </svg>
+          <span [class]="periodoSeleccionado ? 'text-slate-800' : 'text-slate-400'">{{ etiquetaPeriodo }}</span>
+          <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+
+        <div *ngIf="mostrarSelector" class="absolute left-0 top-full mt-2 z-50 bg-white border border-slate-200 rounded-2xl p-4 shadow-2xl w-64 animate-fade-in">
+          <div class="flex items-center justify-between mb-3 px-1">
+            <button type="button" (click)="navegarAnioSelector(-1)" [disabled]="!anioAnteriorHabilitado()"
+              class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <span class="text-sm font-bold text-slate-800">{{ anioSelector }}</span>
+            <button type="button" (click)="navegarAnioSelector(1)" [disabled]="!anioSiguienteHabilitado()"
+              class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+          <div class="grid grid-cols-3 gap-1.5">
+            <button *ngFor="let m of listaMeses" type="button" (click)="seleccionarMes(m.value)" [disabled]="mesBloqueado(m.value)"
+              [class]="(m.value === mesSeleccionado && anioSelector === anioSeleccionado)
+                ? 'py-2 rounded-xl text-xs font-bold bg-violet-500 text-white shadow-xs'
+                : (mesBloqueado(m.value)
+                  ? 'py-2 rounded-xl text-xs font-semibold bg-slate-50 text-slate-300 opacity-40 cursor-not-allowed'
+                  : 'py-2 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-violet-50 hover:text-violet-700 text-slate-700 transition-colors cursor-pointer')">
+              {{ m.nombre }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dropzone -->
+    <div>
+      <label class="text-xs font-bold text-slate-600 block mb-2">Archivo de datos (.xlsx o .csv)</label>
+      <div class="rounded-2xl border-2 border-dashed p-8 text-center transition-colors hover:border-violet-300 bg-slate-50/50">
+        <input type="file" id="archivoEmpresaInput" class="hidden" accept=".xlsx,.csv" (change)="onFileSelected($event)" />
+        <label *ngIf="!archivoSeleccionado" for="archivoEmpresaInput" class="cursor-pointer flex flex-col items-center gap-2">
+          <svg class="w-12 h-12 text-violet-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+          <span class="text-sm font-semibold text-slate-600">Arrastra tu archivo o haz clic para seleccionarlo</span>
+          <span class="text-[11px] text-slate-400 font-mono">XLSX o CSV · según plantilla · máx. 60 MB</span>
+        </label>
+
+        <div *ngIf="archivoSeleccionado" class="flex items-center justify-between gap-3 bg-white border border-violet-100 rounded-xl px-4 py-3 shadow-xs max-w-md mx-auto">
+          <div class="flex items-center gap-2.5 min-w-0 text-left">
+            <svg class="w-8 h-8 text-violet-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-slate-700 truncate">{{ archivoSeleccionado.name }}</p>
+              <p class="text-[11px] text-slate-400">{{ archivoSeleccionado.size / 1024 | number:'1.0-0' }} KB</p>
+            </div>
+          </div>
+          <button type="button" (click)="removerArchivo()" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="flex items-center justify-between gap-3 pt-2 border-t border-slate-100">
+      <a
+        [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'ventas']"
+        [queryParams]="{ tab: 'empresa' }"
+        class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-bold transition-colors cursor-pointer"
+      >
+        Cancelar
+      </a>
+      <button
+        type="button"
+        (click)="ejecutarCarga()"
+        [disabled]="!archivoSeleccionado || !periodoSeleccionado || cargando"
+        [title]="!periodoSeleccionado ? 'Selecciona primero el periodo' : (!archivoSeleccionado ? 'Selecciona el archivo a cargar' : '')"
+        class="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold shadow-sm shadow-violet-500/20 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        <svg *ngIf="cargando" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+        {{ cargando ? 'Procesando archivo...' : 'Cargar archivo' }}
+      </button>
+    </div>
+  </div>
+</div>

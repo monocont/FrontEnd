@@ -17,6 +17,7 @@ import { RouterLink, RouterOutlet } from '@angular/router';
             </a>
             <div class="nav-links">
               <a routerLink="/tipo-cambio" class="nav-link">Tipo de Cambio</a>
+              <a routerLink="/visor-comprobantes" class="nav-link">Visor Comprobantes</a>
             </div>
             <div class="nav-actions">
               <a routerLink="/auth/login" class="btn btn-primary">Iniciar Sesión</a>

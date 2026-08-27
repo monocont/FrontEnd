@@ -1,0 +1,301 @@
+<div class="space-y-2 w-full">
+  <!-- Cabecera Compacta (Breadcrumb + Info + Acciones) -->
+  <div class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-2">
+    <div class="flex items-center gap-2 text-xs flex-wrap">
+      <a routerLink="/home/contabilidad" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+        Empresas
+      </a>
+      <span class="text-slate-300">/</span>
+      <a [routerLink]="['/home/contabilidad/empresa', idEmpresa]" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">{{ nombreEmpresa }}</a>
+      <span class="text-slate-300">/</span>
+      <a [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'ventas']" [queryParams]="{ tab: 'empresa' }" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">Ventas</a>
+      <span class="text-slate-300">/</span>
+      <span class="font-semibold text-slate-800 bg-violet-50 text-violet-700 px-2 py-0.5 rounded-md">
+        Datos Empresa · {{ periodoLabel }}
+      </span>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <!-- Botón Observaciones -->
+      <button
+        *ngIf="errores.length > 0"
+        type="button"
+        (click)="mostrarObservaciones = true"
+        class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <span>{{ errores.length }} Observaciones</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="exportarCSV()"
+        title="Exportar a CSV"
+        class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        Exportar
+      </button>
+
+      <a
+        [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'ventas']"
+        [queryParams]="{ tab: 'empresa' }"
+        class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Volver
+      </a>
+
+      <!-- Guardar Cambios -->
+      <button
+        *ngIf="totalCambiosPendientes > 0"
+        type="button"
+        (click)="guardarCambios()"
+        [disabled]="guardando"
+        class="px-4 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold shadow-sm shadow-violet-500/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        Guardar Cambios ({{ totalCambiosPendientes }})
+      </button>
+    </div>
+  </div>
+
+  <!-- Métricas -->
+  <div class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center gap-x-6 gap-y-2">
+    <div class="flex items-center gap-2 text-xs">
+      <span class="text-slate-400 font-medium">Archivo:</span>
+      <span class="font-semibold text-slate-700 font-mono max-w-[240px] truncate" [title]="carga?.nombreOriginal">{{ carga?.nombreOriginal }}</span>
+      <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold">{{ periodoLabel }}</span>
+    </div>
+    <span class="h-4 w-px bg-slate-200 hidden sm:block"></span>
+    <div class="flex items-center gap-1.5 text-xs">
+      <span class="text-slate-400 font-medium">Registros:</span>
+      <span class="font-bold text-slate-700">{{ ventas.length }}</span>
+    </div>
+    <div class="flex items-center gap-1.5 text-xs">
+      <span class="text-slate-400 font-medium">Σ Base Imponible:</span>
+      <span class="font-bold text-slate-700 font-mono">{{ totalBi | number:'1.2-2' }}</span>
+    </div>
+    <div class="flex items-center gap-1.5 text-xs">
+      <span class="text-slate-400 font-medium">Σ IGV:</span>
+      <span class="font-bold text-slate-700 font-mono">{{ totalIgv | number:'1.2-2' }}</span>
+    </div>
+    <div class="flex items-center gap-1.5 text-xs">
+      <span class="text-slate-400 font-medium">Σ Total:</span>
+      <span class="font-bold text-slate-800 font-mono">{{ totalGeneral | number:'1.2-2' }}</span>
+    </div>
+    <div class="ml-auto">
+      <button
+        type="button"
+        (click)="insertarFila()"
+        class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-500/20 transition-all cursor-pointer flex items-center gap-1.5"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        Agregar registro
+      </button>
+    </div>
+  </div>
+
+  <!-- Skeleton / Error -->
+  <div *ngIf="cargando" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-3">
+    <div *ngFor="let i of [1, 2, 3, 4, 5]" class="h-10 rounded-xl bg-slate-50 animate-pulse"></div>
+  </div>
+
+  <div *ngIf="!cargando && mensajeError" class="bg-white rounded-2xl border border-rose-200 p-8 text-center">
+    <p class="text-sm font-semibold text-slate-700">{{ mensajeError }}</p>
+    <button type="button" (click)="volver()" class="mt-4 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold cursor-pointer">Volver</button>
+  </div>
+
+  <!-- Grilla editable -->
+  <div *ngIf="!cargando && !mensajeError" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs">
+    <div class="grid-empresa-container">
+      <table class="w-full text-xs text-left tabla-empresa">
+        <thead>
+          <tr class="bg-slate-50/75 text-slate-500 uppercase tracking-wider font-semibold">
+            <th class="th-sticky py-3 px-2 text-center w-12">N°</th>
+            <th class="th-sticky py-3 px-2 text-center w-14">Tipo</th>
+            <th class="th-sticky py-3 px-2 w-20">Serie</th>
+            <th class="th-sticky py-3 px-2 w-24">Número</th>
+            <th class="th-sticky py-3 px-2 w-28">Fecha</th>
+            <th class="th-sticky py-3 px-2 w-24">Doc</th>
+            <th class="th-sticky py-3 px-2">Razón Social</th>
+            <th class="th-sticky py-3 px-2 text-right w-28">Base Imp.</th>
+            <th class="th-sticky py-3 px-2 text-right w-24">IGV</th>
+            <th class="th-sticky py-3 px-2 text-right w-28">Total</th>
+            <th class="th-sticky py-3 px-2 w-16">Moneda</th>
+            <th class="th-sticky py-3 px-2 text-center w-20">Acción</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <tr *ngIf="ventas.length === 0">
+            <td colspan="12" class="text-center py-12 text-slate-400 text-sm">
+              No hay registros. Usa "Agregar registro" para crear el primero.
+            </td>
+          </tr>
+          <tr *ngFor="let v of ventas"
+            [class.fila-nueva]="v.esNuevo"
+            [class.fila-modificada]="v.modificado && !v.esNuevo"
+            [class.fila-eliminable]="idsParaEliminar.length > 0 && false">
+            <!-- N° línea -->
+            <td class="py-2 px-2 text-center text-slate-400 font-mono text-[10px]">{{ v.numeroLinea || '—' }}</td>
+
+            <!-- Tipo CP -->
+            <td class="py-2 px-2 text-center">
+              <ng-container *ngIf="v.editando || v.esNuevo">
+                <input type="text" maxlength="2" [(ngModel)]="v.codigoTipoCp" (blur)="finalizarEdicion(v)" class="celda-input text-center w-full" />
+              </ng-container>
+              <ng-container *ngIf="!v.editando && !v.esNuevo">
+                <span class="font-mono font-bold text-slate-600 cursor-pointer" (click)="iniciarEdicion(v)">{{ v.codigoTipoCp }}</span>
+              </ng-container>
+            </td>
+
+            <!-- Serie -->
+            <td class="py-2 px-2">
+              <ng-container *ngIf="v.editando || v.esNuevo">
+                <input type="text" maxlength="10" [(ngModel)]="v.serie" (blur)="finalizarEdicion(v)" class="celda-input w-full" />
+              </ng-container>
+              <span *ngIf="!v.editando && !v.esNuevo" class="font-mono text-slate-700 cursor-pointer" (click)="iniciarEdicion(v)">{{ v.serie }}</span>
+            </td>
+
+            <!-- Número -->
+            <td class="py-2 px-2">
+              <ng-container *ngIf="v.editando || v.esNuevo">
+                <input type="text" maxlength="20" [(ngModel)]="v.numero" (blur)="finalizarEdicion(v)" class="celda-input w-full" />
+              </ng-container>
+              <span *ngIf="!v.editando && !v.esNuevo" class="font-mono text-slate-700 cursor-pointer" (click)="iniciarEdicion(v)">{{ v.numero }}</span>
+            </td>
+
+            <!-- Fecha -->
+            <td class="py-2 px-2">
+              <ng-container *ngIf="v.editando || v.esNuevo">
+                <input type="date" [(ngModel)]="v.fechaEmision" (blur)="finalizarEdicion(v)" class="celda-input w-full" />
+              </ng-container>
+              <span *ngIf="!v.editando && !v.esNuevo" class="font-mono text-slate-600 cursor-pointer" (click)="iniciarEdicion(v)">{{ v.fechaEmision }}</span>
+            </td>
+
+            <!-- Tipo Doc + N° Doc -->
+            <td class="py-2 px-2">
+              <ng-container *ngIf="v.editando || v.esNuevo">
+                <div class="flex items-center gap-1">
+                  <input type="text" maxlength="2" [(ngModel)]="v.codigoTipoDocIdentidad" class="celda-input w-9 text-center" (blur)="finalizarEdicion(v)" />
+                  <input type="text" maxlength="15" [(ngModel)]="v.nroDocIdentidad" class="celda-input flex-1" (blur)="finalizarEdicion(v)" />
+                </div>
+              </ng-container>
+              <span *ngIf="!v.editando && !v.esNuevo" class="font-mono text-slate-600 text-[11px] cursor-pointer block truncate" (click)="iniciarEdicion(v)" [title]="v.nroDocIdentidad">{{ v.codigoTipoDocIdentidad }} · {{ v.nroDocIdentidad }}</span>
+            </td>
+
+            <!-- Razón Social -->
+            <td class="py-2 px-2">
+              <ng-container *ngIf="v.editando || v.esNuevo">
+                <input type="text" maxlength="200" [(ngModel)]="v.razonSocial" (blur)="finalizarEdicion(v)" class="celda-input w-full" />
+              </ng-container>
+              <span *ngIf="!v.editando && !v.esNuevo" class="text-slate-700 cursor-pointer block truncate" (click)="iniciarEdicion(v)" [title]="v.razonSocial">{{ v.razonSocial }}</span>
+            </td>
+
+            <!-- Base Imponible -->
+            <td class="py-2 px-2 text-right">
+              <ng-container *ngIf="v.editando || v.esNuevo">
+                <input type="number" step="0.01" [(ngModel)]="v.biGravada" (blur)="finalizarEdicion(v)" class="celda-input text-right w-full" />
+              </ng-container>
+              <span *ngIf="!v.editando && !v.esNuevo" class="font-mono text-slate-700 cursor-pointer" (click)="iniciarEdicion(v)">{{ v.biGravada | number:'1.2-2' }}</span>
+            </td>
+
+            <!-- IGV -->
+            <td class="py-2 px-2 text-right">
+              <ng-container *ngIf="v.editando || v.esNuevo">
+                <input type="number" step="0.01" [(ngModel)]="v.igvIpm" (blur)="finalizarEdicion(v)" class="celda-input text-right w-full" />
+              </ng-container>
+              <span *ngIf="!v.editando && !v.esNuevo" class="font-mono text-slate-700 cursor-pointer" (click)="iniciarEdicion(v)">{{ v.igvIpm | number:'1.2-2' }}</span>
+            </td>
+
+            <!-- Total -->
+            <td class="py-2 px-2 text-right">
+              <ng-container *ngIf="v.editando || v.esNuevo">
+                <input type="number" step="0.01" [(ngModel)]="v.totalCp" (blur)="finalizarEdicion(v)" class="celda-input text-right w-full font-semibold" />
+              </ng-container>
+              <span *ngIf="!v.editando && !v.esNuevo" class="font-mono font-semibold text-slate-800 cursor-pointer" (click)="iniciarEdicion(v)">{{ v.totalCp | number:'1.2-2' }}</span>
+            </td>
+
+            <!-- Moneda -->
+            <td class="py-2 px-2">
+              <ng-container *ngIf="v.editando || v.esNuevo">
+                <input type="text" maxlength="3" [(ngModel)]="v.codigoMoneda" (blur)="finalizarEdicion(v)" class="celda-input w-full" />
+              </ng-container>
+              <span *ngIf="!v.editando && !v.esNuevo" class="font-mono text-slate-500 text-[11px]">{{ v.codigoMoneda }}</span>
+            </td>
+
+            <!-- Acciones -->
+            <td class="py-2 px-2 text-center">
+              <div class="inline-flex items-center gap-1">
+                <button
+                  *ngIf="!v.editando && !v.esNuevo"
+                  type="button"
+                  (click)="iniciarEdicion(v)"
+                  title="Editar fila"
+                  class="w-6 h-6 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors cursor-pointer"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-4M11 5a2 2 0 012 2h0a2 2 0 002-2M11 5a2 2 0 012-2h0a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                </button>
+                <button
+                  type="button"
+                  (click)="eliminarFila(v)"
+                  title="Eliminar fila"
+                  class="w-6 h-6 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= Modal: Observaciones ======================= -->
+<div *ngIf="mostrarObservaciones && errores.length > 0" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs" (click)="mostrarObservaciones = false">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col" (click)="$event.stopPropagation()">
+    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <h3 class="text-base font-bold text-slate-800">Observaciones de la Carga</h3>
+        <p class="text-xs text-slate-400 mt-0.5">Detectadas durante la validación del archivo de la empresa</p>
+      </div>
+      <button type="button" (click)="mostrarObservaciones = false" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="overflow-auto p-6">
+      <table class="w-full text-xs text-left border-collapse">
+        <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider">
+          <tr>
+            <th class="py-2.5 px-3 rounded-l-lg">Línea</th>
+            <th class="py-2.5 px-3">Tipo</th>
+            <th class="py-2.5 px-3">Campo</th>
+            <th class="py-2.5 px-3">Detalle</th>
+            <th class="py-2.5 px-3 rounded-r-lg">Severidad</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <tr *ngFor="let e of errores" class="hover:bg-slate-50/60">
+            <td class="py-2.5 px-3 font-mono font-bold text-slate-600">{{ e.numeroLinea }}</td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold">{{ e.tipoError }}</span>
+            </td>
+            <td class="py-2.5 px-3 font-mono text-slate-600">{{ e.campoError || '—' }}</td>
+            <td class="py-2.5 px-3 text-slate-700">{{ e.mensaje }}</td>
+            <td class="py-2.5 px-3">
+              <span [class]="e.severidad === 'Error'
+                ? 'px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 text-[10px] font-bold border border-rose-100'
+                : 'px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-100'">
+                {{ e.severidad }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

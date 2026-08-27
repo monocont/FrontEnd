@@ -1,0 +1,56 @@
+/* Resultado del match — grilla comparativa estilo excel */
+
+.tabla-match-container {
+  overflow: auto;
+  max-height: calc(100vh - 460px);
+  min-height: 220px;
+  border-radius: 0 0 1rem 1rem;
+}
+
+.tabla-match thead th.th-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 11;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.tabla-match thead th.th-sticky-2 {
+  position: sticky;
+  top: 34px;
+  z-index: 10;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Colores de fila según resultado */
+.fila-coincidente { background-color: rgba(16, 185, 129, 0.05); }
+.fila-conflicto { background-color: rgba(245, 158, 11, 0.06); }
+.fila-solo-sire { background-color: rgba(244, 63, 94, 0.05); }
+.fila-solo-empresa { background-color: rgba(14, 165, 233, 0.05); }
+.fila-manual { background-color: rgba(16, 185, 129, 0.10); }
+.fila-editada { background-color: rgba(139, 92, 246, 0.08); }
+
+.texto-faltante {
+  color: #cbd5e1;
+  font-style: italic;
+}
+
+.tabla-match tbody tr { transition: filter 0.15s ease; }
+.tabla-match tbody tr:hover { filter: brightness(0.96); }
+
+/* Campos del formulario del consolidado */
+.campo-form {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 7px 10px;
+  font-size: 12px;
+  color: #334155;
+  background: #f8fafc;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.campo-form:focus {
+  border-color: #10b981;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
