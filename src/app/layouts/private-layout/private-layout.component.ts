@@ -19,6 +19,7 @@ export class PrivateLayoutComponent implements OnDestroy {
 
   esVistaDetalleCompleta: boolean = false;
   sidebarColapsado: boolean = false;
+  tituloSeccion: string = 'Empresas';
 
   toggleSidebar(): void {
     this.sidebarColapsado = !this.sidebarColapsado;
@@ -37,6 +38,20 @@ export class PrivateLayoutComponent implements OnDestroy {
   private evaluarRuta(url: string): void {
     // Solo aplica pantalla completa y padding cero si estamos dentro de detalle de ventas o compras
     this.esVistaDetalleCompleta = /\/contabilidad\/empresa\/[^\/]+\/(ventas|compras)\/[^\/]+/.test(url);
+
+    if (url.includes('/home/empresa')) {
+      this.tituloSeccion = 'Empresas';
+    } else if (url.includes('/home/contabilidad')) {
+      this.tituloSeccion = 'Comprobantes';
+    } else if (url.includes('/home/tipo-cambio')) {
+      this.tituloSeccion = 'Tipo de Cambio (USD $)';
+    } else if (url.includes('/home/visor-comprobantes')) {
+      this.tituloSeccion = 'Visor de Comprobantes';
+    } else if (url.includes('/home/perfil')) {
+      this.tituloSeccion = 'Mi Perfil';
+    } else {
+      this.tituloSeccion = 'Panel Principal';
+    }
   }
 
   cerrarSesion(): void {

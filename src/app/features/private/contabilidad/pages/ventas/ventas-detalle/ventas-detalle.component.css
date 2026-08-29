@@ -40,21 +40,21 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background-color: #f8fafc;
-  color: #475569;
-  font-weight: 600;
+  background-color: #dbeafe;
+  color: #1e3a8a;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.025em;
   font-size: 10.5px;
   padding: 6px 10px;
-  border-bottom: 2px solid #cbd5e1;
-  border-right: 1px solid #e2e8f0;
+  border-bottom: 2px solid #bfdbfe;
+  border-right: 1px solid #bfdbfe;
   white-space: nowrap;
   user-select: none;
 }
 
 .excel-grid thead th:hover {
-  background-color: #f1f5f9;
+  background-color: #bfdbfe;
 }
 
 .sort-header {
@@ -74,24 +74,39 @@
   user-select: none;
 }
 
+.excel-grid thead th.row-num {
+  background-color: #bfdbfe !important;
+  color: #1e3a8a !important;
+  border-right: 1px solid #93c5fd !important;
+}
+
 .sort-icon-up, .sort-icon-down {
-  color: #cbd5e1;
+  color: #93c5fd;
   transition: color 0.15s ease;
 }
 
 .sort-icon-up.active, .sort-icon-down.active {
-  color: #0d9488;
+  color: #1d4ed8;
   font-weight: bold;
 }
 
 .sort-priority {
   font-size: 8.5px;
   font-weight: 700;
-  color: #0d9488;
-  background: #ccfbf1;
+  color: #ffffff;
+  background: #2563eb;
   border-radius: 9999px;
   padding: 0 3px;
   line-height: 11px;
+}
+
+.excel-grid thead th > .sort-header button {
+  color: #2563eb;
+}
+
+.excel-grid thead th > .sort-header button:hover {
+  background-color: #93c5fd;
+  color: #1e3a8a;
 }
 
 .excel-grid tbody td {
@@ -103,57 +118,60 @@
 }
 
 .excel-grid tbody tr:hover td {
-  background-color: #f0fdf4 !important;
+  background-color: #f0f7ff !important;
 }
 
 .excel-grid tbody tr:nth-child(even) td {
   background-color: #fafbfc;
 }
 
+/* Columna de Enumeración (#) con fondo azul mate suave */
+.excel-grid tbody td.row-num {
+  background-color: #eff6ff !important;
+  color: #2563eb !important;
+  font-weight: 600;
+  text-align: center;
+  width: 40px;
+  border-right: 1px solid #dbeafe !important;
+  border-bottom: 1px solid #e0e7ff !important;
+}
+
+.excel-grid tbody tr:hover td.row-num {
+  background-color: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
 /* Colores de Fondo según Estado del Comprobante (0, 2, 8, 9) */
-/* 0: OMITIDO (Ámbar / Naranja suave - Alerta de omisión) */
-.excel-grid tbody tr.fila-omitido td {
+.excel-grid tbody tr.fila-omitido td:not(.row-num) {
   background-color: #fffbeb !important;
   color: #92400e;
 }
-.excel-grid tbody tr.fila-omitido:hover td {
+.excel-grid tbody tr.fila-omitido:hover td:not(.row-num) {
   background-color: #fef3c7 !important;
 }
 
-/* 2: ANULADO (Rojo / Rosa suave - Comprobante de baja) */
-.excel-grid tbody tr.fila-anulado td {
+.excel-grid tbody tr.fila-anulado td:not(.row-num) {
   background-color: #fff1f2 !important;
   color: #9f1239;
 }
-.excel-grid tbody tr.fila-anulado:hover td {
+.excel-grid tbody tr.fila-anulado:hover td:not(.row-num) {
   background-color: #ffe4e6 !important;
 }
 
-/* 8: OMITIDO ANTERIOR (Púrpura / Violeta suave - Arrastre de periodo anterior) */
-.excel-grid tbody tr.fila-omitido-anterior td {
+.excel-grid tbody tr.fila-omitido-anterior td:not(.row-num) {
   background-color: #faf5ff !important;
   color: #6b21a8;
 }
-.excel-grid tbody tr.fila-omitido-anterior:hover td {
+.excel-grid tbody tr.fila-omitido-anterior:hover td:not(.row-num) {
   background-color: #f3e8ff !important;
 }
 
-/* 9: RECTIFICADO ANTERIOR (Azul / Celeste suave - Modificación o ajuste previo) */
-.excel-grid tbody tr.fila-rectificado-anterior td {
+.excel-grid tbody tr.fila-rectificado-anterior td:not(.row-num) {
   background-color: #f0f9ff !important;
   color: #075985;
 }
-.excel-grid tbody tr.fila-rectificado-anterior:hover td {
+.excel-grid tbody tr.fila-rectificado-anterior:hover td:not(.row-num) {
   background-color: #e0f2fe !important;
-}
-
-.excel-grid tbody td.row-num {
-  background-color: #f8fafc;
-  color: #94a3b8;
-  font-weight: 500;
-  text-align: center;
-  width: 40px;
-  border-right: 1px solid #cbd5e1;
 }
 
 /* Fila Editable Nueva (Texto Verde Esmeralda sin cambio de fondo) */
@@ -243,18 +261,23 @@
   pointer-events: auto;
 }
 
-/* Custom Scrollbars sutiles */
+/* Custom Scrollbars Azul Mate */
 .excel-grid-container::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
 }
 .excel-grid-container::-webkit-scrollbar-track {
-  background: #f8fafc;
-}
-.excel-grid-container::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #f0f7ff;
   border-radius: 4px;
 }
+.excel-grid-container::-webkit-scrollbar-thumb {
+  background: #93c5fd;
+  border-radius: 6px;
+  border: 2px solid #f0f7ff;
+}
 .excel-grid-container::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #60a5fa;
+}
+.excel-grid-container::-webkit-scrollbar-corner {
+  background: #f0f7ff;
 }

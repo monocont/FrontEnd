@@ -167,14 +167,13 @@
               <th class="py-4 px-6">Periodo</th>
               <th class="py-4 px-6">Nombre de Archivo</th>
               <th class="py-4 px-4 text-center">Registros</th>
-              <th class="py-4 px-4 text-center">Válidos</th>
               <th class="py-4 px-4 text-center">Observaciones</th>
               <th class="py-4 px-6 text-center">Acción</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 text-slate-700">
             <tr *ngIf="!cargando && cargas.length === 0">
-              <td colspan="6" class="text-center py-12 text-slate-400">
+              <td colspan="5" class="text-center py-12 text-slate-400">
                 <div class="flex flex-col items-center justify-center gap-2">
                   <svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                   <p class="text-sm font-medium">No se han registrado archivos de ventas para este criterio.</p>
@@ -191,9 +190,6 @@
               </td>
               <td class="py-4 px-4 text-center font-semibold text-slate-800">
                 {{ (carga.numRegistros || 0) | number }}
-              </td>
-              <td class="py-4 px-4 text-center font-semibold text-emerald-600">
-                {{ (carga.numRegistrosValidos || 0) | number }}
               </td>
               <td class="py-4 px-4 text-center font-semibold">
                 <span [class]="(carga.numRegistrosError || 0) > 0 ? 'text-amber-600 font-bold' : 'text-slate-400 font-normal'">

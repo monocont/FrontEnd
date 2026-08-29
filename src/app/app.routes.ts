@@ -144,6 +144,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/private/fiscal/fiscal.component').then((m) => m.FiscalComponent),
       },
       {
+        path: 'tipo-cambio',
+        loadComponent: () =>
+          import('./features/public/tipo_cambio/tipo_cambio.component').then(
+            (m) => m.TipoCambioComponent
+          ),
+      },
+      {
         path: 'visor-comprobantes',
         loadComponent: () =>
           import('./shared/visor-comprobantes/visor-comprobantes.component').then(
