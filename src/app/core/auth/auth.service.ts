@@ -174,7 +174,7 @@ export class AuthService {
       )
       .subscribe({
         next: () => {
-          this.obtenerPerfilUsuario(() => this.router.navigate(['/home/empresa']));
+          this.obtenerPerfilUsuario(() => this.router.navigate(['/home/indicadores']));
         },
         error: () => {}
       });
@@ -266,7 +266,7 @@ export class AuthService {
       )
       .subscribe({
         next: () => {
-          this.obtenerPerfilUsuario(() => this.router.navigate(['/home/empresa']));
+          this.obtenerPerfilUsuario(() => this.router.navigate(['/home/indicadores']));
         },
         error: () => {}
       });

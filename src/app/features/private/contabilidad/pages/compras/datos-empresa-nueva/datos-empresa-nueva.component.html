@@ -10,7 +10,7 @@
       <span class="text-slate-300">/</span>
       <a [routerLink]="['/home/contabilidad/empresa', idEmpresa]" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">{{ nombreEmpresa }}</a>
       <span class="text-slate-300">/</span>
-      <a [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'ventas']" [queryParams]="{ tab: 'empresa' }" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">Ventas</a>
+      <a [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'compras']" [queryParams]="{ tab: 'empresa' }" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">Compras</a>
       <span class="text-slate-300">/</span>
       <span class="font-semibold text-slate-800 bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md">
         Datos Empresa · Nueva Carga
@@ -19,7 +19,7 @@
 
     <!-- Botón Volver -->
     <a
-      [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'ventas']"
+      [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'compras']"
       [queryParams]="{ tab: 'empresa' }"
       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-colors cursor-pointer"
     >
@@ -33,7 +33,7 @@
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2.5">
         <span class="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span>
-        <h1 class="text-lg font-bold text-slate-800 tracking-tight">Cargar Registros Internos de Ventas</h1>
+        <h1 class="text-lg font-bold text-slate-800 tracking-tight">Cargar Registros Internos de Compras</h1>
       </div>
       <span class="text-[11px] text-slate-400">Paso previo para la conciliación con SUNAT SIRE</span>
     </div>
@@ -107,7 +107,7 @@
           type="button"
           (click)="descargarPlantilla()"
           class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition-all shadow-xs cursor-pointer"
-          title="Descargar formato Excel oficial con columnas de ventas"
+          title="Descargar formato Excel oficial con columnas de compras"
         >
           <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
           Descargar plantilla (Excel)
@@ -117,10 +117,16 @@
 
     <!-- Zona Drag & Drop Compacta -->
     <div>
-      <label class="text-xs font-bold text-slate-700 block mb-1.5">Archivo de ventas (.xlsx o .csv)</label>
+      <label class="text-xs font-bold text-slate-700 block mb-1.5">Archivo de compras (.xlsx o .csv)</label>
       <div class="rounded-2xl border-2 border-dashed p-5 text-center transition-colors hover:border-indigo-300 bg-slate-50/50 border-slate-200">
-        <input type="file" id="archivoEmpresaInput" class="hidden" accept=".xlsx,.csv" (change)="onFileSelected($event)" />
-        <label *ngIf="!archivoSeleccionado" for="archivoEmpresaInput" class="cursor-pointer flex flex-col items-center gap-1.5 py-2">
+        <input
+          type="file"
+          id="archivoComprasEmpresaInput"
+          class="hidden"
+          accept=".xlsx,.xls,.csv"
+          (change)="onFileSelected($event)"
+        />
+        <label *ngIf="!archivoSeleccionado" for="archivoComprasEmpresaInput" class="cursor-pointer flex flex-col items-center justify-center gap-1.5 py-2">
           <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
           </div>
@@ -134,12 +140,17 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             </div>
             <div class="min-w-0">
-              <p class="text-xs font-bold text-slate-800 truncate">{{ archivoSeleccionado.name }}</p>
-              <p class="text-[10px] text-slate-400 font-mono">{{ archivoSeleccionado.size / 1024 | number:'1.0-0' }} KB</p>
+              <p class="text-xs font-bold text-slate-800 truncate" [title]="nombreArchivo">{{ nombreArchivo }}</p>
+              <p class="text-[10px] text-slate-400 font-mono">{{ tamanoArchivoKB }} KB</p>
             </div>
           </div>
-          <button type="button" (click)="removerArchivo()" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0" title="Quitar archivo">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          <button
+            type="button"
+            (click)="quitarArchivo()"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
+            title="Quitar archivo"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         </div>
       </div>
@@ -149,13 +160,12 @@
     <div class="flex items-center justify-center pt-3 border-t border-slate-100">
       <button
         type="button"
-        (click)="ejecutarCarga()"
-        [disabled]="!archivoSeleccionado || !periodoSeleccionado || cargando"
-        [title]="!periodoSeleccionado ? 'Selecciona primero el periodo' : (!archivoSeleccionado ? 'Selecciona el archivo a cargar' : '')"
-        class="px-8 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+        (click)="procesarCarga()"
+        [disabled]="!archivoSeleccionado || procesando"
+        class="px-8 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs shadow-indigo-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
       >
-        <svg *ngIf="cargando" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-        {{ cargando ? 'Procesando archivo...' : 'Cargar archivo' }}
+        <svg *ngIf="procesando" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+        <span>{{ procesando ? 'Procesando archivo...' : 'Cargar archivo' }}</span>
       </button>
     </div>
   </div>

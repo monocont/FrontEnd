@@ -43,6 +43,8 @@ export class PrivateLayoutComponent implements OnDestroy {
       this.tituloSeccion = 'Empresas';
     } else if (url.includes('/home/contabilidad')) {
       this.tituloSeccion = 'Comprobantes';
+    } else if (url.includes('/home/indicadores')) {
+      this.tituloSeccion = 'Indicadores y Límites Tributarios';
     } else if (url.includes('/home/tipo-cambio')) {
       this.tituloSeccion = 'Tipo de Cambio (USD $)';
     } else if (url.includes('/home/visor-comprobantes')) {

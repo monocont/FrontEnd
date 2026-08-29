@@ -26,6 +26,18 @@ export const routes: Routes = [
       ),
     children: [
       {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'indicadores',
+      },
+      {
+        path: 'indicadores',
+        loadComponent: () =>
+          import('./features/private/indicadores/indicadores.component').then(
+            (m) => m.IndicadoresComponent
+          ),
+      },
+      {
         path: 'perfil',
         loadComponent: () => import('./features/private/seguridad/seguridad.component').then((m) => m.SeguridadComponent),
       },
@@ -130,6 +142,30 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'empresa/:idEmpresa/compras/empresa/nueva',
+            canActivate: [empresaRucGuard],
+            loadComponent: () =>
+              import('./features/private/contabilidad/pages/compras/datos-empresa-nueva/datos-empresa-nueva.component').then(
+                (m) => m.DatosEmpresaNuevaComprasComponent
+              ),
+          },
+          {
+            path: 'empresa/:idEmpresa/compras/empresa/:idCargaEmpresa',
+            canActivate: [empresaRucGuard],
+            loadComponent: () =>
+              import('./features/private/contabilidad/pages/compras/datos-empresa-detalle/datos-empresa-detalle.component').then(
+                (m) => m.DatosEmpresaDetalleComprasComponent
+              ),
+          },
+          {
+            path: 'empresa/:idEmpresa/compras/match/:idMatch',
+            canActivate: [empresaRucGuard],
+            loadComponent: () =>
+              import('./features/private/contabilidad/pages/compras/match-resultado/match-resultado.component').then(
+                (m) => m.MatchResultadoComprasComponent
+              ),
+          },
+          {
             path: 'empresa/:idEmpresa/compras/:idCarga',
             canActivate: [empresaRucGuard, cargaGuard],
             loadComponent: () =>
@@ -139,7 +175,7 @@ export const routes: Routes = [
           },
         ],
       },
-      {
+       {
         path: 'fiscal',
         loadComponent: () => import('./features/private/fiscal/fiscal.component').then((m) => m.FiscalComponent),
       },
@@ -157,7 +193,6 @@ export const routes: Routes = [
             (m) => m.VisorComprobantesComponent
           ),
       },
-      { path: '', redirectTo: 'empresa', pathMatch: 'full' },
       {
         path: '**',
         loadComponent: () =>

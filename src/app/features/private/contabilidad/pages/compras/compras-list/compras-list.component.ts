@@ -5,8 +5,15 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EmpresaContextService } from '../../../../../../core/services/empresa-context.service';
 import { EmpresaService, Empresa } from '../../../../empresa/services/empresa.service';
 import { OperacionesService, ArchivoCargaItem } from '../../../services/operaciones.service';
+import {
+  ComprasWorkspaceService,
+  CargaEmpresaComprasItem,
+  PanelMatchComprasItem
+} from '../../../services/compras-workspace.service';
 import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
 import { ModalService } from '../../../../../../shared/ui/modal/modal.service';
+
+type TabActiva = 'sire' | 'empresa' | 'match';
 
 @Component({
   selector: 'app-compras-list',
@@ -21,6 +28,7 @@ export class ComprasListComponent implements OnInit {
   private empresaService = inject(EmpresaService);
   private empresaContext = inject(EmpresaContextService);
   private operacionesService = inject(OperacionesService);
+  private workspaceService = inject(ComprasWorkspaceService);
   private loadingService = inject(LoadingService);
   private modalService = inject(ModalService);
   private cdr = inject(ChangeDetectorRef);
@@ -33,6 +41,19 @@ export class ComprasListComponent implements OnInit {
   mensajeError: string | null = null;
 
   totalArchivos: number = 0;
+
+  // Workspace: pestaña activa (?tab=sire|empresa|match)
+  tabActiva: TabActiva = 'sire';
+
+  // Pestaña 2 — Cargas Empresa
+  cargasEmpresa: CargaEmpresaComprasItem[] = [];
+  cargandoEmpresa: boolean = false;
+  mensajeErrorEmpresa: string | null = null;
+
+  // Pestaña 3 — Match
+  panelMatch: PanelMatchComprasItem[] = [];
+  cargandoMatch: boolean = false;
+  mensajeErrorMatch: string | null = null;
 
   // Selector de Periodo tipo Calendario (Popup Mes / Año)
   periodoSeleccionado: string = ''; // formato "YYYYMM" o vacio
@@ -57,6 +78,18 @@ export class ComprasListComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    if (tabParam === 'empresa' || tabParam === 'match' || tabParam === 'sire') {
+      this.tabActiva = tabParam;
+    }
+
+    this.route.queryParamMap.subscribe(params => {
+      const tab = params.get('tab');
+      if (tab === 'empresa' || tab === 'match' || tab === 'sire') {
+        this.tabActiva = tab;
+      }
+    });
+
     const max = this.obtenerMesAnterior();
     this.anioSelector = max.anio;
 
@@ -144,6 +177,15 @@ export class ComprasListComponent implements OnInit {
     return `${mesObj?.nombreCompleto || ''} ${this.anioSeleccionado}`;
   }
 
+  cambiarTab(tab: TabActiva): void {
+    this.tabActiva = tab;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge'
+    });
+  }
+
   cargarDatosEmpresa(): void {
     // Empresa ya validada por el guard: disponible sin espera (breadcrumb correcto al instante)
     const delContexto = this.empresaContext.empresa();
@@ -158,8 +200,144 @@ export class ComprasListComponent implements OnInit {
         this.ruc = empresa?.ruc || '';
         this.cdr.detectChanges();
         this.cargarCargasCompras();
+        this.cargarCargasEmpresa();
+        this.cargarPanelMatch();
       }
     });
+  }
+
+  // ------------------------------------------------------------------
+  // Pestaña 2 — Datos Empresa
+  // ------------------------------------------------------------------
+
+  cargarCargasEmpresa(): void {
+    this.cargandoEmpresa = true;
+    this.mensajeErrorEmpresa = null;
+    this.cdr.detectChanges();
+    this.workspaceService.obtenerCargasEmpresa(this.periodoSeleccionado || undefined).subscribe({
+      next: (cargas) => {
+        this.cargasEmpresa = cargas;
+        this.cargandoEmpresa = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cargandoEmpresa = false;
+        this.mensajeErrorEmpresa = 'No se pudieron cargar los datos de compras de la empresa.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  irNuevaCargaEmpresa(): void {
+    this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'compras', 'empresa', 'nueva']);
+  }
+
+  irCargarDatosEmpresa(): void {
+    this.irNuevaCargaEmpresa();
+  }
+
+  verDatosEmpresa(carga: CargaEmpresaComprasItem): void {
+    this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'compras', 'empresa', carga.idCargaEmpresa]);
+  }
+
+  async eliminarCargaEmpresa(carga: CargaEmpresaComprasItem): Promise<void> {
+    const confirmado = await this.modalService.open({
+      type: 'confirm',
+      title: 'Eliminar Datos de Compras de la Empresa',
+      message: `¿Eliminar definitivamente el archivo "${carga.nombreOriginal}" del periodo ${this.formatearPeriodo(carga.periodo)}? Se eliminarán sus registros y observaciones, y el match del periodo quedará invalidado.`,
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Cancelar'
+    });
+    if (!confirmado) return;
+
+    this.loadingService.show();
+    this.workspaceService.eliminarCargaEmpresa(carga.idCargaEmpresa).subscribe({
+      next: () => {
+        this.loadingService.hide();
+        this.modalService.open({
+          type: 'info',
+          title: 'Archivo Eliminado',
+          message: `El archivo "${carga.nombreOriginal}" fue eliminado correctamente.`
+        });
+        this.cargarCargasEmpresa();
+        this.cargarPanelMatch();
+      },
+      error: (err) => {
+        this.loadingService.hide();
+        this.modalService.open({ type: 'error', title: 'Error', message: err?.message || 'No se pudo eliminar el archivo.' });
+      }
+    });
+  }
+
+  // ------------------------------------------------------------------
+  // Pestaña 3 — Match de Información
+  // ------------------------------------------------------------------
+
+  cargarPanelMatch(): void {
+    this.cargandoMatch = true;
+    this.mensajeErrorMatch = null;
+    this.cdr.detectChanges();
+    this.workspaceService.obtenerPanelMatch().subscribe({
+      next: (items) => {
+        this.panelMatch = items;
+        this.cargandoMatch = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cargandoMatch = false;
+        this.mensajeErrorMatch = 'No se pudo cargar el estado del match de compras por periodo.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  puedeEjecutarMatch(item: PanelMatchComprasItem): boolean {
+    return item.sireCargado && item.empresaCargada;
+  }
+
+  async ejecutarMatch(item: PanelMatchComprasItem): Promise<void> {
+    if (!this.puedeEjecutarMatch(item)) return;
+
+    const confirmado = await this.modalService.open({
+      type: 'confirm',
+      title: item.match ? 'Re-ejecutar Match de Compras' : 'Ejecutar Match de Compras',
+      message: `Se cruzarán los comprobantes de SIRE contra los datos de compras de la empresa para ${this.formatearPeriodo(item.periodo)}. ¿Desea continuar?`,
+      confirmText: 'Sí, ejecutar',
+      cancelText: 'Cancelar'
+    });
+    if (!confirmado) return;
+
+    this.loadingService.show();
+    this.workspaceService.ejecutarMatch(item.periodo).subscribe({
+      next: (resumen) => {
+        this.loadingService.hide();
+        this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'compras', 'match', resumen.idMatch]);
+      },
+      error: async (err) => {
+        this.loadingService.hide();
+        await this.modalService.open({
+          type: 'error',
+          title: 'No se pudo ejecutar el match',
+          message: err?.message || 'Ocurrió un error al cruzar las compras.',
+          confirmText: 'Volver'
+        });
+      }
+    });
+  }
+
+  verMatch(item: PanelMatchComprasItem): void {
+    if (!item.match) return;
+    this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'compras', 'match', item.match.idMatch]);
+  }
+
+  formatearFecha(fechaStr?: string): string {
+    if (!fechaStr) return '-';
+    try {
+      const f = new Date(fechaStr);
+      return f.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch {
+      return fechaStr;
+    }
   }
 
   cargarCargasCompras(): void {

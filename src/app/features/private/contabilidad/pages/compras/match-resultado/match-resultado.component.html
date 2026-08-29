@@ -1,0 +1,171 @@
+<div class="space-y-2 w-full">
+  <!-- Cabecera Compacta (Breadcrumb + Acciones) -->
+  <div class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-2">
+    <div class="flex items-center gap-2 text-xs flex-wrap">
+      <a routerLink="/home/contabilidad" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+        Empresas
+      </a>
+      <span class="text-slate-300">/</span>
+      <a [routerLink]="['/home/contabilidad/empresa', idEmpresa]" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">{{ nombreEmpresa }}</a>
+      <span class="text-slate-300">/</span>
+      <a [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'compras']" [queryParams]="{ tab: 'match' }" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">Compras</a>
+      <span class="text-slate-300">/</span>
+      <span class="font-semibold text-slate-800 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md">
+        Match Compras · {{ formatearPeriodo(resumen?.periodo) }}
+      </span>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <a
+        [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'compras']"
+        [queryParams]="{ tab: 'match' }"
+        class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Volver
+      </a>
+      <button
+        type="button"
+        (click)="reejecutar()"
+        class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs shadow-emerald-500/20"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+        Re-ejecutar
+      </button>
+      <button
+        *ngIf="totalCambiosPendientes > 0"
+        type="button"
+        (click)="guardarCambios()"
+        [disabled]="guardando"
+        class="px-4 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold shadow-sm shadow-violet-500/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        Guardar Cambios ({{ totalCambiosPendientes }})
+      </button>
+    </div>
+  </div>
+
+  <!-- Métricas y KPIs de Match -->
+  <div *ngIf="resumen" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div class="text-[11px] font-semibold text-slate-400 uppercase">Coincidentes</div>
+      <div class="text-xl font-bold text-emerald-600 mt-1">{{ resumen.totalCoincidentes }}</div>
+      <div class="text-[10px] text-slate-400 mt-0.5">100% compatibles</div>
+    </div>
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div class="text-[11px] font-semibold text-slate-400 uppercase">Conflictos</div>
+      <div class="text-xl font-bold text-amber-600 mt-1">{{ resumen.totalConflictos }}</div>
+      <div class="text-[10px] text-slate-400 mt-0.5">Diferencia de importes/datos</div>
+    </div>
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div class="text-[11px] font-semibold text-slate-400 uppercase">Solo en SIRE</div>
+      <div class="text-xl font-bold text-indigo-600 mt-1">{{ resumen.totalSoloSire }}</div>
+      <div class="text-[10px] text-slate-400 mt-0.5">No están en la empresa</div>
+    </div>
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div class="text-[11px] font-semibold text-slate-400 uppercase">Solo en Empresa</div>
+      <div class="text-xl font-bold text-violet-600 mt-1">{{ resumen.totalSoloEmpresa }}</div>
+      <div class="text-[10px] text-slate-400 mt-0.5">No están en SUNAT</div>
+    </div>
+  </div>
+
+  <!-- Filtro y Búsqueda -->
+  <div class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+    <div class="flex items-center gap-1.5 flex-wrap">
+      <button
+        type="button"
+        (click)="filtroResultado = 'Todos'"
+        class="px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+        [ngClass]="filtroResultado === 'Todos' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'">
+        Todos ({{ detalles.length }})
+      </button>
+      <button
+        type="button"
+        (click)="filtroResultado = 'Coincidente'"
+        class="px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+        [ngClass]="filtroResultado === 'Coincidente' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'">
+        Coincidentes ({{ resumen?.totalCoincidentes || 0 }})
+      </button>
+      <button
+        type="button"
+        (click)="filtroResultado = 'Conflicto'"
+        class="px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+        [ngClass]="filtroResultado === 'Conflicto' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'">
+        Conflictos ({{ resumen?.totalConflictos || 0 }})
+      </button>
+      <button
+        type="button"
+        (click)="filtroResultado = 'SoloSire'"
+        class="px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+        [ngClass]="filtroResultado === 'SoloSire' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'">
+        Solo SIRE ({{ resumen?.totalSoloSire || 0 }})
+      </button>
+      <button
+        type="button"
+        (click)="filtroResultado = 'SoloEmpresa'"
+        class="px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+        [ngClass]="filtroResultado === 'SoloEmpresa' ? 'bg-violet-600 text-white' : 'bg-violet-50 text-violet-700 hover:bg-violet-100'">
+        Solo Empresa ({{ resumen?.totalSoloEmpresa || 0 }})
+      </button>
+    </div>
+
+    <div class="relative min-w-[240px]">
+      <input
+        type="text"
+        [(ngModel)]="filtroTexto"
+        placeholder="Buscar por RUC, serie, proveedor..."
+        class="w-full pl-3 pr-7 py-1 text-xs border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+      />
+      <button *ngIf="filtroTexto" (click)="filtroTexto = ''" class="absolute right-2 top-1 text-slate-400 hover:text-slate-600 text-xs font-bold">✕</button>
+    </div>
+  </div>
+
+  <!-- Tabla de Detalle Consolidado del Match -->
+  <div *ngIf="!cargando && !mensajeError" class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs text-left">
+        <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100 uppercase text-[10px]">
+          <tr>
+            <th class="py-3 px-4 text-center">Estado</th>
+            <th class="py-3 px-4">Comprobante</th>
+            <th class="py-3 px-4">Proveedor</th>
+            <th class="py-3 px-4 text-right">BI SIRE</th>
+            <th class="py-3 px-4 text-right">BI Empresa</th>
+            <th class="py-3 px-4 text-right">Total SIRE</th>
+            <th class="py-3 px-4 text-right">Total Empresa</th>
+            <th class="py-3 px-4">Detalle / Diferencia</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-700">
+          <tr *ngFor="let d of detallesFiltrados" class="hover:bg-slate-50/70">
+            <td class="py-3 px-4 text-center">
+              <span *ngIf="d.resultado === 'Coincidente'" class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-[10px] border border-emerald-200">Coincide</span>
+              <span *ngIf="d.resultado === 'Conflicto'" class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-bold text-[10px] border border-amber-200">Conflicto</span>
+              <span *ngIf="d.resultado === 'SoloSire'" class="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold text-[10px] border border-indigo-200">Solo SIRE</span>
+              <span *ngIf="d.resultado === 'SoloEmpresa'" class="px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 font-bold text-[10px] border border-violet-200">Solo Empresa</span>
+            </td>
+            <td class="py-3 px-4 font-mono font-medium">
+              <div>{{ d.consolidado.serie }}-{{ d.consolidado.numero }}</div>
+              <div class="text-[10px] text-slate-400 font-sans">{{ d.consolidado.fechaEmision }}</div>
+            </td>
+            <td class="py-3 px-4">
+              <div class="font-bold text-slate-800 truncate max-w-[200px]" [title]="d.consolidado.razonSocial">{{ d.consolidado.razonSocial }}</div>
+              <div class="text-[10px] text-slate-400 font-mono">RUC: {{ d.consolidado.nroDocIdentidad }}</div>
+            </td>
+            <td class="py-3 px-4 text-right font-mono">{{ (d.sire?.biGravada || 0) | number:'1.2-2' }}</td>
+            <td class="py-3 px-4 text-right font-mono">{{ (d.empresa?.biGravada || 0) | number:'1.2-2' }}</td>
+            <td class="py-3 px-4 text-right font-mono font-bold">{{ (d.sire?.totalCp || 0) | number:'1.2-2' }}</td>
+            <td class="py-3 px-4 text-right font-mono font-bold">{{ (d.empresa?.totalCp || 0) | number:'1.2-2' }}</td>
+            <td class="py-3 px-4 text-xs">
+              <span *ngIf="d.camposConflicto" class="text-amber-700 font-medium">{{ d.camposConflicto }}</span>
+              <span *ngIf="!d.camposConflicto && d.resultado === 'Coincidente'" class="text-emerald-600">Sin diferencias</span>
+              <span *ngIf="d.resultado === 'SoloSire'" class="text-indigo-600">Pendiente de registro interno</span>
+              <span *ngIf="d.resultado === 'SoloEmpresa'" class="text-violet-600">No reportado en SUNAT</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -7,6 +7,8 @@ import { VentasWorkspaceService } from '../../../services/ventas-workspace.servi
 import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
 import { ModalService } from '../../../../../../shared/ui/modal/modal.service';
 
+import * as XLSX from 'xlsx';
+
 @Component({
   selector: 'app-datos-empresa-nueva',
   standalone: true,
@@ -152,20 +154,87 @@ export class DatosEmpresaNuevaComponent implements OnInit {
   }
 
   descargarPlantilla(): void {
-    const cabecera = 'Tipo CP;Serie;Número;Fecha Emisión;Tipo Doc;N° Doc;Razón Social;Base Imponible;IGV;Total;Moneda';
-    const ejemplos = [
-      '01;F001;00000001;2026-07-05;6;20512345678;COMERCIAL ANDINA S.A.C.;5000.00;900.00;5900.00;PEN',
-      '03;B001;00000008;2026-07-18;1;08123456;PEREZ LOPEZ, JUAN CARLOS;150.00;27.00;177.00;PEN',
-      '07;F001;00000025;2026-07-24;6;20123456789;FARMACIA CENTRAL S.A.C.;-1000.00;-180.00;-1180.00;PEN'
+    // Cabeceras en mayúsculas limpias
+    const cabeceras = [
+      'FECHA EMISION',
+      'TIPO CP',
+      'SERIE',
+      'NUMERO',
+      'TIPO DOC',
+      'NRO DOC CLIENTE',
+      'RAZON SOCIAL',
+      'BASE IMPONIBLE',
+      'IGV',
+      'TOTAL CP',
+      'MONEDA'
     ];
-    const csv = '\uFEFF' + [cabecera, ...ejemplos].join('\r\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'plantilla_datos_empresa.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+
+    // 2 filas de ejemplo con ceros a la izquierda preservados
+    const filasEjemplo = [
+      [
+        '2026-05-04',
+        '01',
+        'F001',
+        '00215',
+        '6',
+        '20504012345',
+        'DEBEL INVERSIONES S.A.C.',
+        5000.00,
+        900.00,
+        5900.00,
+        'PEN'
+      ],
+      [
+        '2026-05-10',
+        '03',
+        'B001',
+        '000450',
+        '1',
+        '08123456',
+        'MENDOZA BAZAN CARLOS ENRIQUE',
+        250.00,
+        45.00,
+        295.00,
+        'PEN'
+      ]
+    ];
+
+    const data = [cabeceras, ...filasEjemplo];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    // Ajustar anchos de columnas
+    ws['!cols'] = [
+      { wch: 18 }, // FECHA EMISION
+      { wch: 12 }, // TIPO CP
+      { wch: 10 }, // SERIE
+      { wch: 16 }, // NUMERO
+      { wch: 12 }, // TIPO DOC
+      { wch: 22 }, // NRO DOC CLIENTE
+      { wch: 38 }, // RAZON SOCIAL
+      { wch: 18 }, // BASE IMPONIBLE
+      { wch: 14 }, // IGV
+      { wch: 16 }, // TOTAL CP
+      { wch: 12 }  // MONEDA
+    ];
+
+    // Formatear columnas como texto explícito (@) para preservar ceros a la izquierda (ej. 00215, 08123456, F001)
+    const columnasTexto = [1, 2, 3, 4, 5]; // B: TIPO CP, C: SERIE, D: NUMERO, E: TIPO DOC, F: NRO DOC CLIENTE
+    for (let r = 1; r <= 1000; r++) {
+      for (const col of columnasTexto) {
+        const cellRef = XLSX.utils.encode_cell({ r, c: col });
+        if (!ws[cellRef]) {
+          ws[cellRef] = { t: 's', v: '', z: '@' };
+        } else {
+          ws[cellRef].z = '@';
+          ws[cellRef].t = 's';
+        }
+      }
+    }
+    ws['!ref'] = 'A1:K1000';
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Ventas_Empresa');
+    XLSX.writeFile(wb, 'plantilla_ventas_empresa.xlsx');
   }
 
   // --------------------------------------------------------------------------

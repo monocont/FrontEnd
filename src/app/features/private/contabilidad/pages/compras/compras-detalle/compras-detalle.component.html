@@ -1,4 +1,4 @@
-<div class="space-y-2 w-full">
+<div [ngClass]="esNuevaCarga ? 'space-y-4 max-w-4xl mx-auto pb-4' : 'space-y-2 w-full'">
   <!-- Cabecera Compacta (Breadcrumb + Info de Carga + Acciones) -->
   <div class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-2">
     <!-- Breadcrumb & Metadatos -->
@@ -32,18 +32,6 @@
       >
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
         <span>{{ errores.length }} Observaciones</span>
-      </button>
-
-      <!-- Botón Exportar Excel/CSV -->
-      <button
-        *ngIf="compras.length > 0"
-        type="button"
-        (click)="exportarCSV()"
-        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold border border-emerald-200 transition-colors cursor-pointer"
-        title="Descargar datos en CSV"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-        <span>Exportar CSV</span>
       </button>
 
       <!-- Botón Volver -->
@@ -133,39 +121,61 @@
     <button type="button" (click)="mensajeError = null" class="text-rose-500 hover:text-rose-700">✕</button>
   </div>
 
-  <!-- SECCIÓN DROPZONE: Compacto para cuando es Nueva Carga -->
-  <div *ngIf="esNuevaCarga || !idCarga" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs mb-2">
-    <div class="max-w-xl mx-auto text-center">
-      <h2 class="text-sm font-bold text-slate-800">Cargar Archivo SIRE RCE Compras (.txt / .csv)</h2>
-      <p class="text-[11px] text-slate-400 mt-0.5">
-        Procesamiento y validación de ~80 campos, crédito fiscal, detracciones y transaccionalidad total.
-      </p>
+  <!-- SECCIÓN DROPZONE: Estandarizada idéntica a datos-empresa-nueva -->
+  <ng-container *ngIf="esNuevaCarga || !idCarga">
+    <!-- Hero Breve y Compacto con Pasos en Línea -->
+    <div class="bg-white px-5 py-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+          <span class="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span>
+          <h1 class="text-lg font-bold text-slate-800 tracking-tight">Cargar Archivo SIRE RCE (SUNAT)</h1>
+        </div>
+        <span class="text-[11px] text-slate-400">Procesamiento y validación de comprobantes de compras RCE con control de duplicados</span>
+      </div>
 
-      <!-- Selector de Periodo de Carga -->
-      <div class="mt-3 flex flex-col sm:flex-row items-center justify-center gap-2">
-        <label class="text-xs font-semibold text-slate-600">Periodo Contable a Cargar:</label>
-        <div class="relative">
+      <!-- Pasos compactos horizontales -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 border-t border-slate-100">
+        <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-600">
+          <span class="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0 text-[10px]">1</span>
+          <span class="truncate">Descarga archivo de SUNAT SIRE</span>
+        </div>
+        <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-600">
+          <span class="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0 text-[10px]">2</span>
+          <span class="truncate">Selecciona el periodo contable</span>
+        </div>
+        <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-600">
+          <span class="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0 text-[10px]">3</span>
+          <span class="truncate">Sube el archivo (.zip / .txt / .csv)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario de Carga Compacto -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4">
+      <!-- Selector de Periodo -->
+      <div class="pb-3 border-b border-slate-100">
+        <label class="text-xs font-bold text-slate-700 block mb-1.5">Periodo contable a cargar</label>
+        <div class="relative inline-block">
           <button
             type="button"
             (click)="toggleSelectorPeriodo()"
-            class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white text-slate-800 font-semibold text-xs transition-all shadow-xs cursor-pointer"
+            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs transition-all shadow-xs cursor-pointer"
           >
-            <svg class="w-4 h-4 text-emerald-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="w-4 h-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>
             </svg>
-            <span>{{ etiquetaBotonPeriodoCarga }}</span>
+            <span [class]="periodoSeleccionado || periodoParam ? 'text-slate-800' : 'text-slate-400'">{{ etiquetaBotonPeriodoCarga }}</span>
             <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
 
-          <!-- Popup Calendario Mes/Año para Nueva Carga -->
-          <div *ngIf="mostrarSelectorPeriodo" class="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 bg-white border border-slate-200 rounded-2xl p-4 shadow-2xl w-64 animate-fade-in text-left">
-            <!-- Cabecera de Año -->
+          <!-- Dropdown Popup de Selección de Periodo -->
+          <div *ngIf="mostrarSelectorPeriodo" class="absolute left-0 top-full mt-2 z-50 bg-white border border-slate-200 rounded-2xl p-4 shadow-2xl w-64 animate-fade-in text-left">
             <div class="flex items-center justify-between mb-3 px-1">
               <button
                 type="button"
                 (click)="navegarAnioPeriodo(-1)"
                 [disabled]="!anioPeriodoAnteriorHabilitado()"
-                class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
               </button>
@@ -174,90 +184,85 @@
                 type="button"
                 (click)="navegarAnioPeriodo(1)"
                 [disabled]="!anioPeriodoSiguienteHabilitado()"
-                class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
               </button>
             </div>
-
-            <!-- Cuadrícula de 12 Meses -->
-            <div class="grid grid-cols-3 gap-1.5 mb-3">
+            <div class="grid grid-cols-3 gap-1.5 mb-2">
               <button
                 *ngFor="let m of listaMeses"
                 type="button"
                 (click)="seleccionarMesPeriodo(m.value)"
                 [disabled]="mesPeriodoBloqueado(m.value)"
                 [class]="(m.value === mesSeleccionado && anioSelector === anioSeleccionado)
-                  ? 'py-2 rounded-xl text-xs font-bold bg-emerald-500 text-white shadow-xs'
+                  ? 'py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-xs'
                   : (mesPeriodoBloqueado(m.value)
                     ? 'py-2 rounded-xl text-xs font-semibold bg-slate-50 text-slate-300 opacity-40 cursor-not-allowed'
-                    : 'py-2 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors cursor-pointer')"
+                    : 'py-2 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 transition-colors cursor-pointer')"
               >
                 {{ m.nombre }}
-              </button>
-            </div>
-
-            <div class="pt-2 border-t border-slate-100 flex justify-end">
-              <button
-                type="button"
-                (click)="cerrarSelectorPeriodo()"
-                class="text-[11px] font-medium text-slate-400 hover:text-slate-600 cursor-pointer"
-              >
-                Cerrar
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="mt-3 border border-dashed border-slate-300 rounded-2xl p-4 hover:border-emerald-400 transition-all bg-slate-50/50">
-        <input
-          type="file"
-          id="fileCompra"
-          (change)="onFileSelected($event)"
-          accept=".txt,.csv"
-          class="hidden"
-        />
-        <label for="fileCompra" class="cursor-pointer block">
-          <p class="text-xs font-semibold text-slate-700">Haz clic aquí para seleccionar el archivo oficial SUNAT RCE</p>
-          <p class="text-[10px] text-slate-400">Archivos soportados: .txt o .csv estructurado SUNAT RCE</p>
-        </label>
-
-        <div *ngIf="archivoSeleccionado" class="mt-2 p-2.5 bg-white rounded-xl border border-emerald-100 flex items-center justify-between text-left shadow-xs">
-          <div class="truncate mr-2 flex items-center gap-2">
-            <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <div class="truncate">
-              <span class="text-xs font-semibold text-slate-800">{{ archivoSeleccionado.name }}</span>
-              <span class="text-[10px] text-slate-400 ml-2">({{ (archivoSeleccionado.size / 1024) | number:'1.1-2' }} KB)</span>
+      <!-- Zona Drag & Drop Compacta -->
+      <div>
+        <label class="text-xs font-bold text-slate-700 block mb-1.5">Archivo oficial SUNAT SIRE (.zip / .txt / .csv)</label>
+        <div class="rounded-2xl border-2 border-dashed p-5 text-center transition-colors hover:border-indigo-300 bg-slate-50/50 border-slate-200">
+          <input
+            type="file"
+            id="fileCompra"
+            (change)="onFileSelected($event)"
+            accept=".zip,.txt,.csv"
+            class="hidden"
+          />
+          <label *ngIf="!archivoSeleccionado" for="fileCompra" class="cursor-pointer flex flex-col items-center gap-1.5 py-2">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
             </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Listo</span>
+            <span class="text-xs font-semibold text-slate-700">Arrastra tu archivo o haz clic para seleccionarlo</span>
+            <span class="text-[10px] text-slate-400 font-mono">Archivos soportados: .zip, .txt o .csv estructurado SUNAT RCE</span>
+          </label>
+
+          <div *ngIf="archivoSeleccionado" class="flex items-center justify-between gap-3 bg-white border border-indigo-100 rounded-xl px-4 py-2.5 shadow-xs max-w-md mx-auto">
+            <div class="flex items-center gap-2.5 min-w-0 text-left">
+              <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              </div>
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-slate-800 truncate">{{ archivoSeleccionado.name }}</p>
+                <p class="text-[10px] text-slate-400 font-mono">{{ archivoSeleccionado.size / 1024 | number:'1.0-0' }} KB</p>
+              </div>
+            </div>
             <button
               type="button"
-              (click)="removerArchivoSeleccionado(); $event.stopPropagation()"
-              class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-              title="Quitar archivo y seleccionar otro"
+              (click)="removerArchivoSeleccionado()"
+              class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
+              title="Quitar archivo"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
           </div>
         </div>
       </div>
 
-      <div class="mt-3 flex justify-center">
+      <!-- Botón de Acción Centrado Estandarizado -->
+      <div class="flex items-center justify-center pt-3 border-t border-slate-100">
         <button
           type="button"
           (click)="ejecutarCarga()"
           [disabled]="!archivoSeleccionado || cargando"
-          class="py-2 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold text-xs transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
+          class="px-8 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs shadow-indigo-500/20 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <svg *ngIf="cargando" class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-          <span>{{ cargando ? 'Procesando e Importando...' : 'Iniciar Carga Masiva' }}</span>
+          <svg *ngIf="cargando" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+          {{ cargando ? 'Procesando e Importando...' : 'Cargar archivo' }}
         </button>
       </div>
     </div>
-  </div>
+  </ng-container>
 
   <!-- MODAL DE OBSERVACIONES / ADVERTENCIAS DE CORRELATIVIDAD -->
   <div
