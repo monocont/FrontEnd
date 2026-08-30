@@ -316,10 +316,29 @@ export class VentasListComponent implements OnInit {
     this.cargandoEmpresa = true;
     this.mensajeErrorEmpresa = null;
     this.cdr.detectChanges();
-    this.workspaceService.obtenerCargasEmpresa().subscribe({
-      next: (items) => {
-        this.cargasEmpresa = items;
+
+    this.operacionesService.listarCargas(this.ruc, 'VentasEmpresa', this.periodoSeleccionado, 1, 50).subscribe({
+      next: (res: any) => {
         this.cargandoEmpresa = false;
+        const data = res?.data || res?.Data || res;
+        let list: any[] = [];
+        if (Array.isArray(data)) {
+          list = data;
+        } else if (data && Array.isArray(data.items)) {
+          list = data.items;
+        } else if (res && Array.isArray(res.items)) {
+          list = res.items;
+        }
+
+        this.cargasEmpresa = list.map(c => ({
+          idCargaEmpresa: c.idCarga,
+          periodo: c.periodo,
+          nombreOriginal: c.nombreOriginal,
+          numRegistros: c.numRegistros,
+          numObservaciones: c.numRegistrosError,
+          fechaCreacion: c.fechaCreacion
+        }));
+
         this.cdr.detectChanges();
       },
       error: () => {
@@ -342,14 +361,14 @@ export class VentasListComponent implements OnInit {
     const confirmado = await this.modalService.open({
       type: 'confirm',
       title: 'Eliminar Datos de la Empresa',
-      message: `¿Eliminar definitivamente el archivo "${carga.nombreOriginal}" del periodo ${this.formatearPeriodo(carga.periodo)}? Se eliminarán sus registros y observaciones, y el match del periodo quedará invalidado.`,
+      message: `¿Eliminar definitivamente el archivo "${carga.nombreOriginal}" del periodo ${this.formatearPeriodo(carga.periodo)}? Se eliminarán sus registros y observaciones.`,
       confirmText: 'Sí, eliminar',
       cancelText: 'Cancelar'
     });
     if (!confirmado) return;
 
     this.loadingService.show();
-    this.workspaceService.eliminarCargaEmpresa(carga.idCargaEmpresa).subscribe({
+    this.operacionesService.eliminarCarga(carga.idCargaEmpresa).subscribe({
       next: () => {
         this.loadingService.hide();
         this.modalService.open({
@@ -358,11 +377,10 @@ export class VentasListComponent implements OnInit {
           message: `El archivo "${carga.nombreOriginal}" fue eliminado correctamente.`
         });
         this.cargarCargasEmpresa();
-        this.cargarPanelMatch();
       },
       error: (err) => {
         this.loadingService.hide();
-        this.modalService.open({ type: 'error', title: 'Error', message: err?.message || 'No se pudo eliminar el archivo.' });
+        this.modalService.open({ type: 'error', title: 'Error', message: err?.error?.message || err?.message || 'No se pudo eliminar el archivo.' });
       }
     });
   }

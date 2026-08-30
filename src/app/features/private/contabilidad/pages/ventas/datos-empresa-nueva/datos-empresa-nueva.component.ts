@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EmpresaContextService } from '../../../../../../core/services/empresa-context.service';
 import { VentasWorkspaceService } from '../../../services/ventas-workspace.service';
+import { OperacionesService } from '../../../services/operaciones.service';
 import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
 import { ModalService } from '../../../../../../shared/ui/modal/modal.service';
 
@@ -62,6 +63,11 @@ export class DatosEmpresaNuevaComponent implements OnInit {
   get nombreEmpresa(): string {
     const empresa = this.empresaContext.empresa();
     return empresa?.razonSocial || this.idEmpresa;
+  }
+
+  get ruc(): string {
+    const empresa = this.empresaContext.empresa();
+    return empresa?.ruc || '';
   }
 
   // --------------------------------------------------------------------------
@@ -125,21 +131,50 @@ export class DatosEmpresaNuevaComponent implements OnInit {
   }
 
   // --------------------------------------------------------------------------
-  // Archivo
+  // Archivo & Drag and Drop
   // --------------------------------------------------------------------------
+
+  arrastrando: boolean = false;
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.arrastrando = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.arrastrando = false;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.arrastrando = false;
+
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+      const file = event.dataTransfer.files[0];
+      this.asignarArchivo(file);
+    }
+  }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    this.asignarArchivo(file);
+  }
 
-    if (!/\.(xlsx|csv)$/i.test(file.name)) {
+  private asignarArchivo(file: File): void {
+    if (!/\.(xlsx|xls|csv)$/i.test(file.name)) {
       this.modalService.open({
         type: 'warning',
         title: 'Formato no permitido',
-        message: 'Solo se aceptan archivos .xlsx o .csv generados según la plantilla del sistema.'
+        message: 'Solo se aceptan archivos .xlsx, .xls o .csv generados según la plantilla del sistema.'
       });
-      input.value = '';
+      const input = document.getElementById('archivoEmpresaInput') as HTMLInputElement | null;
+      if (input) input.value = '';
       return;
     }
     this.archivoSeleccionado = file;
@@ -161,12 +196,10 @@ export class DatosEmpresaNuevaComponent implements OnInit {
       'SERIE',
       'NUMERO',
       'TIPO DOC',
-      'NRO DOC CLIENTE',
-      'RAZON SOCIAL',
-      'BASE IMPONIBLE',
-      'IGV',
+      'RUC / DOC CLIENTE',
       'TOTAL CP',
-      'MONEDA'
+      'MONEDA',
+      'TIPO CAMBIO'
     ];
 
     // 2 filas de ejemplo con ceros a la izquierda preservados
@@ -178,11 +211,9 @@ export class DatosEmpresaNuevaComponent implements OnInit {
         '00215',
         '6',
         '20504012345',
-        'DEBEL INVERSIONES S.A.C.',
-        5000.00,
-        900.00,
         5900.00,
-        'PEN'
+        'PEN',
+        1.000
       ],
       [
         '2026-05-10',
@@ -191,11 +222,9 @@ export class DatosEmpresaNuevaComponent implements OnInit {
         '000450',
         '1',
         '08123456',
-        'MENDOZA BAZAN CARLOS ENRIQUE',
-        250.00,
-        45.00,
         295.00,
-        'PEN'
+        'USD',
+        3.750
       ]
     ];
 
@@ -209,16 +238,14 @@ export class DatosEmpresaNuevaComponent implements OnInit {
       { wch: 10 }, // SERIE
       { wch: 16 }, // NUMERO
       { wch: 12 }, // TIPO DOC
-      { wch: 22 }, // NRO DOC CLIENTE
-      { wch: 38 }, // RAZON SOCIAL
-      { wch: 18 }, // BASE IMPONIBLE
-      { wch: 14 }, // IGV
+      { wch: 24 }, // RUC / DOC CLIENTE
       { wch: 16 }, // TOTAL CP
-      { wch: 12 }  // MONEDA
+      { wch: 12 }, // MONEDA
+      { wch: 14 }  // TIPO CAMBIO
     ];
 
     // Formatear columnas como texto explícito (@) para preservar ceros a la izquierda (ej. 00215, 08123456, F001)
-    const columnasTexto = [1, 2, 3, 4, 5]; // B: TIPO CP, C: SERIE, D: NUMERO, E: TIPO DOC, F: NRO DOC CLIENTE
+    const columnasTexto = [1, 2, 3, 4, 5]; // B: TIPO CP, C: SERIE, D: NUMERO, E: TIPO DOC, F: RUC / DOC CLIENTE
     for (let r = 1; r <= 1000; r++) {
       for (const col of columnasTexto) {
         const cellRef = XLSX.utils.encode_cell({ r, c: col });
@@ -230,7 +257,7 @@ export class DatosEmpresaNuevaComponent implements OnInit {
         }
       }
     }
-    ws['!ref'] = 'A1:K1000';
+    ws['!ref'] = 'A1:I1000';
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Ventas_Empresa');
@@ -241,22 +268,24 @@ export class DatosEmpresaNuevaComponent implements OnInit {
   // Carga
   // --------------------------------------------------------------------------
 
+  private operacionesService = inject(OperacionesService);
+
   async ejecutarCarga(): Promise<void> {
     if (!this.archivoSeleccionado || !this.periodoSeleccionado) return;
 
     this.cargando = true;
     this.cdr.detectChanges();
-    this.workspaceService.cargarArchivoEmpresa(this.periodoSeleccionado, this.archivoSeleccionado).subscribe({
+    this.operacionesService.cargarVentasEmpresa(this.ruc, this.periodoSeleccionado, this.archivoSeleccionado).subscribe({
       next: async (res) => {
         this.cargando = false;
         this.loadingService.hide();
         await this.modalService.open({
           type: 'info',
           title: 'Carga Completada',
-          message: `${res.mensaje} Revisa las observaciones y corrige los datos si es necesario.`,
+          message: `${res.observaciones || 'Carga procesada correctamente.'} Revisa las observaciones y corrige los datos si es necesario.`,
           confirmText: 'Ir a los datos'
         });
-        this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'ventas', 'empresa', res.idCargaEmpresa]);
+        this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'ventas', 'empresa', res.idCarga]);
       },
       error: async (err) => {
         this.cargando = false;
@@ -264,7 +293,7 @@ export class DatosEmpresaNuevaComponent implements OnInit {
         await this.modalService.open({
           type: 'error',
           title: 'Error al Cargar',
-          message: err?.message || 'No se pudo procesar el archivo.',
+          message: err?.error?.message || err?.message || 'No se pudo procesar el archivo.',
           confirmText: 'Volver'
         });
       }

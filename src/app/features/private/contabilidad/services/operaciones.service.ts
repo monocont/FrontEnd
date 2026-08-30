@@ -97,6 +97,26 @@ export interface VentaItem {
   modificado?: boolean;
 }
 
+export interface VentaEmpresaItem {
+  idVentaEmpresa: string;
+  idCarga?: string;
+  empresaRuc?: string;
+  periodo?: string;
+  numeroLinea: number;
+  fechaEmision: string;
+  codigoTipoCp: string;
+  serie: string;
+  numero: string;
+  codigoTipoDocIdentidad: string;
+  nroDocIdentidad: string;
+  totalCp: number;
+  codigoMoneda: string;
+  tipoCambio: number;
+  esNuevo?: boolean;
+  editando?: boolean;
+  modificado?: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class OperacionesService {
   private http = inject(HttpClient);
@@ -136,9 +156,20 @@ export class OperacionesService {
       .pipe(map(res => this.extractData<CargarArchivoSunatDTO>(res)));
   }
 
+  cargarVentasEmpresa(empresaRuc: string, periodo: string, file: File): Observable<CargarArchivoSunatDTO> {
+    const formData = new FormData();
+    formData.append('EmpresaRuc', empresaRuc);
+    formData.append('Periodo', periodo);
+    formData.append('Archivo', file, file.name);
+
+    return this.http
+      .post<any>(`${this.baseUrl}/cargas/ventas-empresa`, formData, { withCredentials: true })
+      .pipe(map(res => this.extractData<CargarArchivoSunatDTO>(res)));
+  }
+
   listarCargas(
     empresaRuc: string,
-    tipoArchivo: 'Ventas' | 'Compras' | string,
+    tipoArchivo: 'Ventas' | 'Compras' | 'VentasEmpresa' | 'ComprasEmpresa' | string,
     periodo?: string,
     pageNumber: number = 1,
     pageSize: number = 20
@@ -203,6 +234,19 @@ export class OperacionesService {
       );
   }
 
+  listarVentasEmpresaPorCarga(idCarga: string): Observable<VentaEmpresaItem[]> {
+    return this.http
+      .get<any>(`${this.baseUrl}/cargas/${idCarga}/ventas-empresa`, { withCredentials: true })
+      .pipe(
+        map(res => {
+          const data = this.extractData<any>(res);
+          if (Array.isArray(data)) return data as VentaEmpresaItem[];
+          if (data && Array.isArray(data.items)) return data.items as VentaEmpresaItem[];
+          return [];
+        })
+      );
+  }
+
   actualizarVentas(
     idCarga: string,
     eliminadosIds: string[] = [],
@@ -212,6 +256,18 @@ export class OperacionesService {
     const body = { eliminadosIds, nuevos, modificados };
     return this.http
       .post<any>(`${this.baseUrl}/cargas/${idCarga}/actualizar-ventas`, body, { withCredentials: true })
+      .pipe(map(res => this.extractData<any>(res)));
+  }
+
+  actualizarVentasEmpresa(
+    idCarga: string,
+    eliminadosIds: string[] = [],
+    nuevos: any[] = [],
+    modificados: any[] = []
+  ): Observable<{ idCarga: string; mensaje: string; numRegistros: number; numRegistrosError: number; totalGeneral: number }> {
+    const body = { eliminadosIds, nuevos, modificados };
+    return this.http
+      .post<any>(`${this.baseUrl}/cargas/${idCarga}/actualizar-ventas-empresa`, body, { withCredentials: true })
       .pipe(map(res => this.extractData<any>(res)));
   }
 

@@ -6,13 +6,13 @@ import { EmpresaContextService } from '../../../../../../core/services/empresa-c
 import {
   VentasWorkspaceService,
   CargaEmpresaItem,
-  VentaEmpresaItem,
   ObservacionEmpresaItem
 } from '../../../services/ventas-workspace.service';
+import { OperacionesService, VentaEmpresaItem } from '../../../services/operaciones.service';
 import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
 import { ModalService } from '../../../../../../shared/ui/modal/modal.service';
 
-type FilaVenta = VentaEmpresaItem & { esNuevo?: boolean; editando?: boolean; modificado?: boolean };
+type FilaVenta = VentaEmpresaItem & { esNuevo?: boolean; editando?: boolean; modificado?: boolean; razonSocial?: string; biGravada?: number; igvIpm?: number };
 
 interface CriterioOrden {
   columna: string;
@@ -117,6 +117,8 @@ export class DatosEmpresaDetalleComponent implements OnInit {
 
   private readonly meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
 
+  private operacionesService = inject(OperacionesService);
+
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
       this.idEmpresa = params.get('idEmpresa') || '';
@@ -132,15 +134,30 @@ export class DatosEmpresaDetalleComponent implements OnInit {
     this.mensajeError = null;
     this.cdr.detectChanges();
 
-    this.workspaceService.obtenerCargaEmpresa(this.idCargaEmpresa).subscribe({
+    this.operacionesService.obtenerCargaPorId(this.idCargaEmpresa).subscribe({
       next: (carga) => {
-        this.carga = carga;
-        this.workspaceService.obtenerVentasEmpresa(this.idCargaEmpresa).subscribe({
+        this.carga = {
+          idCargaEmpresa: carga.idCarga,
+          periodo: carga.periodo,
+          nombreOriginal: carga.nombreOriginal,
+          numRegistros: carga.numRegistros,
+          numObservaciones: carga.numRegistrosError,
+          fechaCreacion: carga.fechaCreacion
+        };
+
+        this.operacionesService.listarVentasEmpresaPorCarga(this.idCargaEmpresa).subscribe({
           next: (ventas) => {
             this.ventas = ventas;
-            this.workspaceService.obtenerErroresEmpresa(this.idCargaEmpresa).subscribe({
+            this.operacionesService.obtenerErroresCarga(this.idCargaEmpresa).subscribe({
               next: (errores) => {
-                this.errores = errores;
+                this.errores = errores.map(e => ({
+                  numeroLinea: e.numeroLinea,
+                  tipoError: e.tipoError,
+                  campoError: e.campoError || null,
+                  valorLectura: e.valorLectura || null,
+                  mensaje: e.mensaje,
+                  severidad: e.severidad as 'Error' | 'Advertencia'
+                }));
                 this.cargando = false;
                 this.idsParaEliminar = [];
                 this.cdr.detectChanges();
@@ -708,8 +725,8 @@ export class DatosEmpresaDetalleComponent implements OnInit {
       String(orig[campo] ?? '') !== String((fila as any)[campo] ?? '');
 
     if (cambia('codigoTipoCp') || cambia('serie') || cambia('numero') || cambia('fechaEmision') ||
-        cambia('codigoTipoDocIdentidad') || cambia('nroDocIdentidad') || cambia('razonSocial') ||
-        cambia('biGravada') || cambia('igvIpm') || cambia('totalCp') || cambia('codigoMoneda')) {
+        cambia('codigoTipoDocIdentidad') || cambia('nroDocIdentidad') ||
+        cambia('totalCp') || cambia('codigoMoneda') || cambia('tipoCambio')) {
       fila.modificado = true;
     } else {
       fila.modificado = false;
@@ -730,11 +747,9 @@ export class DatosEmpresaDetalleComponent implements OnInit {
       fechaEmision: fechaBase,
       codigoTipoDocIdentidad: '6',
       nroDocIdentidad: '',
-      razonSocial: '',
-      biGravada: 0,
-      igvIpm: 0,
       totalCp: 0,
       codigoMoneda: 'PEN',
+      tipoCambio: 1.0000,
       esNuevo: true,
       editando: true
     };
@@ -781,19 +796,19 @@ export class DatosEmpresaDetalleComponent implements OnInit {
 
     const revisar = [...this.filasNuevas, ...this.filasModificadas];
     for (const fila of revisar) {
-      if (!fila.serie?.trim() || !fila.numero?.trim() || !fila.razonSocial?.trim()) {
+      if (!fila.serie?.trim() || !fila.numero?.trim()) {
         await this.modalService.open({
           type: 'warning',
           title: 'Datos Incompletos',
-          message: `La fila con serie "${fila.serie || '(vacía)'}" debe tener Serie, Número y Razón Social completos.`
+          message: `La fila con serie "${fila.serie || '(vacía)'}" debe tener Serie y Número completos.`
         });
         return;
       }
-      if (isNaN(Number(fila.biGravada)) || isNaN(Number(fila.igvIpm)) || isNaN(Number(fila.totalCp))) {
+      if (isNaN(Number(fila.totalCp)) || Number(fila.totalCp) < 0) {
         await this.modalService.open({
           type: 'warning',
           title: 'Montos Inválidos',
-          message: `El comprobante ${fila.serie}-${fila.numero} tiene montos que no son números válidos.`
+          message: `El comprobante ${fila.serie}-${fila.numero} tiene un importe Total CP inválido.`
         });
         return;
       }
@@ -815,7 +830,7 @@ export class DatosEmpresaDetalleComponent implements OnInit {
     const nuevos = this.filasNuevas.map(v => ({ ...v, esNuevo: undefined, editando: undefined, modificado: undefined }) as VentaEmpresaItem);
     const modificados = this.filasModificadas.map(v => ({ ...v, esNuevo: undefined, editando: undefined, modificado: undefined }) as VentaEmpresaItem);
 
-    this.workspaceService.actualizarVentasEmpresa(this.idCargaEmpresa, this.idsParaEliminar, nuevos, modificados).subscribe({
+    this.operacionesService.actualizarVentasEmpresa(this.idCargaEmpresa, this.idsParaEliminar, nuevos, modificados).subscribe({
       next: async (res) => {
         this.guardando = false;
         this.loadingService.hide();
@@ -834,8 +849,42 @@ export class DatosEmpresaDetalleComponent implements OnInit {
         await this.modalService.open({
           type: 'error',
           title: 'Error al Guardar',
-          message: err?.message || 'No se pudieron guardar los cambios.',
+          message: err?.error?.message || err?.message || 'No se pudieron guardar los cambios.',
           confirmText: 'Volver'
+        });
+      }
+    });
+  }
+
+  async eliminarCarga(): Promise<void> {
+    const confirmado = await this.modalService.open({
+      type: 'confirm',
+      title: 'Eliminar Archivo de Empresa',
+      message: `¿Estás seguro de eliminar el archivo de ventas de la empresa "${this.carga?.nombreOriginal || ''}" y todos sus registros? Esta acción no se puede deshacer.`,
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Cancelar'
+    });
+    if (!confirmado) return;
+
+    this.loadingService.show();
+    this.operacionesService.eliminarCarga(this.idCargaEmpresa).subscribe({
+      next: async () => {
+        this.loadingService.hide();
+        await this.modalService.open({
+          type: 'info',
+          title: 'Archivo Eliminado',
+          message: 'El archivo y sus registros fueron eliminados exitosamente.',
+          confirmText: 'Aceptar'
+        });
+        this.volver();
+      },
+      error: async (err) => {
+        this.loadingService.hide();
+        await this.modalService.open({
+          type: 'error',
+          title: 'Error al Eliminar',
+          message: err?.error?.message || err?.message || 'No se pudo eliminar el archivo.',
+          confirmText: 'Aceptar'
         });
       }
     });
