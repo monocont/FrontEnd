@@ -11,6 +11,7 @@ import {
 import { OperacionesService, VentaEmpresaItem } from '../../../services/operaciones.service';
 import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
 import { ModalService } from '../../../../../../shared/ui/modal/modal.service';
+import { ModalObservacionesComponent } from '../../../../../../shared/ui/modal-observaciones/modal-observaciones.component';
 
 type FilaVenta = VentaEmpresaItem & { esNuevo?: boolean; editando?: boolean; modificado?: boolean; razonSocial?: string; biGravada?: number; igvIpm?: number };
 
@@ -27,7 +28,7 @@ interface CatalogoItem {
 @Component({
   selector: 'app-datos-empresa-detalle',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ModalObservacionesComponent],
   templateUrl: './datos-empresa-detalle.component.html',
   styleUrl: './datos-empresa-detalle.component.css'
 })
@@ -147,7 +148,10 @@ export class DatosEmpresaDetalleComponent implements OnInit {
 
         this.operacionesService.listarVentasEmpresaPorCarga(this.idCargaEmpresa).subscribe({
           next: (ventas) => {
-            this.ventas = ventas;
+            this.ventas = (ventas || []).map(v => ({
+              ...v,
+              fechaEmision: v.fechaEmision ? v.fechaEmision.substring(0, 10) : ''
+            }));
             this.operacionesService.obtenerErroresCarga(this.idCargaEmpresa).subscribe({
               next: (errores) => {
                 this.errores = errores.map(e => ({
@@ -804,7 +808,7 @@ export class DatosEmpresaDetalleComponent implements OnInit {
         });
         return;
       }
-      if (isNaN(Number(fila.totalCp)) || Number(fila.totalCp) < 0) {
+      if (isNaN(Number(fila.totalCp))) {
         await this.modalService.open({
           type: 'warning',
           title: 'Montos Inválidos',

@@ -28,16 +28,6 @@
         <span>{{ errores.length }} Observaciones</span>
       </button>
 
-      <!-- Botón Eliminar Archivo -->
-      <button
-        type="button"
-        (click)="eliminarCarga()"
-        class="px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100/80 text-rose-600 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
-        title="Eliminar este archivo de ventas de la empresa"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-        Eliminar Archivo
-      </button>
 
       <a
         [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'ventas']"
@@ -945,47 +935,8 @@
 </div>
 
 <!-- ======================= Modal: Observaciones ======================= -->
-<div *ngIf="mostrarObservaciones && errores.length > 0" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs" (click)="mostrarObservaciones = false">
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col" (click)="$event.stopPropagation()">
-    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-      <div>
-        <h3 class="text-base font-bold text-slate-800">Observaciones de la Carga</h3>
-        <p class="text-xs text-slate-400 mt-0.5">Detectadas durante la validación del archivo de la empresa</p>
-      </div>
-      <button type="button" (click)="mostrarObservaciones = false" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-    </div>
-
-    <div class="overflow-auto p-6">
-      <table class="w-full text-xs text-left border-collapse">
-        <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider">
-          <tr>
-            <th class="py-2.5 px-3 rounded-l-lg">Línea</th>
-            <th class="py-2.5 px-3">Tipo</th>
-            <th class="py-2.5 px-3">Campo</th>
-            <th class="py-2.5 px-3">Detalle</th>
-            <th class="py-2.5 px-3 rounded-r-lg">Severidad</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100">
-          <tr *ngFor="let e of errores" class="hover:bg-slate-50/60">
-            <td class="py-2.5 px-3 font-mono font-bold text-slate-600">{{ e.numeroLinea }}</td>
-            <td class="py-2.5 px-3">
-              <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold">{{ e.tipoError }}</span>
-            </td>
-            <td class="py-2.5 px-3 font-mono text-slate-600">{{ e.campoError || '—' }}</td>
-            <td class="py-2.5 px-3 text-slate-700">{{ e.mensaje }}</td>
-            <td class="py-2.5 px-3">
-              <span [class]="e.severidad === 'Error'
-                ? 'px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 text-[10px] font-bold border border-rose-100'
-                : 'px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-100'">
-                {{ e.severidad }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
+<app-modal-observaciones
+  [visible]="mostrarObservaciones"
+  [observaciones]="errores"
+  (cerrar)="mostrarObservaciones = false"
+></app-modal-observaciones>

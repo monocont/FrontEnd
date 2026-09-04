@@ -19,11 +19,12 @@ import {
 } from '../../../services/catalogo-sunat.service';
 import { ModalService } from '../../../../../../shared/ui/modal/modal.service';
 import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
+import { ModalObservacionesComponent } from '../../../../../../shared/ui/modal-observaciones/modal-observaciones.component';
 
 @Component({
   selector: 'app-ventas-detalle',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ModalObservacionesComponent],
   templateUrl: './ventas-detalle.component.html',
   styleUrl: './ventas-detalle.component.css'
 })
@@ -747,22 +748,6 @@ export class VentasDetalleComponent implements OnInit {
 
     // Ordenar respetando el orden natural/insertado de las filas
     return list;
-  }
-
-  get erroresOrdenados(): ArchivoCargaErrorItem[] {
-    return this.errores.slice().sort((a, b) => {
-      const tipoA = (a.tipoError || '').toLowerCase();
-      const tipoB = (b.tipoError || '').toLowerCase();
-      const cmpTipo = tipoA.localeCompare(tipoB);
-      if (cmpTipo !== 0) return cmpTipo;
-
-      const campoA = (a.campoError || '').toLowerCase();
-      const campoB = (b.campoError || '').toLowerCase();
-      const cmpCampo = campoA.localeCompare(campoB);
-      if (cmpCampo !== 0) return cmpCampo;
-
-      return a.numeroLinea - b.numeroLinea;
-    });
   }
 
   ngOnInit(): void {

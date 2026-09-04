@@ -117,6 +117,69 @@ export interface VentaEmpresaItem {
   modificado?: boolean;
 }
 
+export interface VentaMatchItem {
+  idVentaMatch: string;
+  idCarga: string;
+  empresaRuc: string;
+  periodo: string;
+  numeroLinea: number;
+  origenDato: string;
+  esCoincidenciaExacta: boolean;
+  esDiferencia: boolean;
+  esSoloUnOrigen: boolean;
+  carSunat?: string;
+  codigoTipoCp: string;
+  serie: string;
+  numero: string;
+  numeroFinal?: string;
+  fechaEmision: string;
+  fechaVencimiento?: string;
+  codigoTipoDocIdentidad: string;
+  nroDocIdentidad: string;
+  razonSocial: string;
+  valorFacturadoExportacion?: number;
+  biGravada?: number;
+  descuentoBi?: number;
+  igvIpm?: number;
+  descuentoIgv?: number;
+  montoExonerado?: number;
+  montoInafecto?: number;
+  montoIsc?: number;
+  biGravadaIvap?: number;
+  montoIvap?: number;
+  montoIcbper?: number;
+  montoOtrosTributos?: number;
+  totalCp: number;
+  codigoMoneda: string;
+  tipoCambio?: number;
+  fechaEmisionDocModificado?: string;
+  codigoTipoCpModificado?: string;
+  serieCpModificado?: string;
+  numeroCpModificado?: string;
+  codigoEstadoComprobante?: string;
+  codigoTipoNota?: string;
+  tipoOperacion?: string;
+  camposLibres?: string;
+  esNuevo?: boolean;
+  editando?: boolean;
+  modificado?: boolean;
+}
+
+export interface EjecutarMatchResponseDTO {
+  idCarga: string;
+  empresaRuc: string;
+  periodo: string;
+  totalRegistrosSire: number;
+  totalRegistrosEmpresa: number;
+  totalConsolidado: number;
+  coincidenciasExactas: number;
+  diferencias: number;
+  soloUnOrigen: number;
+  totalObservaciones: number;
+  totalGeneral: number;
+  mensaje: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class OperacionesService {
   private http = inject(HttpClient);
@@ -280,6 +343,54 @@ export class OperacionesService {
     const body = { eliminadosIds, nuevos, modificados };
     return this.http
       .post<any>(`${this.baseUrl}/cargas/${idCarga}/actualizar-compras`, body, { withCredentials: true })
+      .pipe(map(res => this.extractData<any>(res)));
+  }
+
+  ejecutarMatchVentas(empresaRuc: string, periodo: string): Observable<EjecutarMatchResponseDTO> {
+    const body = { empresaRuc, periodo };
+    return this.http
+      .post<any>(`${this.baseUrl}/ventas/ejecutar-match`, body, { withCredentials: true })
+      .pipe(map(res => this.extractData<EjecutarMatchResponseDTO>(res)));
+  }
+
+  reejecutarMatchVentas(empresaRuc: string, periodo: string): Observable<EjecutarMatchResponseDTO> {
+    const body = { empresaRuc, periodo };
+    return this.http
+      .post<any>(`${this.baseUrl}/ventas/re-ejecutar-match`, body, { withCredentials: true })
+      .pipe(map(res => this.extractData<EjecutarMatchResponseDTO>(res)));
+  }
+
+  listarVentasMatch(idCarga: string): Observable<VentaMatchItem[]> {
+    return this.http
+      .get<any>(`${this.baseUrl}/cargas/${idCarga}/ventas-match`, { withCredentials: true })
+      .pipe(
+        map(res => {
+          const data = this.extractData<any>(res);
+          if (Array.isArray(data)) return data as VentaMatchItem[];
+          if (data && Array.isArray(data.items)) return data.items as VentaMatchItem[];
+          return [];
+        })
+      );
+  }
+
+  actualizarVentasMatch(
+    idCarga: string,
+    eliminadosIds: string[] = [],
+    nuevos: any[] = [],
+    modificados: any[] = []
+  ): Observable<{
+    idCarga: string;
+    exito: boolean;
+    mensaje: string;
+    numRegistros: number;
+    numObservaciones: number;
+    totalBaseImponible: number;
+    totalIgv: number;
+    totalGeneral: number;
+  }> {
+    const body = { eliminadosIds, nuevos, modificados };
+    return this.http
+      .post<any>(`${this.baseUrl}/cargas/${idCarga}/actualizar-ventas-match`, body, { withCredentials: true })
       .pipe(map(res => this.extractData<any>(res)));
   }
 

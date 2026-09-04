@@ -1,403 +1,1087 @@
 <div class="space-y-2 w-full">
-  <!-- Cabecera Compacta (Breadcrumb + Acciones) -->
+  <!-- Cabecera Compacta (Breadcrumb + Metadatos + Acciones) -->
   <div class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-2">
+    <!-- Breadcrumb & Metadatos -->
     <div class="flex items-center gap-2 text-xs flex-wrap">
       <a routerLink="/home/contabilidad" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors flex items-center gap-1">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
         Empresas
       </a>
       <span class="text-slate-300">/</span>
-      <a [routerLink]="['/home/contabilidad/empresa', idEmpresa]" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">{{ nombreEmpresa }}</a>
+      <a [routerLink]="['/home/contabilidad/empresa', idEmpresa]" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">{{ empresa?.razonSocial || ruc }}</a>
       <span class="text-slate-300">/</span>
       <a [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'ventas']" [queryParams]="{ tab: 'match' }" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">Ventas</a>
       <span class="text-slate-300">/</span>
-      <span class="font-semibold text-slate-800 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md">
-        Match · {{ formatearPeriodo(resumen?.periodo) }}
+      <span class="font-semibold text-slate-800 bg-sky-50 text-sky-700 px-2 py-0.5 rounded-md">
+        {{ cargaMatch?.nombreOriginal || 'Match de Ventas' }}
+      </span>
+      <span *ngIf="cargaMatch?.periodo" class="text-[11px] font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-semibold">
+        Periodo: {{ cargaMatch?.periodo }}
       </span>
     </div>
 
+    <!-- Acciones Rápidas Superior -->
     <div class="flex items-center gap-2">
+      <!-- Botón Ver Observaciones si existen -->
+      <button
+        *ngIf="totalObservaciones > 0"
+        type="button"
+        (click)="mostrarErrores = !mostrarErrores"
+        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold border transition-all cursor-pointer"
+        [ngClass]="mostrarErrores ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <span>{{ totalObservaciones }} Observaciones</span>
+      </button>
+
+      <!-- Botón Volver -->
       <a
         [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'ventas']"
         [queryParams]="{ tab: 'match' }"
-        class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+        class="inline-flex items-center gap-1 px-3 py-1 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-colors cursor-pointer"
       >
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-        Volver
+        <span>Volver</span>
       </a>
-      <button
-        type="button"
-        (click)="reejecutar()"
-        class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs shadow-emerald-500/20"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-        Re-ejecutar
-      </button>
-      <button
-        type="button"
-        (click)="exportarCSV()"
-        class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-        Exportar CSV
-      </button>
+    </div>
+  </div>
+
+  <!-- Barra Compacta de Métricas y Filtro Rápido (En una sola línea idéntica a Ventas SIRE) -->
+  <div *ngIf="ventasMatch.length > 0 || cargaMatch" class="bg-white px-3 py-2 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+    <!-- Métricas en línea -->
+    <div class="flex items-center gap-4 flex-wrap">
+      <div class="flex items-center gap-1.5">
+        <span class="text-slate-400 font-medium uppercase text-[10px]">Registros:</span>
+        <span class="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">{{ ventasMatch.length | number }}</span>
+      </div>
+
+      <div class="h-3.5 w-px bg-slate-200"></div>
+
+      <div class="flex items-center gap-1.5">
+        <span class="text-slate-400 font-medium uppercase text-[10px]">Base Imponible:</span>
+        <span class="font-bold text-emerald-700">S/ {{ totalBaseImponible | number:'1.2-2' }}</span>
+      </div>
+
+      <div class="h-3.5 w-px bg-slate-200"></div>
+
+      <div class="flex items-center gap-1.5">
+        <span class="text-slate-400 font-medium uppercase text-[10px]">IGV / IPM:</span>
+        <span class="font-bold text-sky-700">S/ {{ totalIgv | number:'1.2-2' }}</span>
+      </div>
+
+      <div class="h-3.5 w-px bg-slate-200"></div>
+
+      <div class="flex items-center gap-1.5">
+        <span class="text-slate-400 font-medium uppercase text-[10px]">Total General:</span>
+        <span class="font-bold text-slate-900 bg-amber-50 text-amber-800 px-2 py-0.5 rounded border border-amber-100">S/ {{ totalGeneral | number:'1.2-2' }}</span>
+      </div>
+    </div>
+
+    <!-- Buscador en tiempo real de la Grilla Excel y badges de filtro -->
+    <div class="flex items-center gap-2 min-w-[320px] flex-wrap">
+      <!-- Badge Fecha Emisión -->
+      <div *ngIf="fechasEmisionSeleccionadas.length > 0" class="flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
+        <span>Fecha: {{ fechasEmisionSeleccionadas.length }}</span>
+        <button type="button" (click)="limpiarFiltroFechasEmision()" class="text-indigo-400 hover:text-indigo-800 ml-1 font-bold" title="Quitar filtro">✕</button>
+      </div>
+
+      <!-- Badge Tipo CP -->
+      <div *ngIf="tiposCpSeleccionados.length > 0" class="flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
+        <span>Tipo CP: {{ tiposCpSeleccionados.length }}</span>
+        <button type="button" (click)="limpiarFiltroTiposCp()" class="text-indigo-400 hover:text-indigo-800 ml-1 font-bold" title="Quitar filtro">✕</button>
+      </div>
+
+      <!-- Badge Serie -->
+      <div *ngIf="seriesSeleccionadas.length > 0" class="flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
+        <span>Serie: {{ seriesSeleccionadas.length }}</span>
+        <button type="button" (click)="limpiarFiltroSeries()" class="text-indigo-400 hover:text-indigo-800 ml-1 font-bold" title="Quitar filtro">✕</button>
+      </div>
+
+      <!-- Badge Número -->
+      <div *ngIf="numerosSeleccionados.length > 0" class="flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
+        <span>Número: {{ numerosSeleccionados.length }}</span>
+        <button type="button" (click)="limpiarFiltroNumeros()" class="text-indigo-400 hover:text-indigo-800 ml-1 font-bold" title="Quitar filtro">✕</button>
+      </div>
+
+      <!-- Badge Tipo Doc -->
+      <div *ngIf="tiposDocSeleccionados.length > 0" class="flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
+        <span>Tipo Doc: {{ tiposDocSeleccionados.length }}</span>
+        <button type="button" (click)="limpiarFiltroTiposDoc()" class="text-indigo-400 hover:text-indigo-800 ml-1 font-bold" title="Quitar filtro">✕</button>
+      </div>
+
+      <!-- Badge Doc Cliente -->
+      <div *ngIf="docsClienteSeleccionados.length > 0" class="flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
+        <span>Doc Cliente: {{ docsClienteSeleccionados.length }}</span>
+        <button type="button" (click)="limpiarFiltroDocsCliente()" class="text-indigo-400 hover:text-indigo-800 ml-1 font-bold" title="Quitar filtro">✕</button>
+      </div>
+
+      <!-- Badge Razón Social -->
+      <div *ngIf="razonesSocialesSeleccionadas.length > 0" class="flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
+        <span>Razón Social: {{ razonesSocialesSeleccionadas.length }}</span>
+        <button type="button" (click)="limpiarFiltroRazonesSociales()" class="text-indigo-400 hover:text-indigo-800 ml-1 font-bold" title="Quitar filtro">✕</button>
+      </div>
+
+      <!-- Badge Moneda -->
+      <div *ngIf="monedasSeleccionadas.length > 0" class="flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
+        <span>Moneda: {{ monedasSeleccionadas.length }}</span>
+        <button type="button" (click)="limpiarFiltroMonedas()" class="text-indigo-400 hover:text-indigo-800 ml-1 font-bold" title="Quitar filtro">✕</button>
+      </div>
+
+      <!-- Badge Origen -->
+      <div *ngIf="origenesSeleccionados.length > 0" class="flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
+        <span>Origen: {{ origenesSeleccionados.length }}</span>
+        <button type="button" (click)="limpiarFiltroOrigenes()" class="text-indigo-400 hover:text-indigo-800 ml-1 font-bold" title="Quitar filtro">✕</button>
+      </div>
+
+      <!-- Badge Estado Match -->
+      <div *ngIf="estadosMatchSeleccionados.length > 0" class="flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
+        <span>Estado: {{ estadosMatchSeleccionados.length }}</span>
+        <button type="button" (click)="limpiarFiltroEstadosMatch()" class="text-indigo-400 hover:text-indigo-800 ml-1 font-bold" title="Quitar filtro">✕</button>
+      </div>
+
+      <!-- Buscador Input -->
+      <div class="relative min-w-[240px] flex-1">
+        <input
+          type="text"
+          [(ngModel)]="filtroTexto"
+          (ngModelChange)="recalcularTotales()"
+          placeholder="Buscar en hoja (RUC, serie, razón social...)"
+          class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl pl-8 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:text-slate-400"
+        />
+        <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <button
+          *ngIf="filtroTexto"
+          type="button"
+          (click)="filtroTexto = ''; recalcularTotales()"
+          class="absolute right-2.5 top-1.5 text-slate-400 hover:text-slate-700 p-0.5 rounded-full hover:bg-slate-200 transition-all cursor-pointer text-xs leading-none"
+          title="Limpiar búsqueda">
+          ✕
+        </button>
+      </div>
+
+      <span *ngIf="filtroTexto || fechasEmisionSeleccionadas.length > 0 || tiposCpSeleccionados.length > 0 || seriesSeleccionadas.length > 0 || numerosSeleccionados.length > 0 || tiposDocSeleccionados.length > 0 || docsClienteSeleccionados.length > 0 || razonesSocialesSeleccionadas.length > 0 || monedasSeleccionadas.length > 0 || origenesSeleccionados.length > 0 || estadosMatchSeleccionados.length > 0" class="text-[11px] text-slate-400 whitespace-nowrap">
+        {{ ventasFiltradas.length }} coincidencias
+      </span>
+
+      <!-- Botón Guardar Cambios (Verde al lado derecho de la caja de búsqueda) -->
       <button
         *ngIf="totalCambiosPendientes > 0"
         type="button"
         (click)="guardarCambios()"
-        [disabled]="guardando"
-        class="px-4 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold shadow-sm shadow-violet-500/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+        [disabled]="guardandoCambios"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold shadow-sm transition-all cursor-pointer shrink-0 animate-pulse"
+        title="Guardar cambios permanentemente en base de datos"
       >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-        Guardar Cambios ({{ totalCambiosPendientes }})
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+        <span>Guardar Cambios</span>
+        <span class="bg-emerald-800 text-emerald-100 text-[10px] font-bold px-1.5 py-0.2 rounded-full">{{ totalCambiosPendientes }}</span>
       </button>
     </div>
   </div>
 
-  <!-- Skeleton / Error -->
-  <div *ngIf="cargando" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-4">
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div *ngFor="let i of [1, 2, 3, 4]" class="h-24 rounded-2xl bg-slate-50 animate-pulse"></div>
-    </div>
-    <div class="h-12 rounded-2xl bg-slate-50 animate-pulse"></div>
-    <div class="h-64 rounded-2xl bg-slate-50 animate-pulse"></div>
+  <!-- MODAL DE OBSERVACIONES DEL MATCH -->
+  <app-modal-observaciones
+    [visible]="mostrarErrores"
+    [titulo]="'Observaciones del Proceso de Match'"
+    [subtitulo]="'Discrepancias encontradas entre SIRE y Empresa o validaciones de correlatividad y negocio'"
+    [observaciones]="listaObservacionesModal"
+    (cerrar)="mostrarErrores = false"
+  ></app-modal-observaciones>
+
+  <!-- Skeleton de Carga -->
+  <div *ngIf="cargandoDatos" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-4">
+    <div class="h-10 rounded-xl bg-slate-50 animate-pulse"></div>
+    <div class="h-72 rounded-2xl bg-slate-50 animate-pulse"></div>
   </div>
 
-  <div *ngIf="!cargando && mensajeError" class="bg-white rounded-2xl border border-rose-200 p-8 text-center">
+  <!-- Mensaje de Error si falla la carga -->
+  <div *ngIf="!cargandoDatos && mensajeError" class="bg-white rounded-2xl border border-rose-200 p-8 text-center">
     <p class="text-sm font-semibold text-slate-700">{{ mensajeError }}</p>
-    <button type="button" (click)="volver()" class="mt-4 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold cursor-pointer">Volver al panel</button>
+    <a [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'ventas']" [queryParams]="{ tab: 'match' }" class="mt-4 inline-block px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold cursor-pointer">Volver al panel</a>
   </div>
 
-  <!-- Contenido -->
-  <div *ngIf="!cargando && resumen" class="space-y-2">
+  <!-- GRILLA EXCEL-LIKE IDÉNTICA A VENTAS SIRE -->
+  <div *ngIf="!cargandoDatos && ventasMatch.length > 0" class="w-full">
+    <div class="excel-grid-container shadow-xs">
+      <table class="excel-grid">
+        <thead>
+          <tr>
+            <th class="row-num text-center">#</th>
 
-    <!-- Tarjetas de Resumen -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
-      <div class="bg-white rounded-2xl border border-emerald-100 p-4 shadow-xs">
-        <div class="flex items-center justify-between">
-          <span class="text-[11px] font-bold uppercase tracking-wide text-emerald-600">Coincidentes</span>
-          <span class="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-          </span>
-        </div>
-        <p class="text-2xl font-bold text-slate-800 mt-1">{{ resumen.totalCoincidentes }}</p>
-        <p class="text-[11px] text-slate-400">Mismos montos en ambos orígenes</p>
-      </div>
-
-      <div class="bg-white rounded-2xl border border-amber-100 p-4 shadow-xs">
-        <div class="flex items-center justify-between">
-          <span class="text-[11px] font-bold uppercase tracking-wide text-amber-600">Conflictos</span>
-          <span class="w-7 h-7 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10l1.4 1.4m0-12.8l-1.4 1.4m-10 10l-1.4 1.4"></path></svg>
-          </span>
-        </div>
-        <p class="text-2xl font-bold text-slate-800 mt-1">{{ resumen.totalConflictos }}</p>
-        <p class="text-[11px] text-slate-400">Existen en ambos pero difieren montos</p>
-      </div>
-
-      <div class="bg-white rounded-2xl border border-rose-100 p-4 shadow-xs">
-        <div class="flex items-center justify-between">
-          <span class="text-[11px] font-bold uppercase tracking-wide text-rose-600">Solo en SIRE</span>
-          <span class="w-7 h-7 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-          </span>
-        </div>
-        <p class="text-2xl font-bold text-slate-800 mt-1">{{ resumen.totalSoloSire }}</p>
-        <p class="text-[11px] text-slate-400">Declarados a SUNAT, no en tus registros</p>
-      </div>
-
-      <div class="bg-white rounded-2xl border border-sky-100 p-4 shadow-xs">
-        <div class="flex items-center justify-between">
-          <span class="text-[11px] font-bold uppercase tracking-wide text-sky-600">Solo en Empresa</span>
-          <span class="w-7 h-7 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-          </span>
-        </div>
-        <p class="text-2xl font-bold text-slate-800 mt-1">{{ resumen.totalSoloEmpresa }}</p>
-        <p class="text-[11px] text-slate-400">En tus registros, no reportados a SIRE</p>
-      </div>
-    </div>
-
-    <!-- Strip de Totales Comparativos -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs px-4 py-3">
-      <div class="grid grid-cols-3 gap-4 divide-x divide-slate-100">
-        <div>
-          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Σ Base Imponible</p>
-          <div class="flex items-baseline gap-2 mt-0.5 flex-wrap">
-            <span class="text-xs text-indigo-600 font-semibold">SIRE {{ resumen.sumaBiSire | number:'1.2-2' }}</span>
-            <span class="text-slate-300">vs</span>
-            <span class="text-xs text-violet-600 font-semibold">EMP {{ resumen.sumaBiEmpresa | number:'1.2-2' }}</span>
-          </div>
-          <p class="text-sm font-bold mt-0.5" [ngClass]="deltaResumenClase(resumen.difBi)">Δ {{ deltaTexto(resumen.difBi) }}</p>
-        </div>
-        <div class="pl-4">
-          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Σ IGV</p>
-          <div class="flex items-baseline gap-2 mt-0.5 flex-wrap">
-            <span class="text-xs text-indigo-600 font-semibold">SIRE {{ resumen.sumaIgvSire | number:'1.2-2' }}</span>
-            <span class="text-slate-300">vs</span>
-            <span class="text-xs text-violet-600 font-semibold">EMP {{ resumen.sumaIgvEmpresa | number:'1.2-2' }}</span>
-          </div>
-          <p class="text-sm font-bold mt-0.5" [ngClass]="deltaResumenClase(resumen.difIgv)">Δ {{ deltaTexto(resumen.difIgv) }}</p>
-        </div>
-        <div class="pl-4">
-          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Σ Total</p>
-          <div class="flex items-baseline gap-2 mt-0.5 flex-wrap">
-            <span class="text-xs text-indigo-600 font-semibold">SIRE {{ resumen.sumaTotalSire | number:'1.2-2' }}</span>
-            <span class="text-slate-300">vs</span>
-            <span class="text-xs text-violet-600 font-semibold">EMP {{ resumen.sumaTotalEmpresa | number:'1.2-2' }}</span>
-          </div>
-          <p class="text-sm font-bold mt-0.5" [ngClass]="deltaResumenClase(resumen.difTotal)">Δ {{ deltaTexto(resumen.difTotal) }}</p>
-        </div>
-      </div>
-      <p class="text-[10px] text-slate-400 mt-2">
-        Ejecutado por {{ resumen.ejecutadoPor }} · {{ resumen.totalSire }} comprobantes SIRE vs {{ resumen.totalEmpresa }} de la empresa ·
-        El consolidado es editable: SIRE y Empresa permanecen intactos como evidencia.
-      </p>
-    </div>
-
-    <!-- Filtros -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-1.5 flex-wrap">
-        <button type="button" (click)="filtroActivo = 'Todos'"
-          class="px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer"
-          [ngClass]="filtroActivo === 'Todos' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'">
-          Todos ({{ detalle.length }})
-        </button>
-        <button type="button" (click)="filtroActivo = 'Coincidente'"
-          class="px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer"
-          [ngClass]="filtroActivo === 'Coincidente' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'">
-          ✓ Coincidentes ({{ contar('Coincidente') }})
-        </button>
-        <button type="button" (click)="filtroActivo = 'Conflicto'"
-          class="px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer"
-          [ngClass]="filtroActivo === 'Conflicto' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50'">
-          ⚠ Conflictos ({{ contar('Conflicto') }})
-        </button>
-        <button type="button" (click)="filtroActivo = 'SoloSire'"
-          class="px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer"
-          [ngClass]="filtroActivo === 'SoloSire' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-rose-700 border-rose-200 hover:bg-rose-50'">
-          ✗ Solo SIRE ({{ contar('SoloSire') }})
-        </button>
-        <button type="button" (click)="filtroActivo = 'SoloEmpresa'"
-          class="px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer"
-          [ngClass]="filtroActivo === 'SoloEmpresa' ? 'bg-sky-600 text-white border-sky-600' : 'bg-white text-sky-700 border-sky-200 hover:bg-sky-50'">
-          ◆ Solo Empresa ({{ contar('SoloEmpresa') }})
-        </button>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <div class="relative">
-          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-          <input type="text" [(ngModel)]="busqueda" placeholder="Buscar serie, número o cliente..."
-            class="pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-xs w-60 focus:outline-none focus:ring-2 focus:ring-violet-100 focus:border-violet-300 transition-all" />
-        </div>
-        <button
-          type="button"
-          (click)="abrirFilaNueva()"
-          class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-500/20 transition-all cursor-pointer flex items-center gap-1.5"
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-          Agregar comprobante
-        </button>
-      </div>
-    </div>
-
-    <!-- Tabla Comparativa de 3 bloques -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs">
-      <div class="tabla-match-container">
-        <table class="w-full text-xs text-left tabla-match">
-          <thead>
-            <tr class="text-slate-500 uppercase tracking-wider font-semibold text-[10px]">
-              <th class="th-sticky bg-slate-50/75 py-3 px-2 text-center w-12">Tipo</th>
-              <th class="th-sticky bg-slate-50/75 py-3 px-2 w-16">Serie</th>
-              <th class="th-sticky bg-slate-50/75 py-3 px-2 w-24">Número</th>
-              <th colspan="3" class="th-sticky bg-indigo-50/60 py-2 px-2 text-center text-indigo-500">SIRE (SUNAT)</th>
-              <th colspan="3" class="th-sticky bg-violet-50/60 py-2 px-2 text-center text-violet-500">Empresa</th>
-              <th colspan="3" class="th-sticky bg-emerald-50/60 py-2 px-2 text-center text-emerald-600">Consolidado (editable)</th>
-              <th class="th-sticky bg-slate-50/75 py-3 px-2 text-center w-24">Resultado</th>
-              <th class="th-sticky bg-slate-50/75 py-3 px-2 text-center w-16">Acción</th>
-            </tr>
-            <tr class="text-slate-400 uppercase font-semibold text-[9px]">
-              <th colspan="3" class="th-sticky-2 bg-slate-50/75"></th>
-              <th class="th-sticky-2 bg-indigo-50/40 py-2 px-2 text-right px-2">BI</th>
-              <th class="th-sticky-2 bg-indigo-50/40 py-2 px-2 text-right">IGV</th>
-              <th class="th-sticky-2 bg-indigo-50/40 py-2 px-2 text-right">Total</th>
-              <th class="th-sticky-2 bg-violet-50/40 py-2 px-2 text-right">BI</th>
-              <th class="th-sticky-2 bg-violet-50/40 py-2 px-2 text-right">IGV</th>
-              <th class="th-sticky-2 bg-violet-50/40 py-2 px-2 text-right">Total</th>
-              <th class="th-sticky-2 bg-emerald-50/40 py-2 px-2 text-right">BI</th>
-              <th class="th-sticky-2 bg-emerald-50/40 py-2 px-2 text-right">IGV</th>
-              <th class="th-sticky-2 bg-emerald-50/40 py-2 px-2 text-right">Total</th>
-              <th colspan="2" class="th-sticky-2 bg-slate-50/75"></th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            <tr *ngIf="detalleFiltrado.length === 0">
-              <td colspan="14" class="text-center py-10 text-slate-400 text-sm">
-                No hay comprobantes que coincidan con el filtro aplicado.
-              </td>
-            </tr>
-            <tr *ngFor="let d of detalleFiltrado" (click)="abrirFila(d)" [class]="filaClase(d)" class="cursor-pointer transition-all hover:brightness-97">
-              <td class="py-2.5 px-2 text-center font-mono font-bold text-slate-600">{{ d.consolidado.codigoTipoCp }}</td>
-              <td class="py-2.5 px-2 font-mono font-semibold text-slate-700">{{ d.consolidado.serie }}</td>
-              <td class="py-2.5 px-2 font-mono text-slate-700">{{ d.consolidado.numero }}</td>
-
-              <!-- SIRE -->
-              <td class="py-2.5 px-2 text-right font-mono" [ngClass]="d.sire ? 'text-slate-700' : 'texto-faltante'">{{ d.sire ? (d.sire.biGravada | number:'1.2-2') : '—' }}</td>
-              <td class="py-2.5 px-2 text-right font-mono" [ngClass]="d.sire ? 'text-slate-700' : 'texto-faltante'">{{ d.sire ? (d.sire.igvIpm | number:'1.2-2') : '—' }}</td>
-              <td class="py-2.5 px-2 text-right font-mono font-semibold" [ngClass]="d.sire ? 'text-slate-800' : 'texto-faltante'">{{ d.sire ? (d.sire.totalCp | number:'1.2-2') : '—' }}</td>
-
-              <!-- Empresa -->
-              <td class="py-2.5 px-2 text-right font-mono" [ngClass]="d.empresa ? 'text-slate-700' : 'texto-faltante'">{{ d.empresa ? (d.empresa.biGravada | number:'1.2-2') : '—' }}</td>
-              <td class="py-2.5 px-2 text-right font-mono" [ngClass]="d.empresa ? 'text-slate-700' : 'texto-faltante'">{{ d.empresa ? (d.empresa.igvIpm | number:'1.2-2') : '—' }}</td>
-              <td class="py-2.5 px-2 text-right font-mono font-semibold" [ngClass]="d.empresa ? 'text-slate-800' : 'texto-faltante'">{{ d.empresa ? (d.empresa.totalCp | number:'1.2-2') : '—' }}</td>
-
-              <!-- Consolidado (editable) -->
-              <td class="py-2.5 px-2 text-right font-mono text-slate-700">{{ d.consolidado.biGravada | number:'1.2-2' }}</td>
-              <td class="py-2.5 px-2 text-right font-mono text-slate-700">{{ d.consolidado.igvIpm | number:'1.2-2' }}</td>
-              <td class="py-2.5 px-2 text-right font-mono font-bold text-slate-900">{{ d.consolidado.totalCp | number:'1.2-2' }}</td>
-
-              <!-- Resultado -->
-              <td class="py-2.5 px-2 text-center">
-                <span *ngIf="d.origen === 'Manual'" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border bg-slate-100 text-slate-600 border-slate-200">Manual</span>
-                <span *ngIf="d.origen !== 'Manual'" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border whitespace-nowrap" [class]="resultadoClase(d.resultado)">
-                  {{ etiqueta(d.resultado) }}
+            <!-- Columna Fecha Emisión -->
+            <th class="relative" (click)="ordenarPor('fechaEmision')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+              <div class="sort-header">
+                <span>Fecha Emisión</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('fechaEmision').activo && obtenerEstadoOrden('fechaEmision').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('fechaEmision').activo && !obtenerEstadoOrden('fechaEmision').ascendente">▼</span>
                 </span>
-              </td>
+                <span *ngIf="obtenerEstadoOrden('fechaEmision').ordenIndice > 0" class="sort-priority">{{ obtenerEstadoOrden('fechaEmision').ordenIndice }}</span>
 
-              <!-- Acción -->
-              <td class="py-2.5 px-2 text-center" (click)="$event.stopPropagation()">
-                <div class="inline-flex items-center gap-1">
-                  <button type="button" (click)="abrirFila(d)" title="Ver comparativo y editar consolidado"
-                    class="w-6 h-6 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors cursor-pointer">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-4M11 5a2 2 0 012 2h0a2 2 0 002-2M11 5a2 2 0 012-2h0a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                  </button>
-                  <button type="button" (click)="eliminarFila(d)" title="Eliminar del consolidado"
-                    class="w-6 h-6 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                  </button>
+                <button
+                  *ngIf="opcionesFechaEmisionDisponibles.length > 1"
+                  type="button"
+                  (click)="toggleMenuFiltroFechaEmision($event)"
+                  class="ml-1 p-0.5 rounded hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900"
+                  [ngClass]="{'bg-indigo-100 text-indigo-700 font-bold ring-1 ring-indigo-400': fechasEmisionSeleccionadas.length > 0}"
+                  title="Filtrar por Fecha de Emisión">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                </button>
+              </div>
+
+              <!-- Popup Fecha Emisión -->
+              <div
+                *ngIf="menuFiltroFechaEmisionAbierto"
+                (click)="$event.stopPropagation()"
+                class="absolute left-0 top-full mt-1 w-56 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 z-50 text-left normal-case tracking-normal font-normal text-xs animate-fade-in">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2 font-semibold text-slate-800 text-[11.5px]">
+                  <span>Filtrar Fecha</span>
+                  <button type="button" (click)="menuFiltroFechaEmisionAbierto = false" class="text-slate-400 hover:text-slate-600">✕</button>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+                <div class="mb-2">
+                  <input type="text" [(ngModel)]="filtroTextoFechaEmisionMenu" placeholder="Buscar fecha dd/mm/yyyy..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-indigo-600 font-semibold mb-2 px-0.5">
+                  <button type="button" (click)="seleccionarTodasFechasEmision()" class="hover:underline">Seleccionar todo</button>
+                  <span class="text-slate-300">|</span>
+                  <button type="button" (click)="limpiarFiltroFechasEmision()" class="text-rose-600 hover:underline">Borrar filtro</button>
+                </div>
+                <div class="max-h-40 overflow-y-auto space-y-1 py-1 border-t border-b border-slate-100">
+                  <label *ngFor="let op of opcionesFechaEmisionFiltradas" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                    <div class="flex items-center gap-2 overflow-hidden pr-2">
+                      <input type="checkbox" [checked]="estaFechaEmisionSeleccionada(op.fechaIso)" (change)="toggleSeleccionFechaEmision(op.fechaIso)" class="rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5" />
+                      <span class="truncate font-medium text-slate-700 text-[11px] font-mono">{{ op.fechaFormato }}</span>
+                    </div>
+                    <span class="bg-slate-100 text-slate-500 text-[9.5px] font-bold px-1.5 py-0.5 rounded-full">{{ op.cantidad }}</span>
+                  </label>
+                </div>
+                <div class="mt-2 pt-1 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{{ fechasEmisionSeleccionadas.length }} seleccionado(s)</span>
+                  <button type="button" (click)="menuFiltroFechaEmisionAbierto = false" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-2.5 py-1 rounded-md">Aceptar</button>
+                </div>
+              </div>
+            </th>
+
+            <!-- Columna Tipo CP -->
+            <th class="relative" (click)="ordenarPor('codigoTipoCp')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+              <div class="sort-header">
+                <span>Tipo CP</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('codigoTipoCp').activo && obtenerEstadoOrden('codigoTipoCp').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('codigoTipoCp').activo && !obtenerEstadoOrden('codigoTipoCp').ascendente">▼</span>
+                </span>
+                <span *ngIf="obtenerEstadoOrden('codigoTipoCp').ordenIndice > 0" class="sort-priority">{{ obtenerEstadoOrden('codigoTipoCp').ordenIndice }}</span>
+
+                <button
+                  *ngIf="opcionesTipoCpDisponibles.length > 1"
+                  type="button"
+                  (click)="toggleMenuFiltroTipoCp($event)"
+                  class="ml-1.5 p-1 rounded hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900"
+                  [ngClass]="{'bg-indigo-100 text-indigo-700 font-bold ring-1 ring-indigo-400': tiposCpSeleccionados.length > 0}"
+                  title="Filtrar por Tipo de Comprobante">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                </button>
+              </div>
+
+              <!-- Popup Tipo CP -->
+              <div
+                *ngIf="menuFiltroTipoCpAbierto"
+                (click)="$event.stopPropagation()"
+                class="absolute left-0 top-full mt-1 w-64 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 z-50 text-left normal-case tracking-normal font-normal text-xs animate-fade-in">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2 font-semibold text-slate-800 text-[11.5px]">
+                  <span>Filtrar Tipo CP</span>
+                  <button type="button" (click)="menuFiltroTipoCpAbierto = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+                <div class="mb-2">
+                  <input type="text" [(ngModel)]="filtroTextoTipoCpMenu" placeholder="Buscar tipo..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-indigo-600 font-semibold mb-2 px-0.5">
+                  <button type="button" (click)="seleccionarTodosTiposCp()" class="hover:underline">Seleccionar todo</button>
+                  <span class="text-slate-300">|</span>
+                  <button type="button" (click)="limpiarFiltroTiposCp()" class="text-rose-600 hover:underline">Borrar filtro</button>
+                </div>
+                <div class="max-h-40 overflow-y-auto space-y-1 py-1 border-t border-b border-slate-100">
+                  <label *ngFor="let op of opcionesTipoCpFiltradas" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                    <div class="flex items-center gap-2 overflow-hidden pr-2">
+                      <input type="checkbox" [checked]="estaTipoCpSeleccionado(op.nombre)" (change)="toggleSeleccionTipoCp(op.nombre)" class="rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5" />
+                      <span class="truncate font-medium text-slate-700 text-[11px]" [title]="op.nombre">{{ op.nombre }}</span>
+                    </div>
+                    <span class="bg-slate-100 text-slate-500 text-[9.5px] font-bold px-1.5 py-0.5 rounded-full">{{ op.cantidad }}</span>
+                  </label>
+                </div>
+                <div class="mt-2 pt-1 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{{ tiposCpSeleccionados.length }} seleccionado(s)</span>
+                  <button type="button" (click)="menuFiltroTipoCpAbierto = false" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-2.5 py-1 rounded-md">Aceptar</button>
+                </div>
+              </div>
+            </th>
+
+            <!-- Columna Serie -->
+            <th class="relative" (click)="ordenarPor('serie')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+              <div class="sort-header">
+                <span>Serie</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('serie').activo && obtenerEstadoOrden('serie').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('serie').activo && !obtenerEstadoOrden('serie').ascendente">▼</span>
+                </span>
+                <span *ngIf="obtenerEstadoOrden('serie').ordenIndice > 0" class="sort-priority">{{ obtenerEstadoOrden('serie').ordenIndice }}</span>
+
+                <button
+                  *ngIf="opcionesSerieDisponibles.length > 1"
+                  type="button"
+                  (click)="toggleMenuFiltroSerie($event)"
+                  class="ml-1 p-0.5 rounded hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900"
+                  [ngClass]="{'bg-indigo-100 text-indigo-700 font-bold ring-1 ring-indigo-400': seriesSeleccionadas.length > 0}"
+                  title="Filtrar por Serie">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                </button>
+              </div>
+
+              <!-- Popup Serie -->
+              <div
+                *ngIf="menuFiltroSerieAbierto"
+                (click)="$event.stopPropagation()"
+                class="absolute left-0 top-full mt-1 w-52 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 z-50 text-left normal-case tracking-normal font-normal text-xs animate-fade-in">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2 font-semibold text-slate-800 text-[11.5px]">
+                  <span>Filtrar Serie</span>
+                  <button type="button" (click)="menuFiltroSerieAbierto = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+                <div class="mb-2">
+                  <input type="text" [(ngModel)]="filtroTextoSerieMenu" placeholder="Buscar serie..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-indigo-600 font-semibold mb-2 px-0.5">
+                  <button type="button" (click)="seleccionarTodasSeries()" class="hover:underline">Seleccionar todo</button>
+                  <span class="text-slate-300">|</span>
+                  <button type="button" (click)="limpiarFiltroSeries()" class="text-rose-600 hover:underline">Borrar filtro</button>
+                </div>
+                <div class="max-h-40 overflow-y-auto space-y-1 py-1 border-t border-b border-slate-100">
+                  <label *ngFor="let op of opcionesSerieFiltradas" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                    <div class="flex items-center gap-2 overflow-hidden pr-2">
+                      <input type="checkbox" [checked]="estaSerieSeleccionada(op.nombre)" (change)="toggleSeleccionSerie(op.nombre)" class="rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5" />
+                      <span class="truncate font-medium text-slate-700 text-[11px]">{{ op.nombre }}</span>
+                    </div>
+                    <span class="bg-slate-100 text-slate-500 text-[9.5px] font-bold px-1.5 py-0.5 rounded-full">{{ op.cantidad }}</span>
+                  </label>
+                </div>
+                <div class="mt-2 pt-1 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{{ seriesSeleccionadas.length }} seleccionado(s)</span>
+                  <button type="button" (click)="menuFiltroSerieAbierto = false" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-2.5 py-1 rounded-md">Aceptar</button>
+                </div>
+              </div>
+            </th>
+
+            <!-- Columna Número -->
+            <th class="relative" (click)="ordenarPor('numero')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+              <div class="sort-header">
+                <span>Número</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('numero').activo && obtenerEstadoOrden('numero').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('numero').activo && !obtenerEstadoOrden('numero').ascendente">▼</span>
+                </span>
+                <span *ngIf="obtenerEstadoOrden('numero').ordenIndice > 0" class="sort-priority">{{ obtenerEstadoOrden('numero').ordenIndice }}</span>
+
+                <button
+                  *ngIf="opcionesNumeroDisponibles.length > 1"
+                  type="button"
+                  (click)="toggleMenuFiltroNumero($event)"
+                  class="ml-1 p-0.5 rounded hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900"
+                  [ngClass]="{'bg-indigo-100 text-indigo-700 font-bold ring-1 ring-indigo-400': numerosSeleccionados.length > 0}"
+                  title="Filtrar por Número">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                </button>
+              </div>
+
+              <!-- Popup Número -->
+              <div
+                *ngIf="menuFiltroNumeroAbierto"
+                (click)="$event.stopPropagation()"
+                class="absolute left-0 top-full mt-1 w-56 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 z-50 text-left normal-case tracking-normal font-normal text-xs animate-fade-in">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2 font-semibold text-slate-800 text-[11.5px]">
+                  <span>Filtrar Número</span>
+                  <button type="button" (click)="menuFiltroNumeroAbierto = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+                <div class="mb-2">
+                  <input type="text" [(ngModel)]="filtroTextoNumeroMenu" placeholder="Buscar número..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-indigo-600 font-semibold mb-2 px-0.5">
+                  <button type="button" (click)="seleccionarTodosNumeros()" class="hover:underline">Seleccionar todo</button>
+                  <span class="text-slate-300">|</span>
+                  <button type="button" (click)="limpiarFiltroNumeros()" class="text-rose-600 hover:underline">Borrar filtro</button>
+                </div>
+                <div class="max-h-40 overflow-y-auto space-y-1 py-1 border-t border-b border-slate-100">
+                  <label *ngFor="let op of opcionesNumeroFiltradas" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                    <div class="flex items-center gap-2 overflow-hidden pr-2">
+                      <input type="checkbox" [checked]="estaNumeroSeleccionado(op.nombre)" (change)="toggleSeleccionNumero(op.nombre)" class="rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5" />
+                      <span class="truncate font-medium text-slate-700 text-[11px] font-mono">{{ op.nombre }}</span>
+                    </div>
+                    <span class="bg-slate-100 text-slate-500 text-[9.5px] font-bold px-1.5 py-0.5 rounded-full">{{ op.cantidad }}</span>
+                  </label>
+                </div>
+                <div class="mt-2 pt-1 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{{ numerosSeleccionados.length }} seleccionado(s)</span>
+                  <button type="button" (click)="menuFiltroNumeroAbierto = false" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-2.5 py-1 rounded-md">Aceptar</button>
+                </div>
+              </div>
+            </th>
+
+            <!-- Columna Tipo Doc -->
+            <th class="relative text-center" (click)="ordenarPor('codigoTipoDocIdentidad')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+              <div class="sort-header justify-center">
+                <span>Tipo Doc</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('codigoTipoDocIdentidad').activo && obtenerEstadoOrden('codigoTipoDocIdentidad').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('codigoTipoDocIdentidad').activo && !obtenerEstadoOrden('codigoTipoDocIdentidad').ascendente">▼</span>
+                </span>
+                <span *ngIf="obtenerEstadoOrden('codigoTipoDocIdentidad').ordenIndice > 0" class="sort-priority">{{ obtenerEstadoOrden('codigoTipoDocIdentidad').ordenIndice }}</span>
+
+                <button
+                  *ngIf="opcionesTipoDocDisponibles.length > 1"
+                  type="button"
+                  (click)="toggleMenuFiltroTipoDoc($event)"
+                  class="ml-1 p-0.5 rounded hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900"
+                  [ngClass]="{'bg-indigo-100 text-indigo-700 font-bold ring-1 ring-indigo-400': tiposDocSeleccionados.length > 0}"
+                  title="Filtrar por Tipo de Documento">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                </button>
+              </div>
+
+              <!-- Popup Tipo Doc -->
+              <div
+                *ngIf="menuFiltroTipoDocAbierto"
+                (click)="$event.stopPropagation()"
+                class="absolute left-0 top-full mt-1 w-60 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 z-50 text-left normal-case tracking-normal font-normal text-xs animate-fade-in">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2 font-semibold text-slate-800 text-[11.5px]">
+                  <span>Filtrar Tipo Doc</span>
+                  <button type="button" (click)="menuFiltroTipoDocAbierto = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+                <div class="mb-2">
+                  <input type="text" [(ngModel)]="filtroTextoTipoDocMenu" placeholder="Buscar tipo doc..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-indigo-600 font-semibold mb-2 px-0.5">
+                  <button type="button" (click)="seleccionarTodosTiposDoc()" class="hover:underline">Seleccionar todo</button>
+                  <span class="text-slate-300">|</span>
+                  <button type="button" (click)="limpiarFiltroTiposDoc()" class="text-rose-600 hover:underline">Borrar filtro</button>
+                </div>
+                <div class="max-h-40 overflow-y-auto space-y-1 py-1 border-t border-b border-slate-100">
+                  <label *ngFor="let op of opcionesTipoDocFiltradas" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                    <div class="flex items-center gap-2 overflow-hidden pr-2">
+                      <input type="checkbox" [checked]="estaTipoDocSeleccionado(op.nombre)" (change)="toggleSeleccionTipoDoc(op.nombre)" class="rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5" />
+                      <span class="truncate font-medium text-slate-700 text-[11px]">{{ op.nombre }}</span>
+                    </div>
+                    <span class="bg-slate-100 text-slate-500 text-[9.5px] font-bold px-1.5 py-0.5 rounded-full">{{ op.cantidad }}</span>
+                  </label>
+                </div>
+                <div class="mt-2 pt-1 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{{ tiposDocSeleccionados.length }} seleccionado(s)</span>
+                  <button type="button" (click)="menuFiltroTipoDocAbierto = false" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-2.5 py-1 rounded-md">Aceptar</button>
+                </div>
+              </div>
+            </th>
+
+            <!-- Columna RUC / Doc Cliente -->
+            <th class="relative" (click)="ordenarPor('nroDocIdentidad')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+              <div class="sort-header">
+                <span>RUC / Doc Cliente</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('nroDocIdentidad').activo && obtenerEstadoOrden('nroDocIdentidad').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('nroDocIdentidad').activo && !obtenerEstadoOrden('nroDocIdentidad').ascendente">▼</span>
+                </span>
+                <span *ngIf="obtenerEstadoOrden('nroDocIdentidad').ordenIndice > 0" class="sort-priority">{{ obtenerEstadoOrden('nroDocIdentidad').ordenIndice }}</span>
+
+                <button
+                  *ngIf="opcionesDocClienteDisponibles.length > 1"
+                  type="button"
+                  (click)="toggleMenuFiltroDocCliente($event)"
+                  class="ml-1 p-0.5 rounded hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900"
+                  [ngClass]="{'bg-indigo-100 text-indigo-700 font-bold ring-1 ring-indigo-400': docsClienteSeleccionados.length > 0}"
+                  title="Filtrar por RUC / Doc Cliente">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                </button>
+              </div>
+
+              <!-- Popup Doc Cliente -->
+              <div
+                *ngIf="menuFiltroDocClienteAbierto"
+                (click)="$event.stopPropagation()"
+                class="absolute left-0 top-full mt-1 w-64 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 z-50 text-left normal-case tracking-normal font-normal text-xs animate-fade-in">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2 font-semibold text-slate-800 text-[11.5px]">
+                  <span>Filtrar RUC / Doc Cliente</span>
+                  <button type="button" (click)="menuFiltroDocClienteAbierto = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+                <div class="mb-2">
+                  <input type="text" [(ngModel)]="filtroTextoDocClienteMenu" placeholder="Buscar doc..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-indigo-600 font-semibold mb-2 px-0.5">
+                  <button type="button" (click)="seleccionarTodosDocsCliente()" class="hover:underline">Seleccionar todo</button>
+                  <span class="text-slate-300">|</span>
+                  <button type="button" (click)="limpiarFiltroDocsCliente()" class="text-rose-600 hover:underline">Borrar filtro</button>
+                </div>
+                <div class="max-h-40 overflow-y-auto space-y-1 py-1 border-t border-b border-slate-100">
+                  <label *ngFor="let op of opcionesDocClienteFiltradas" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                    <div class="flex items-center gap-2 overflow-hidden pr-2">
+                      <input type="checkbox" [checked]="estaDocClienteSeleccionado(op.nombre)" (change)="toggleSeleccionDocCliente(op.nombre)" class="rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5" />
+                      <span class="truncate font-medium text-slate-700 text-[11px] font-mono">{{ op.nombre }}</span>
+                    </div>
+                    <span class="bg-slate-100 text-slate-500 text-[9.5px] font-bold px-1.5 py-0.5 rounded-full">{{ op.cantidad }}</span>
+                  </label>
+                </div>
+                <div class="mt-2 pt-1 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{{ docsClienteSeleccionados.length }} seleccionado(s)</span>
+                  <button type="button" (click)="menuFiltroDocClienteAbierto = false" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-2.5 py-1 rounded-md">Aceptar</button>
+                </div>
+              </div>
+            </th>
+
+            <!-- Columna Razón Social -->
+            <th class="relative" (click)="ordenarPor('razonSocial')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+              <div class="sort-header">
+                <span>Razón Social / Apellidos y Nombres</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('razonSocial').activo && obtenerEstadoOrden('razonSocial').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('razonSocial').activo && !obtenerEstadoOrden('razonSocial').ascendente">▼</span>
+                </span>
+                <span *ngIf="obtenerEstadoOrden('razonSocial').ordenIndice > 0" class="sort-priority">{{ obtenerEstadoOrden('razonSocial').ordenIndice }}</span>
+
+                <button
+                  *ngIf="opcionesRazonSocialDisponibles.length > 1"
+                  type="button"
+                  (click)="toggleMenuFiltroRazonSocial($event)"
+                  class="ml-1 p-0.5 rounded hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900"
+                  [ngClass]="{'bg-indigo-100 text-indigo-700 font-bold ring-1 ring-indigo-400': razonesSocialesSeleccionadas.length > 0}"
+                  title="Filtrar por Razón Social">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                </button>
+              </div>
+
+              <!-- Popup Razón Social -->
+              <div
+                *ngIf="menuFiltroRazonSocialAbierto"
+                (click)="$event.stopPropagation()"
+                class="absolute left-0 top-full mt-1 w-72 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 z-50 text-left normal-case tracking-normal font-normal text-xs animate-fade-in">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2 font-semibold text-slate-800 text-[11.5px]">
+                  <span>Filtrar Razón Social</span>
+                  <button type="button" (click)="menuFiltroRazonSocialAbierto = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+                <div class="mb-2">
+                  <input type="text" [(ngModel)]="filtroTextoRazonSocialMenu" placeholder="Buscar razón social..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-indigo-600 font-semibold mb-2 px-0.5">
+                  <button type="button" (click)="seleccionarTodasRazonesSociales()" class="hover:underline">Seleccionar todo</button>
+                  <span class="text-slate-300">|</span>
+                  <button type="button" (click)="limpiarFiltroRazonesSociales()" class="text-rose-600 hover:underline">Borrar filtro</button>
+                </div>
+                <div class="max-h-40 overflow-y-auto space-y-1 py-1 border-t border-b border-slate-100">
+                  <label *ngFor="let op of opcionesRazonSocialFiltradas" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                    <div class="flex items-center gap-2 overflow-hidden pr-2">
+                      <input type="checkbox" [checked]="estaRazonSocialSeleccionada(op.nombre)" (change)="toggleSeleccionRazonSocial(op.nombre)" class="rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5" />
+                      <span class="truncate font-medium text-slate-700 text-[11px]" [title]="op.nombre">{{ op.nombre }}</span>
+                    </div>
+                    <span class="bg-slate-100 text-slate-500 text-[9.5px] font-bold px-1.5 py-0.5 rounded-full">{{ op.cantidad }}</span>
+                  </label>
+                </div>
+                <div class="mt-2 pt-1 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{{ razonesSocialesSeleccionadas.length }} seleccionado(s)</span>
+                  <button type="button" (click)="menuFiltroRazonSocialAbierto = false" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-2.5 py-1 rounded-md">Aceptar</button>
+                </div>
+              </div>
+            </th>
+
+            <!-- Columna Base Imponible -->
+            <th class="text-right" (click)="ordenarPor('biGravada')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+              <div class="sort-header justify-end">
+                <span>Base Imponible</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('biGravada').activo && obtenerEstadoOrden('biGravada').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('biGravada').activo && !obtenerEstadoOrden('biGravada').ascendente">▼</span>
+                </span>
+                <span *ngIf="obtenerEstadoOrden('biGravada').ordenIndice > 0" class="sort-priority">{{ obtenerEstadoOrden('biGravada').ordenIndice }}</span>
+              </div>
+            </th>
+
+            <!-- Columna IGV / IPM -->
+            <th class="text-right" (click)="ordenarPor('igvIpm')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+              <div class="sort-header justify-end">
+                <span>IGV / IPM</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('igvIpm').activo && obtenerEstadoOrden('igvIpm').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('igvIpm').activo && !obtenerEstadoOrden('igvIpm').ascendente">▼</span>
+                </span>
+                <span *ngIf="obtenerEstadoOrden('igvIpm').ordenIndice > 0" class="sort-priority">{{ obtenerEstadoOrden('igvIpm').ordenIndice }}</span>
+              </div>
+            </th>
+
+            <!-- Columna Total CP -->
+            <th class="text-right" (click)="ordenarPor('totalCp')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+              <div class="sort-header justify-end">
+                <span>Total CP</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('totalCp').activo && obtenerEstadoOrden('totalCp').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('totalCp').activo && !obtenerEstadoOrden('totalCp').ascendente">▼</span>
+                </span>
+                <span *ngIf="obtenerEstadoOrden('totalCp').ordenIndice > 0" class="sort-priority">{{ obtenerEstadoOrden('totalCp').ordenIndice }}</span>
+              </div>
+            </th>
+
+            <!-- Columna Moneda -->
+            <th class="relative text-center" (click)="ordenarPor('codigoMoneda')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+              <div class="sort-header justify-center">
+                <span>Moneda</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('codigoMoneda').activo && obtenerEstadoOrden('codigoMoneda').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('codigoMoneda').activo && !obtenerEstadoOrden('codigoMoneda').ascendente">▼</span>
+                </span>
+                <span *ngIf="obtenerEstadoOrden('codigoMoneda').ordenIndice > 0" class="sort-priority">{{ obtenerEstadoOrden('codigoMoneda').ordenIndice }}</span>
+
+                <button
+                  *ngIf="opcionesMonedaDisponibles.length > 1"
+                  type="button"
+                  (click)="toggleMenuFiltroMoneda($event)"
+                  class="ml-1 p-0.5 rounded hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900"
+                  [ngClass]="{'bg-indigo-100 text-indigo-700 font-bold ring-1 ring-indigo-400': monedasSeleccionadas.length > 0}"
+                  title="Filtrar por Moneda">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                </button>
+              </div>
+
+              <!-- Popup Moneda -->
+              <div
+                *ngIf="menuFiltroMonedaAbierto"
+                (click)="$event.stopPropagation()"
+                class="absolute left-0 top-full mt-1 w-44 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 z-50 text-left normal-case tracking-normal font-normal text-xs animate-fade-in">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2 font-semibold text-slate-800 text-[11.5px]">
+                  <span>Filtrar Moneda</span>
+                  <button type="button" (click)="menuFiltroMonedaAbierto = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-indigo-600 font-semibold mb-2 px-0.5">
+                  <button type="button" (click)="seleccionarTodasMonedas()" class="hover:underline">Seleccionar todo</button>
+                  <span class="text-slate-300">|</span>
+                  <button type="button" (click)="limpiarFiltroMonedas()" class="text-rose-600 hover:underline">Borrar</button>
+                </div>
+                <div class="max-h-36 overflow-y-auto space-y-1 py-1 border-t border-b border-slate-100">
+                  <label *ngFor="let op of opcionesMonedaFiltradas" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                    <div class="flex items-center gap-2">
+                      <input type="checkbox" [checked]="estaMonedaSeleccionada(op.nombre)" (change)="toggleSeleccionMoneda(op.nombre)" class="rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5" />
+                      <span class="font-medium text-slate-700 text-[11px]">{{ op.nombre }}</span>
+                    </div>
+                    <span class="bg-slate-100 text-slate-500 text-[9.5px] font-bold px-1.5 py-0.5 rounded-full">{{ op.cantidad }}</span>
+                  </label>
+                </div>
+                <div class="mt-2 pt-1 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{{ monedasSeleccionadas.length }} sel.</span>
+                  <button type="button" (click)="menuFiltroMonedaAbierto = false" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-2.5 py-1 rounded-md">Aceptar</button>
+                </div>
+              </div>
+            </th>
+
+            <!-- Columna T.C. -->
+            <th class="text-right" (click)="ordenarPor('tipoCambio')" title="Tipo de Cambio">
+              <div class="sort-header justify-end">
+                <span>T.C.</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('tipoCambio').activo && obtenerEstadoOrden('tipoCambio').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('tipoCambio').activo && !obtenerEstadoOrden('tipoCambio').ascendente">▼</span>
+                </span>
+              </div>
+            </th>
+
+            <!-- Columna Origen Dato (SIRE / EMPRESA) -->
+            <th class="relative text-center" (click)="ordenarPor('origenDato')" title="Origen del Comprobante">
+              <div class="sort-header justify-center">
+                <span>Origen</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('origenDato').activo && obtenerEstadoOrden('origenDato').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('origenDato').activo && !obtenerEstadoOrden('origenDato').ascendente">▼</span>
+                </span>
+
+                <button
+                  *ngIf="opcionesOrigenDisponibles.length > 1"
+                  type="button"
+                  (click)="toggleMenuFiltroOrigen($event)"
+                  class="ml-1 p-0.5 rounded hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900"
+                  [ngClass]="{'bg-indigo-100 text-indigo-700 font-bold ring-1 ring-indigo-400': origenesSeleccionados.length > 0}"
+                  title="Filtrar por Origen">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                </button>
+              </div>
+
+              <!-- Popup Origen -->
+              <div
+                *ngIf="menuFiltroOrigenAbierto"
+                (click)="$event.stopPropagation()"
+                class="absolute left-0 top-full mt-1 w-44 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 z-50 text-left normal-case tracking-normal font-normal text-xs animate-fade-in">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2 font-semibold text-slate-800 text-[11.5px]">
+                  <span>Filtrar Origen</span>
+                  <button type="button" (click)="menuFiltroOrigenAbierto = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-indigo-600 font-semibold mb-2 px-0.5">
+                  <button type="button" (click)="seleccionarTodosOrigenes()" class="hover:underline">Seleccionar todo</button>
+                  <span class="text-slate-300">|</span>
+                  <button type="button" (click)="limpiarFiltroOrigenes()" class="text-rose-600 hover:underline">Borrar</button>
+                </div>
+                <div class="max-h-36 overflow-y-auto space-y-1 py-1 border-t border-b border-slate-100">
+                  <label *ngFor="let op of opcionesOrigenFiltradas" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                    <div class="flex items-center gap-2">
+                      <input type="checkbox" [checked]="estaOrigenSeleccionado(op.nombre)" (change)="toggleSeleccionOrigen(op.nombre)" class="rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5" />
+                      <span class="font-medium text-slate-700 text-[11px]">{{ op.nombre }}</span>
+                    </div>
+                    <span class="bg-slate-100 text-slate-500 text-[9.5px] font-bold px-1.5 py-0.5 rounded-full">{{ op.cantidad }}</span>
+                  </label>
+                </div>
+                <div class="mt-2 pt-1 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{{ origenesSeleccionados.length }} sel.</span>
+                  <button type="button" (click)="menuFiltroOrigenAbierto = false" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-2.5 py-1 rounded-md">Aceptar</button>
+                </div>
+              </div>
+            </th>
+
+            <!-- Columna Estado Match -->
+            <th class="relative text-center" title="Resultado del Match">
+              <div class="sort-header justify-center">
+                <span>Estado Match</span>
+
+                <button
+                  *ngIf="opcionesEstadoMatchDisponibles.length > 1"
+                  type="button"
+                  (click)="toggleMenuFiltroEstadoMatch($event)"
+                  class="ml-1 p-0.5 rounded hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900"
+                  [ngClass]="{'bg-indigo-100 text-indigo-700 font-bold ring-1 ring-indigo-400': estadosMatchSeleccionados.length > 0}"
+                  title="Filtrar por Estado Match">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                </button>
+              </div>
+
+              <!-- Popup Estado Match -->
+              <div
+                *ngIf="menuFiltroEstadoMatchAbierto"
+                (click)="$event.stopPropagation()"
+                class="absolute right-0 top-full mt-1 w-52 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 z-50 text-left normal-case tracking-normal font-normal text-xs animate-fade-in">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2 font-semibold text-slate-800 text-[11.5px]">
+                  <span>Filtrar Estado Match</span>
+                  <button type="button" (click)="menuFiltroEstadoMatchAbierto = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-indigo-600 font-semibold mb-2 px-0.5">
+                  <button type="button" (click)="seleccionarTodosEstadosMatch()" class="hover:underline">Seleccionar todo</button>
+                  <span class="text-slate-300">|</span>
+                  <button type="button" (click)="limpiarFiltroEstadosMatch()" class="text-rose-600 hover:underline">Borrar</button>
+                </div>
+                <div class="max-h-36 overflow-y-auto space-y-1 py-1 border-t border-b border-slate-100">
+                  <label *ngFor="let op of opcionesEstadoMatchFiltradas" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                    <div class="flex items-center gap-2">
+                      <input type="checkbox" [checked]="estaEstadoMatchSeleccionado(op.nombre)" (change)="toggleSeleccionEstadoMatch(op.nombre)" class="rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5" />
+                      <span class="font-medium text-slate-700 text-[11px]">{{ op.nombre }}</span>
+                    </div>
+                    <span class="bg-slate-100 text-slate-500 text-[9.5px] font-bold px-1.5 py-0.5 rounded-full">{{ op.cantidad }}</span>
+                  </label>
+                </div>
+                <div class="mt-2 pt-1 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{{ estadosMatchSeleccionados.length }} sel.</span>
+                  <button type="button" (click)="menuFiltroEstadoMatchAbierto = false" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-2.5 py-1 rounded-md">Aceptar</button>
+                </div>
+              </div>
+            <!-- Columna Acciones -->
+            <th class="text-center w-16">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <!-- Botón flotante para insertar al inicio de la tabla si no hay registros o arriba del primero -->
+          <tr *ngIf="ventasMatch.length === 0 && !cargandoDatos" class="border-b border-dashed border-slate-200">
+            <td colspan="16" class="text-center py-4 bg-slate-50/50">
+              <button
+                type="button"
+                (click)="insertarFilaVisual(0, $event)"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs border border-emerald-300 transition-all cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span>Agregar Primer Registro de Match</span>
+              </button>
+            </td>
+          </tr>
+
+          <tr
+            *ngFor="let v of ventasFiltradas; let i = index"
+            class="fila-contenedor group cursor-pointer"
+            (dblclick)="iniciarEdicionFila(v, $event)"
+            [ngClass]="obtenerClaseFilaMatch(v)">
+
+            <!-- Número de Fila con Botón Flotante (+) sobrepuesto -->
+            <td class="row-num relative">
+              <button
+                type="button"
+                (click)="insertarFilaVisual(v, $event)"
+                class="btn-insertar-flotante"
+                title="Insertar fila aquí">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
+              </button>
+
+              <span *ngIf="!v.esNuevo && !v.modificado">{{ i + 1 }}</span>
+              <span *ngIf="v.esNuevo" class="text-emerald-600 font-bold text-[10px] bg-emerald-100 px-1 py-0.5 rounded">NEW</span>
+              <span *ngIf="!v.esNuevo && v.modificado" class="text-amber-700 font-bold text-[9px] bg-amber-100 px-1 py-0.5 rounded">EDIT</span>
+            </td>
+
+            <!-- Fecha Emisión -->
+            <td class="font-medium">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                {{ v.fechaEmision | date:'dd/MM/yyyy' }}
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <input
+                  type="date"
+                  [(ngModel)]="v.fechaEmision"
+                  (ngModelChange)="marcarFilaModificada(v)"
+                  (blur)="finalizarEdicionFila(v)"
+                  class="input-grid-cell font-sans text-xs"
+                  [ngClass]="{'invalido': !v.fechaEmision}"
+                  required />
+              </ng-container>
+            </td>
+
+            <!-- Tipo CP -->
+            <td class="font-medium text-slate-800 bg-slate-50/50">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                <span [title]="v.codigoTipoCp + ' - ' + obtenerNombreTipoCp(v.codigoTipoCp)">
+                  {{ obtenerNombreTipoCp(v.codigoTipoCp) }}
+                </span>
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <select
+                  [(ngModel)]="v.codigoTipoCp"
+                  (ngModelChange)="marcarFilaModificada(v)"
+                  (blur)="finalizarEdicionFila(v)"
+                  class="input-grid-cell font-sans text-xs bg-white"
+                  required>
+                  <option *ngFor="let tcp of tiposCp" [value]="tcp.codigo">{{ tcp.codigo }} - {{ tcp.nombre }}</option>
+                  <option *ngIf="tiposCp.length === 0" value="01">01 - FACTURA</option>
+                  <option *ngIf="tiposCp.length === 0" value="03">03 - BOLETA DE VENTA</option>
+                  <option *ngIf="tiposCp.length === 0" value="07">07 - NOTA DE CREDITO</option>
+                  <option *ngIf="tiposCp.length === 0" value="08">08 - NOTA DE DEBITO</option>
+                </select>
+              </ng-container>
+            </td>
+
+            <!-- Serie -->
+            <td class="font-mono text-center font-medium">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                {{ v.serie }}
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <input
+                  type="text"
+                  [(ngModel)]="v.serie"
+                  (ngModelChange)="marcarFilaModificada(v)"
+                  (blur)="finalizarEdicionFila(v)"
+                  placeholder="F001"
+                  maxlength="4"
+                  class="input-grid-cell font-mono text-center uppercase"
+                  [ngClass]="{'invalido': !v.serie}"
+                  required />
+              </ng-container>
+            </td>
+
+            <!-- Número -->
+            <td class="font-mono text-center font-medium">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                {{ v.numero }}
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <input
+                  type="text"
+                  [(ngModel)]="v.numero"
+                  (ngModelChange)="marcarFilaModificada(v)"
+                  (blur)="finalizarEdicionFila(v)"
+                  placeholder="12345"
+                  maxlength="10"
+                  class="input-grid-cell font-mono text-center"
+                  [ngClass]="{'invalido': !v.numero}"
+                  required />
+              </ng-container>
+            </td>
+
+            <!-- Tipo Doc Identidad -->
+            <td class="font-medium text-slate-700">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                <span [title]="(v.codigoTipoDocIdentidad || '6') + ' - ' + obtenerNombreTipoDocIdentidad(v.codigoTipoDocIdentidad || '6')">
+                  {{ obtenerNombreTipoDocIdentidad(v.codigoTipoDocIdentidad || '6') }}
+                </span>
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <select
+                  [(ngModel)]="v.codigoTipoDocIdentidad"
+                  (ngModelChange)="onTipoDocIdentidadCambio(v)"
+                  (blur)="finalizarEdicionFila(v)"
+                  class="input-grid-cell font-sans text-xs bg-white"
+                  required>
+                  <option *ngFor="let tdoc of tiposDocIdentidad" [value]="tdoc.codigo">{{ tdoc.codigo }} - {{ tdoc.nombre }}</option>
+                  <option *ngIf="tiposDocIdentidad.length === 0" value="6">6 - RUC</option>
+                  <option *ngIf="tiposDocIdentidad.length === 0" value="1">1 - DNI</option>
+                  <option *ngIf="tiposDocIdentidad.length === 0" value="4">4 - CARNET EXT.</option>
+                  <option *ngIf="tiposDocIdentidad.length === 0" value="7">7 - PASAPORTE</option>
+                </select>
+              </ng-container>
+            </td>
+
+            <!-- RUC / Doc Cliente -->
+            <td class="font-mono font-semibold text-slate-800">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                {{ v.nroDocIdentidad }}
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <input
+                  type="text"
+                  [(ngModel)]="v.nroDocIdentidad"
+                  (input)="onNroDocIdentidadInput(v)"
+                  (blur)="finalizarEdicionFila(v)"
+                  [placeholder]="obtenerPlaceholderDocIdentidad(v.codigoTipoDocIdentidad)"
+                  [maxlength]="obtenerLongitudMaxDocIdentidad(v.codigoTipoDocIdentidad)"
+                  class="input-grid-cell font-mono font-semibold"
+                  [ngClass]="{'invalido': esDocIdentidadInvalido(v)}"
+                  required />
+              </ng-container>
+            </td>
+
+            <!-- Razón Social -->
+            <td class="max-w-[280px]">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                <span class="truncate block" [title]="v.razonSocial">{{ v.razonSocial }}</span>
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <input
+                  type="text"
+                  [(ngModel)]="v.razonSocial"
+                  (ngModelChange)="marcarFilaModificada(v)"
+                  (blur)="finalizarEdicionFila(v)"
+                  placeholder="Razón Social / Nombre"
+                  class="input-grid-cell uppercase"
+                  [ngClass]="{'invalido': !v.razonSocial}"
+                  required />
+              </ng-container>
+            </td>
+
+            <!-- Base Imponible -->
+            <td class="text-right font-mono font-medium text-slate-800">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                {{ v.biGravada | number:'1.2-2' }}
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="v.biGravada"
+                  (ngModelChange)="onBiGravadaCambio(v)"
+                  (blur)="finalizarEdicionFila(v)"
+                  placeholder="0.00"
+                  class="input-grid-cell font-mono text-right"
+                  required />
+              </ng-container>
+            </td>
+
+            <!-- IGV / IPM -->
+            <td class="text-right font-mono text-slate-600">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                {{ v.igvIpm | number:'1.2-2' }}
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="v.igvIpm"
+                  (ngModelChange)="onIgvCambio(v)"
+                  (blur)="finalizarEdicionFila(v)"
+                  placeholder="0.00"
+                  class="input-grid-cell font-mono text-right" />
+              </ng-container>
+            </td>
+
+            <!-- Total CP -->
+            <td class="text-right font-mono font-bold text-slate-900 bg-slate-50/50">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                {{ v.totalCp | number:'1.2-2' }}
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="v.totalCp"
+                  (ngModelChange)="marcarFilaModificada(v); recalcularTotales()"
+                  (blur)="finalizarEdicionFila(v)"
+                  placeholder="0.00"
+                  class="input-grid-cell font-mono font-bold text-right"
+                  required />
+              </ng-container>
+            </td>
+
+            <!-- Moneda -->
+            <td class="text-center font-semibold text-[10px] text-slate-500">
+              {{ v.codigoMoneda || 'PEN' }}
+            </td>
+
+            <!-- Tipo de Cambio -->
+            <td class="text-right font-mono text-slate-400">
+              {{ (v.tipoCambio || 1) | number:'1.3-3' }}
+            </td>
+
+            <!-- Origen Dato -->
+            <td class="text-center">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border" [ngClass]="obtenerBadgeClaseOrigen(v.origenDato)">
+                  {{ v.origenDato }}
+                </span>
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <select
+                  [(ngModel)]="v.origenDato"
+                  (ngModelChange)="marcarFilaModificada(v)"
+                  (blur)="finalizarEdicionFila(v)"
+                  class="input-grid-cell font-sans text-xs bg-white text-center">
+                  <option value="SIRE">SIRE</option>
+                  <option value="EMPRESA">EMPRESA</option>
+                </select>
+              </ng-container>
+            </td>
+
+            <!-- Estado Match -->
+            <td class="text-center">
+              <ng-container *ngIf="!v.esNuevo && !v.modificado">
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border whitespace-nowrap" [ngClass]="obtenerBadgeClaseEstadoMatch(v)">
+                  {{ obtenerEtiquetaEstadoMatch(v) }}
+                </span>
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.modificado">
+                <span class="text-slate-400 italic text-[10px]">Por Revalidar</span>
+              </ng-container>
+            </td>
+
+            <!-- Acciones: Editar / Eliminar -->
+            <td class="text-center">
+              <div class="inline-flex items-center gap-1">
+                <!-- Botón Editar Fila -->
+                <button
+                  *ngIf="!v.esNuevo && !v.editando"
+                  type="button"
+                  (click)="iniciarEdicionFila(v, $event)"
+                  class="p-1 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all cursor-pointer"
+                  title="Editar este comprobante">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                </button>
+
+                <!-- Botón Eliminar / Descartar -->
+                <button
+                  type="button"
+                  (click)="eliminarFilaVisual(v, $event)"
+                  class="p-1 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-all cursor-pointer"
+                  [title]="v.esNuevo ? 'Descartar esta fila' : 'Eliminar este comprobante'">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
-</div>
 
-<!-- ======================= Modal: Comparativo + Consolidado editable ======================= -->
-<div *ngIf="consolidadoEdit" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs" (click)="cerrarModal()">
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto" (click)="$event.stopPropagation()">
-    <div class="p-6 border-b border-slate-100 flex items-start justify-between gap-4">
-      <div>
-        <h3 class="text-base font-bold text-slate-800">
-          {{ esFilaNueva ? 'Nuevo comprobante consolidado' : 'Comprobante ' + consolidadoEdit.codigoTipoCp + ' · ' + consolidadoEdit.serie + '-' + consolidadoEdit.numero }}
-        </h3>
-        <div class="flex items-center gap-2 mt-1.5 flex-wrap" *ngIf="!esFilaNueva && filaEditando">
-          <span class="px-2.5 py-1 rounded-lg text-[11px] font-bold border" [class]="resultadoClase(filaEditando.resultado)">{{ etiqueta(filaEditando.resultado) }}</span>
-          <span *ngFor="let c of camposConflictoLista(filaEditando)" class="px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-bold">{{ etiquetaCampo(c) }} difiere</span>
-        </div>
-        <p *ngIf="esFilaNueva" class="text-xs text-slate-400 mt-1">Se agregará al consolidado con origen Manual (no altera SIRE ni Empresa).</p>
-      </div>
-      <button type="button" (click)="cerrarModal()" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-    </div>
-
-    <!-- Snapshots SIRE / Empresa (solo si no es fila nueva) -->
-    <div *ngIf="!esFilaNueva && filaEditando" class="px-6 pt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <div class="rounded-2xl border border-indigo-100 overflow-hidden">
-        <div class="bg-indigo-50 px-4 py-2 text-[11px] font-bold uppercase tracking-wide text-indigo-700">SUNAT · SIRE</div>
-        <div *ngIf="filaEditando.sire; else sireVacio" class="p-4 space-y-1.5 text-xs">
-          <div class="flex justify-between"><span class="text-slate-400">Fecha</span><span class="font-semibold text-slate-700 font-mono">{{ filaEditando.sire.fechaEmision }}</span></div>
-          <div class="flex justify-between gap-2"><span class="text-slate-400">Cliente</span><span class="font-semibold text-slate-700 text-right">{{ filaEditando.sire.razonSocial }}</span></div>
-          <div class="flex justify-between"><span class="text-slate-400">Documento</span><span class="font-semibold text-slate-700 font-mono">{{ filaEditando.sire.nroDocIdentidad }}</span></div>
-          <div class="flex justify-between"><span class="text-slate-400">BI / IGV</span><span class="font-mono text-slate-700">{{ filaEditando.sire.biGravada | number:'1.2-2' }} / {{ filaEditando.sire.igvIpm | number:'1.2-2' }}</span></div>
-          <div class="flex justify-between border-t border-slate-100 pt-1.5"><span class="text-slate-400 font-semibold">Total</span><span class="font-mono font-bold text-slate-900">{{ filaEditando.sire.totalCp | number:'1.2-2' }}</span></div>
-        </div>
-        <ng-template #sireVacio><div class="p-4 text-center text-xs text-rose-500 font-semibold italic">No aparece en SIRE</div></ng-template>
-      </div>
-
-      <div class="rounded-2xl border border-violet-100 overflow-hidden">
-        <div class="bg-violet-50 px-4 py-2 text-[11px] font-bold uppercase tracking-wide text-violet-700">Registros de la Empresa</div>
-        <div *ngIf="filaEditando.empresa; else empVacio" class="p-4 space-y-1.5 text-xs">
-          <div class="flex justify-between"><span class="text-slate-400">Fecha</span><span class="font-semibold text-slate-700 font-mono">{{ filaEditando.empresa.fechaEmision }}</span></div>
-          <div class="flex justify-between gap-2"><span class="text-slate-400">Cliente</span><span class="font-semibold text-slate-700 text-right">{{ filaEditando.empresa.razonSocial }}</span></div>
-          <div class="flex justify-between"><span class="text-slate-400">Documento</span><span class="font-semibold text-slate-700 font-mono">{{ filaEditando.empresa.nroDocIdentidad }}</span></div>
-          <div class="flex justify-between"><span class="text-slate-400">BI / IGV</span><span class="font-mono text-slate-700">{{ filaEditando.empresa.biGravada | number:'1.2-2' }} / {{ filaEditando.empresa.igvIpm | number:'1.2-2' }}</span></div>
-          <div class="flex justify-between border-t border-slate-100 pt-1.5"><span class="text-slate-400 font-semibold">Total</span><span class="font-mono font-bold text-slate-900">{{ filaEditando.empresa.totalCp | number:'1.2-2' }}</span></div>
-        </div>
-        <ng-template #empVacio><div class="p-4 text-center text-xs text-sky-600 font-semibold italic">No registrado por la empresa</div></ng-template>
-      </div>
-    </div>
-
-    <!-- Diferencias -->
-    <div *ngIf="!esFilaNueva && filaEditando && camposConflictoLista(filaEditando).length > 0" class="px-6 pt-3">
-      <div class="p-3 rounded-2xl bg-amber-50 border border-amber-100 flex flex-wrap items-center gap-x-6 gap-y-1 text-[11px] font-mono">
-        <span class="text-amber-700 font-sans font-bold" *ngIf="filaEditando.difBi !== null">Δ BI: <span [class]="deltaClase(filaEditando.difBi)">{{ deltaTexto(filaEditando.difBi) }}</span></span>
-        <span class="text-amber-700 font-sans font-bold" *ngIf="filaEditando.difIgv !== null">Δ IGV: <span [class]="deltaClase(filaEditando.difIgv)">{{ deltaTexto(filaEditando.difIgv) }}</span></span>
-        <span class="text-amber-700 font-sans font-bold" *ngIf="filaEditando.difTotal !== null">Δ Total: <span [class]="deltaClase(filaEditando.difTotal)">{{ deltaTexto(filaEditando.difTotal) }}</span></span>
-        <span class="text-amber-600">Δ = Empresa − SIRE</span>
-      </div>
-    </div>
-
-    <!-- Formulario Consolidado -->
-    <div class="p-6">
-      <p class="text-[11px] font-bold uppercase tracking-wide text-emerald-600 mb-3">Consolidado (editable)</p>
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase">Tipo CP</label>
-          <input type="text" maxlength="2" [(ngModel)]="consolidadoEdit.codigoTipoCp" class="campo-form" />
-        </div>
-        <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase">Serie</label>
-          <input type="text" maxlength="10" [(ngModel)]="consolidadoEdit.serie" class="campo-form" />
-        </div>
-        <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase">Número</label>
-          <input type="text" maxlength="20" [(ngModel)]="consolidadoEdit.numero" class="campo-form" />
-        </div>
-        <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase">Fecha Emisión</label>
-          <input type="date" [(ngModel)]="consolidadoEdit.fechaEmision" class="campo-form" />
-        </div>
-        <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase">Tipo Doc</label>
-          <input type="text" maxlength="2" [(ngModel)]="consolidadoEdit.codigoTipoDocIdentidad" class="campo-form" />
-        </div>
-        <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase">N° Documento</label>
-          <input type="text" maxlength="15" [(ngModel)]="consolidadoEdit.nroDocIdentidad" class="campo-form" />
-        </div>
-        <div class="col-span-2">
-          <label class="text-[10px] font-bold text-slate-400 uppercase">Razón Social</label>
-          <input type="text" maxlength="200" [(ngModel)]="consolidadoEdit.razonSocial" class="campo-form" />
-        </div>
-        <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase">Base Imponible</label>
-          <input type="number" step="0.01" [(ngModel)]="consolidadoEdit.biGravada" class="campo-form text-right font-mono" />
-        </div>
-        <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase">IGV</label>
-          <input type="number" step="0.01" [(ngModel)]="consolidadoEdit.igvIpm" class="campo-form text-right font-mono" />
-        </div>
-        <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase">Total</label>
-          <input type="number" step="0.01" [(ngModel)]="consolidadoEdit.totalCp" class="campo-form text-right font-mono font-bold" />
-        </div>
-        <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase">Moneda</label>
-          <input type="text" maxlength="3" [(ngModel)]="consolidadoEdit.codigoMoneda" class="campo-form" />
-        </div>
-      </div>
-    </div>
-
-    <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3">
-      <button type="button" (click)="cerrarModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-colors cursor-pointer">Cancelar</button>
-      <button type="button" (click)="guardarFila()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-500/20 transition-all cursor-pointer">
-        {{ esFilaNueva ? 'Agregar al consolidado' : 'Guardar fila' }}
-      </button>
-    </div>
+  <!-- Estado Vacío cuando no hay registros -->
+  <div *ngIf="!cargandoDatos && ventasMatch.length === 0" class="bg-white p-8 rounded-2xl border border-slate-200/80 text-center text-slate-400">
+    <svg class="w-10 h-10 mx-auto mb-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+    <p class="text-xs font-medium">No se encontraron comprobantes consolidados en este proceso de match.</p>
   </div>
 </div>

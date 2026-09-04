@@ -273,9 +273,6 @@
       <div *ngIf="!cargandoEmpresa && cargasEmpresa.length === 0" class="py-14 text-center">
         <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
         <p class="text-sm font-medium text-slate-500">Aún no has cargado los datos de tu empresa.</p>
-        <button type="button" (click)="irCargarDatosEmpresa()" class="mt-4 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold cursor-pointer shadow-sm shadow-indigo-500/20">
-          Cargar primer archivo
-        </button>
       </div>
 
       <div *ngIf="!cargandoEmpresa && cargasEmpresa.length > 0" class="overflow-x-auto rounded-b-3xl">
@@ -286,7 +283,6 @@
               <th class="py-4 px-6">Archivo</th>
               <th class="py-4 px-4 text-center">Registros</th>
               <th class="py-4 px-4 text-center">Observaciones</th>
-              <th class="py-4 px-6">Cargado</th>
               <th class="py-4 px-6 text-center">Acciones</th>
             </tr>
           </thead>
@@ -308,7 +304,6 @@
                   {{ carga.numObservaciones }}
                 </span>
               </td>
-              <td class="py-4 px-6 text-xs text-slate-500">{{ formatearFecha(carga.fechaCreacion) }}</td>
               <td class="py-4 px-6 text-center">
                 <div class="inline-flex items-center gap-2">
                   <button
@@ -411,10 +406,15 @@
               <td class="py-4 px-6">
                 <div *ngIf="item.match" class="space-y-1">
                   <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-100">✓ {{ item.match.totalCoincidentes }}</span>
-                    <span class="px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 text-[11px] font-bold border border-amber-100">⚠ {{ item.match.totalConflictos }}</span>
-                    <span class="px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 text-[11px] font-bold border border-rose-100">✗ {{ item.match.totalSoloSire }}</span>
-                    <span class="px-2 py-0.5 rounded-lg bg-sky-50 text-sky-700 text-[11px] font-bold border border-sky-100">◆ {{ item.match.totalSoloEmpresa }}</span>
+                    <span class="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-100" title="Total Comprobantes Consolidados">
+                      ✓ {{ item.match.totalCoincidentes }} registros
+                    </span>
+                    <span *ngIf="item.match.totalConflictos > 0" class="px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 text-[11px] font-bold border border-amber-100" title="Observaciones detectadas">
+                      ⚠ {{ item.match.totalConflictos }} obs.
+                    </span>
+                    <span *ngIf="item.match.totalConflictos === 0" class="px-2 py-0.5 rounded-lg bg-slate-50 text-slate-600 text-[11px] font-medium border border-slate-100">
+                      Sin observaciones
+                    </span>
                   </div>
                   <div class="text-[11px] text-slate-400">Ejecutado el {{ formatearFecha(item.match.fechaEjecucion) }}</div>
                 </div>

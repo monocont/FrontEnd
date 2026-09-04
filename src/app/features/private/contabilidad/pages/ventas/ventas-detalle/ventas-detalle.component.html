@@ -326,93 +326,11 @@
   </ng-container>
 
   <!-- MODAL DE OBSERVACIONES / ADVERTENCIAS DE CORRELATIVIDAD -->
-  <div
-    *ngIf="mostrarErrores && errores.length > 0"
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fade-in"
-    (click)="mostrarErrores = false"
-  >
-    <div
-      class="bg-white w-full max-w-4xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[85vh] animate-scale-up"
-      (click)="$event.stopPropagation()"
-    >
-      <!-- Cabecera del Modal -->
-      <div class="px-6 py-4 bg-amber-500/10 border-b border-amber-200/60 flex items-center justify-between shrink-0">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <div>
-            <h3 class="text-sm font-bold text-slate-800">Detalle de Observaciones y Advertencias</h3>
-            <p class="text-[11px] text-slate-500">Se encontraron {{ errores.length }} inconsistencias detectadas en la carga</p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          (click)="mostrarErrores = false"
-          class="w-8 h-8 rounded-xl bg-white/80 hover:bg-white text-slate-400 hover:text-slate-700 flex items-center justify-center border border-slate-200/60 shadow-2xs transition-all cursor-pointer"
-          title="Cerrar ventana"
-        >
-          ✕
-        </button>
-      </div>
-
-      <!-- Tabla de Errores con Scroll Limpio -->
-      <div class="overflow-y-auto flex-1 relative bg-white">
-        <table class="w-full text-xs text-left border-collapse">
-          <thead class="bg-slate-100/95 backdrop-blur-md text-slate-700 sticky top-0 font-bold border-b border-slate-200 z-20 shadow-2xs">
-            <tr>
-              <th class="py-3 px-4 bg-slate-100">Tipo Error</th>
-              <th class="py-3 px-4 bg-slate-100">Campo</th>
-              <th class="py-3 px-4 text-center bg-slate-100">Severidad</th>
-              <th class="py-3 px-4 bg-slate-100">Detalle / Mensaje de Inconsistencia</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 text-slate-700">
-            <tr *ngFor="let err of erroresOrdenados" class="hover:bg-slate-50/70 transition-colors">
-              <td class="py-3 px-4 font-semibold text-slate-800 whitespace-nowrap">
-                <span class="inline-flex items-center gap-1.5">
-                  <span
-                    class="w-2 h-2 rounded-full"
-                    [ngClass]="err.severidad?.toLowerCase() === 'error' ? 'bg-rose-500' : 'bg-amber-500'"
-                  ></span>
-                  {{ err.tipoError || 'General' }}
-                </span>
-              </td>
-              <td class="py-3 px-4 font-mono text-slate-600 whitespace-nowrap font-medium">
-                {{ err.campoError || '-' }}
-              </td>
-              <td class="py-3 px-4 text-center whitespace-nowrap">
-                <span
-                  class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider inline-block"
-                  [ngClass]="err.severidad?.toLowerCase() === 'error' ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-amber-100 text-amber-800 border border-amber-200'"
-                >
-                  {{ err.severidad }}
-                </span>
-              </td>
-              <td class="py-3 px-4 text-slate-700 leading-snug">
-                {{ err.mensaje }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pie del Modal -->
-      <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between shrink-0">
-        <span class="text-xs text-slate-400">Total observaciones: <b class="text-slate-700">{{ errores.length }}</b></span>
-        <button
-          type="button"
-          (click)="mostrarErrores = false"
-          class="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
-        >
-          Entendido / Cerrar
-        </button>
-      </div>
-    </div>
-  </div>
+  <app-modal-observaciones
+    [visible]="mostrarErrores"
+    [observaciones]="errores"
+    (cerrar)="mostrarErrores = false"
+  ></app-modal-observaciones>
 
   <!-- GRILLA EXCEL-LIKE: Visualización de TODOS los Registros de Ventas -->
   <div *ngIf="ventas.length > 0" class="w-full">

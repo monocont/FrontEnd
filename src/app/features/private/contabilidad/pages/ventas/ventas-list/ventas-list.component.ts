@@ -2,9 +2,11 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { EmpresaContextService } from '../../../../../../core/services/empresa-context.service';
 import { EmpresaService, Empresa } from '../../../../empresa/services/empresa.service';
 import { OperacionesService, ArchivoCargaItem } from '../../../services/operaciones.service';
+import { extraerMensajeError } from '../../../../../../core/utils/error-handler.util';
 import {
   VentasWorkspaceService,
   CargaEmpresaItem,
@@ -386,17 +388,52 @@ export class VentasListComponent implements OnInit {
   }
 
   // ------------------------------------------------------------------
-  // Pestaña 3 — Match de Información (mock)
+  // Pestaña 3 — Match de Información
   // ------------------------------------------------------------------
 
   cargarPanelMatch(): void {
+    if (!this.ruc) return;
+
     this.cargandoMatch = true;
     this.mensajeErrorMatch = null;
     this.cdr.detectChanges();
-    this.workspaceService.obtenerPanelMatch().subscribe({
-      next: (items) => {
-        this.panelMatch = items;
+
+    // Consultamos cargas de SIRE, Empresa y Match para el RUC
+    forkJoin({
+      sire: this.operacionesService.listarCargas(this.ruc, 'Ventas', this.periodoSeleccionado, 1, 100),
+      empresa: this.operacionesService.listarCargas(this.ruc, 'VentasEmpresa', this.periodoSeleccionado, 1, 100),
+      matches: this.operacionesService.listarCargas(this.ruc, 'VentaMatch', this.periodoSeleccionado, 1, 100)
+    }).subscribe({
+      next: ({ sire, empresa, matches }) => {
         this.cargandoMatch = false;
+
+        const periodosSet = new Set<string>();
+        sire.forEach(c => c.periodo && periodosSet.add(c.periodo));
+        empresa.forEach(c => c.periodo && periodosSet.add(c.periodo));
+        matches.forEach(c => c.periodo && periodosSet.add(c.periodo));
+
+        const periodos = Array.from(periodosSet).sort((a, b) => b.localeCompare(a));
+
+        this.panelMatch = periodos.map(periodo => {
+          const cSire = sire.find(s => s.periodo === periodo);
+          const cEmp = empresa.find(e => e.periodo === periodo);
+          const cMatch = matches.find(m => m.periodo === periodo);
+
+          return {
+            periodo,
+            sireCargado: !!cSire && (cSire.numRegistros || 0) > 0,
+            empresaCargada: !!cEmp && (cEmp.numRegistros || 0) > 0,
+            match: cMatch ? {
+              idMatch: cMatch.idCarga,
+              fechaEjecucion: cMatch.fechaCreacion,
+              totalCoincidentes: cMatch.numRegistrosValidos || cMatch.numRegistros || 0,
+              totalConflictos: cMatch.numRegistrosError || 0,
+              totalSoloSire: 0,
+              totalSoloEmpresa: 0
+            } : null
+          };
+        });
+
         this.cdr.detectChanges();
       },
       error: () => {
@@ -414,28 +451,46 @@ export class VentasListComponent implements OnInit {
   async ejecutarMatch(item: PanelMatchItem): Promise<void> {
     if (!this.puedeEjecutarMatch(item)) return;
 
+    const esReejecucion = !!item.match;
+
+    const mensajeModal = esReejecucion
+      ? `Al continuar se eliminarán definitivamente los resultados del match actual y las observaciones registradas para el periodo ${this.formatearPeriodo(item.periodo)}, y se volverá a procesar el cruce entre SIRE y la Empresa. ¿Desea continuar?`
+      : `Se procesará el cruce entre los comprobantes de SIRE y los registros de la empresa para el periodo ${this.formatearPeriodo(item.periodo)}. ¿Desea continuar?`;
+
     const confirmado = await this.modalService.open({
       type: 'confirm',
-      title: item.match ? 'Re-ejecutar Match' : 'Ejecutar Match',
-      message: `Se cruzarán los comprobantes de SIRE contra los datos de la empresa para ${this.formatearPeriodo(item.periodo)}.${item.match ? ' El match anterior será reemplazado y se perderán las ediciones del consolidado.' : ''} ¿Desea continuar?`,
-      confirmText: 'Sí, ejecutar',
+      title: esReejecucion ? 'Re-ejecutar Match de Ventas' : 'Ejecutar Match de Ventas',
+      message: mensajeModal,
+      confirmText: esReejecucion ? 'Sí, re-ejecutar' : 'Sí, ejecutar match',
       cancelText: 'Cancelar'
     });
     if (!confirmado) return;
 
     this.loadingService.show();
-    this.workspaceService.ejecutarMatch(item.periodo).subscribe({
-      next: (resumen) => {
+
+    const request$ = esReejecucion
+      ? this.operacionesService.reejecutarMatchVentas(this.ruc, item.periodo)
+      : this.operacionesService.ejecutarMatchVentas(this.ruc, item.periodo);
+
+    request$.subscribe({
+      next: async (res) => {
         this.loadingService.hide();
-        this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'ventas', 'match', resumen.idMatch]);
+        await this.modalService.open({
+          type: 'info',
+          title: esReejecucion ? 'Match Re-ejecutado con Éxito' : 'Match Ejecutado con Éxito',
+          message: `Se procesaron ${res.totalConsolidado} comprobantes consolidados: ${res.coincidenciasExactas} coincidencias exactas, ${res.diferencias} con diferencias y ${res.soloUnOrigen} en un solo origen. Observaciones detectadas: ${res.totalObservaciones}.`
+        });
+        this.cargarPanelMatch();
+        this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'ventas', 'match', res.idCarga]);
       },
       error: async (err) => {
         this.loadingService.hide();
+        const msg = extraerMensajeError(err, 'Ocurrió un error al procesar el match de ventas.');
         await this.modalService.open({
           type: 'error',
-          title: 'No se pudo ejecutar el match',
-          message: err?.message || 'Ocurrió un error al cruzar la información.',
-          confirmText: 'Volver'
+          title: esReejecucion ? 'No se pudo re-ejecutar el match' : 'No se pudo ejecutar el match',
+          message: msg,
+          confirmText: 'Entendido'
         });
       }
     });
