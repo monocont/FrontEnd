@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface ObservacionItem {
@@ -17,7 +17,7 @@ export interface ObservacionItem {
   templateUrl: './modal-observaciones.component.html',
   styleUrl: './modal-observaciones.component.css'
 })
-export class ModalObservacionesComponent {
+export class ModalObservacionesComponent implements OnChanges {
   @Input() visible: boolean = false;
   @Input() titulo: string = 'Detalle de Observaciones y Advertencias';
   @Input() subtitulo?: string;
@@ -25,8 +25,16 @@ export class ModalObservacionesComponent {
 
   @Output() cerrar = new EventEmitter<void>();
 
-  get observacionesOrdenadas(): ObservacionItem[] {
-    return (this.observaciones || []).slice().sort((a, b) => {
+  listaOrdenada: ObservacionItem[] = [];
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['observaciones']) {
+      this.ordenarObservaciones();
+    }
+  }
+
+  private ordenarObservaciones(): void {
+    this.listaOrdenada = (this.observaciones || []).slice().sort((a, b) => {
       const tipoA = (a.tipoError || '').toLowerCase();
       const tipoB = (b.tipoError || '').toLowerCase();
       const cmpTipo = tipoA.localeCompare(tipoB);
@@ -39,6 +47,10 @@ export class ModalObservacionesComponent {
 
       return (a.numeroLinea || 0) - (b.numeroLinea || 0);
     });
+  }
+
+  trackByObservacion(index: number, item: ObservacionItem): string {
+    return `${item.tipoError}_${item.campoError}_${item.numeroLinea}_${item.mensaje}`;
   }
 
   onCerrar(): void {

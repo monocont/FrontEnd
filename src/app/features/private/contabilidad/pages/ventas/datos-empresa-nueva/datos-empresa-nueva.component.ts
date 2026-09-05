@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EmpresaContextService } from '../../../../../../core/services/empresa-context.service';
-import { VentasWorkspaceService } from '../../../services/ventas-workspace.service';
 import { OperacionesService } from '../../../services/operaciones.service';
 import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
 import { ModalService } from '../../../../../../shared/ui/modal/modal.service';
@@ -21,7 +20,7 @@ export class DatosEmpresaNuevaComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private empresaContext = inject(EmpresaContextService);
-  private workspaceService = inject(VentasWorkspaceService);
+  private operacionesService = inject(OperacionesService);
   private loadingService = inject(LoadingService);
   private modalService = inject(ModalService);
   private cdr = inject(ChangeDetectorRef);
@@ -189,63 +188,134 @@ export class DatosEmpresaNuevaComponent implements OnInit {
   }
 
   descargarPlantilla(): void {
-    // Cabeceras en mayúsculas limpias
+    // 21 Cabeceras homologadas con formato de Registro de Ventas
     const cabeceras = [
       'FECHA EMISION',
+      'FECHA VCTO',
       'TIPO CP',
       'SERIE',
       'NUMERO',
       'TIPO DOC',
       'RUC / DOC CLIENTE',
+      'RAZON SOCIAL CLIENTE',
+      'VALOR EXPORTACION',
+      'BASE IMPONIBLE',
+      'EXONERADO',
+      'INAFECTO',
+      'ISC',
+      'IGV / IPM',
+      'OTROS TRIBUTOS',
       'TOTAL CP',
-      'MONEDA',
-      'TIPO CAMBIO'
+      'TIPO CAMBIO',
+      'FECHA EMISION DOC MODIFICADO',
+      'TIPO CP MODIFICADO',
+      'SERIE CP MODIFICADO',
+      'NUMERO CP MODIFICADO'
     ];
 
-    // 2 filas de ejemplo con ceros a la izquierda preservados
+    // Filas de ejemplo con datos tributarios realistas y preservación de formato
     const filasEjemplo = [
       [
         '2026-05-04',
+        '2026-05-30',
         '01',
         'F001',
         '00215',
         '6',
         '20504012345',
+        'DISTRIBUIDORA SAN JUAN S.A.C.',
+        0.00,
+        5000.00,
+        0.00,
+        0.00,
+        0.00,
+        900.00,
+        0.00,
         5900.00,
-        'PEN',
-        1.000
+        1.000,
+        '',
+        '',
+        '',
+        ''
       ],
       [
+        '2026-05-10',
         '2026-05-10',
         '03',
         'B001',
         '000450',
         '1',
         '08123456',
+        'PEREZ LOPEZ JUAN CARLOS',
+        0.00,
+        250.00,
+        0.00,
+        0.00,
+        0.00,
+        45.00,
+        0.00,
         295.00,
-        'USD',
-        3.750
+        3.750,
+        '',
+        '',
+        '',
+        ''
+      ],
+      [
+        '2026-05-15',
+        '',
+        '07',
+        'FC01',
+        '000012',
+        '6',
+        '20504012345',
+        'DISTRIBUIDORA SAN JUAN S.A.C.',
+        0.00,
+        -500.00,
+        0.00,
+        0.00,
+        0.00,
+        -90.00,
+        0.00,
+        -590.00,
+        1.000,
+        '2026-05-04',
+        '01',
+        'F001',
+        '00215'
       ]
     ];
 
     const data = [cabeceras, ...filasEjemplo];
     const ws = XLSX.utils.aoa_to_sheet(data);
 
-    // Ajustar anchos de columnas
+    // Ancho de cada una de las 21 columnas
     ws['!cols'] = [
-      { wch: 18 }, // FECHA EMISION
-      { wch: 12 }, // TIPO CP
-      { wch: 10 }, // SERIE
-      { wch: 16 }, // NUMERO
-      { wch: 12 }, // TIPO DOC
-      { wch: 24 }, // RUC / DOC CLIENTE
-      { wch: 16 }, // TOTAL CP
-      { wch: 12 }, // MONEDA
-      { wch: 14 }  // TIPO CAMBIO
+      { wch: 15 }, // 0: FECHA EMISION
+      { wch: 15 }, // 1: FECHA VCTO
+      { wch: 10 }, // 2: TIPO CP
+      { wch: 10 }, // 3: SERIE
+      { wch: 14 }, // 4: NUMERO
+      { wch: 10 }, // 5: TIPO DOC
+      { wch: 20 }, // 6: RUC / DOC CLIENTE
+      { wch: 32 }, // 7: RAZON SOCIAL CLIENTE
+      { wch: 18 }, // 8: VALOR EXPORTACION
+      { wch: 16 }, // 9: BASE IMPONIBLE
+      { wch: 14 }, // 10: EXONERADO
+      { wch: 14 }, // 11: INAFECTO
+      { wch: 12 }, // 12: ISC
+      { wch: 14 }, // 13: IGV / IPM
+      { wch: 16 }, // 14: OTROS TRIBUTOS
+      { wch: 14 }, // 15: TOTAL CP
+      { wch: 12 }, // 16: TIPO CAMBIO
+      { wch: 28 }, // 17: FECHA EMISION DOC MODIFICADO
+      { wch: 20 }, // 18: TIPO CP MODIFICADO
+      { wch: 20 }, // 19: SERIE CP MODIFICADO
+      { wch: 22 }  // 20: NUMERO CP MODIFICADO
     ];
 
-    // Formatear columnas como texto explícito (@) para preservar ceros a la izquierda (ej. 00215, 08123456, F001)
-    const columnasTexto = [1, 2, 3, 4, 5]; // B: TIPO CP, C: SERIE, D: NUMERO, E: TIPO DOC, F: RUC / DOC CLIENTE
+    // Formatear columnas de texto como texto explícito (@) para preservar ceros a la izquierda
+    const columnasTexto = [2, 3, 4, 5, 6, 7, 18, 19, 20];
     for (let r = 1; r <= 1000; r++) {
       for (const col of columnasTexto) {
         const cellRef = XLSX.utils.encode_cell({ r, c: col });
@@ -257,7 +327,7 @@ export class DatosEmpresaNuevaComponent implements OnInit {
         }
       }
     }
-    ws['!ref'] = 'A1:I1000';
+    ws['!ref'] = 'A1:AC1000';
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Ventas_Empresa');
@@ -267,8 +337,6 @@ export class DatosEmpresaNuevaComponent implements OnInit {
   // --------------------------------------------------------------------------
   // Carga
   // --------------------------------------------------------------------------
-
-  private operacionesService = inject(OperacionesService);
 
   async ejecutarCarga(): Promise<void> {
     if (!this.archivoSeleccionado || !this.periodoSeleccionado) return;

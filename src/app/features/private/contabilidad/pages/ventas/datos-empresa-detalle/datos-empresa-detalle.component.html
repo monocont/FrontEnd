@@ -75,6 +75,20 @@
         <span class="font-bold text-sky-700">S/ {{ totalIgv | number:'1.2-2' }}</span>
       </div>
 
+      <div *ngIf="totalExonerado > 0" class="h-3.5 w-px bg-slate-200"></div>
+
+      <div *ngIf="totalExonerado > 0" class="flex items-center gap-1.5">
+        <span class="text-slate-400 font-medium uppercase text-[10px]">Exonerado:</span>
+        <span class="font-bold text-amber-700">S/ {{ totalExonerado | number:'1.2-2' }}</span>
+      </div>
+
+      <div *ngIf="totalInafecto > 0" class="h-3.5 w-px bg-slate-200"></div>
+
+      <div *ngIf="totalInafecto > 0" class="flex items-center gap-1.5">
+        <span class="text-slate-400 font-medium uppercase text-[10px]">Inafecto:</span>
+        <span class="font-bold text-purple-700">S/ {{ totalInafecto | number:'1.2-2' }}</span>
+      </div>
+
       <div class="h-3.5 w-px bg-slate-200"></div>
 
       <div class="flex items-center gap-1.5">
@@ -226,6 +240,13 @@
                   <span>{{ fechasEmisionSeleccionadas.length }} seleccionado(s)</span>
                   <button type="button" (click)="menuFiltroFechaEmisionAbierto = false" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-2.5 py-1 rounded-md">Aceptar</button>
                 </div>
+              </div>
+            </th>
+
+            <!-- Columna Fecha Vcto -->
+            <th class="text-center" (click)="ordenarPor('fechaVencimiento')" title="Fecha de Vencimiento">
+              <div class="sort-header justify-center">
+                <span>Fecha Vcto</span>
               </div>
             </th>
 
@@ -586,6 +607,20 @@
               </div>
             </th>
 
+            <!-- Columna Exonerado -->
+            <th (click)="ordenarPor('montoExonerado')" class="text-right cursor-pointer" title="Operaciones Exoneradas">
+              <div class="sort-header justify-end">
+                <span>Exonerado</span>
+              </div>
+            </th>
+
+            <!-- Columna Inafecto -->
+            <th (click)="ordenarPor('montoInafecto')" class="text-right cursor-pointer" title="Operaciones Inafectas">
+              <div class="sort-header justify-end">
+                <span>Inafecto</span>
+              </div>
+            </th>
+
             <!-- Columna Total CP -->
             <th (click)="ordenarPor('totalCp')" class="text-right cursor-pointer" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
               <div class="sort-header justify-end">
@@ -650,6 +685,20 @@
               </div>
             </th>
 
+            <!-- Columna Tipo Cambio -->
+            <th class="text-right" (click)="ordenarPor('tipoCambio')" title="Tipo de Cambio">
+              <div class="sort-header justify-end">
+                <span>T.C.</span>
+              </div>
+            </th>
+
+            <!-- Columna Doc Modificado -->
+            <th class="text-center" title="Comprobante Modificado (Notas de Crédito/Débito)">
+              <div class="sort-header justify-center">
+                <span>Doc Modificado</span>
+              </div>
+            </th>
+
             <!-- Columna Acciones -->
             <th class="text-center w-16">Acciones</th>
           </tr>
@@ -657,7 +706,7 @@
         <tbody>
           <!-- Botón de inserción inicial si no hay registros -->
           <tr *ngIf="ventas.length === 0 && !cargando" class="border-b border-dashed border-slate-200">
-            <td colspan="11" class="text-center py-6 bg-slate-50/50">
+            <td colspan="17" class="text-center py-6 bg-slate-50/50">
               <button
                 type="button"
                 (click)="insertarFila()"
@@ -704,6 +753,21 @@
                   class="input-grid-cell font-sans text-xs"
                   [ngClass]="{'invalido': !v.fechaEmision}"
                   required />
+              </ng-container>
+            </td>
+
+            <!-- Fecha Vcto -->
+            <td class="font-medium text-slate-500 text-center">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                {{ v.fechaVencimiento ? (v.fechaVencimiento | date:'dd/MM/yyyy') : '-' }}
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <input
+                  type="date"
+                  [(ngModel)]="v.fechaVencimiento"
+                  (ngModelChange)="verificarYMarcarModificacion(v)"
+                  (blur)="finalizarEdicion(v)"
+                  class="input-grid-cell font-sans text-xs" />
               </ng-container>
             </td>
 
@@ -863,6 +927,40 @@
               </ng-container>
             </td>
 
+            <!-- Exonerado -->
+            <td class="text-right font-mono text-slate-600">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                {{ (v.montoExonerado || 0) | number:'1.2-2' }}
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="v.montoExonerado"
+                  (ngModelChange)="verificarYMarcarModificacion(v)"
+                  (blur)="finalizarEdicion(v)"
+                  placeholder="0.00"
+                  class="input-grid-cell font-mono text-right" />
+              </ng-container>
+            </td>
+
+            <!-- Inafecto -->
+            <td class="text-right font-mono text-slate-600">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                {{ (v.montoInafecto || 0) | number:'1.2-2' }}
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="v.montoInafecto"
+                  (ngModelChange)="verificarYMarcarModificacion(v)"
+                  (blur)="finalizarEdicion(v)"
+                  placeholder="0.00"
+                  class="input-grid-cell font-mono text-right" />
+              </ng-container>
+            </td>
+
             <!-- Total CP -->
             <td class="text-right font-mono font-bold text-slate-900 bg-slate-50/50">
               <ng-container *ngIf="!v.esNuevo && !v.editando">
@@ -894,6 +992,54 @@
                   (ngModelChange)="verificarYMarcarModificacion(v)"
                   (blur)="finalizarEdicion(v)"
                   class="input-grid-cell uppercase text-center font-mono text-[10px]" />
+              </ng-container>
+            </td>
+
+            <!-- Tipo Cambio -->
+            <td class="text-right font-mono text-slate-600">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                {{ (v.tipoCambio || 1) | number:'1.3-4' }}
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <input
+                  type="number"
+                  step="0.001"
+                  [(ngModel)]="v.tipoCambio"
+                  (ngModelChange)="verificarYMarcarModificacion(v)"
+                  (blur)="finalizarEdicion(v)"
+                  placeholder="1.000"
+                  class="input-grid-cell font-mono text-right" />
+              </ng-container>
+            </td>
+
+            <!-- Doc Modificado -->
+            <td class="text-center font-mono text-[11px] text-slate-500">
+              <ng-container *ngIf="!v.esNuevo && !v.editando">
+                <span *ngIf="v.serieCpModificado || v.numeroCpModificado">
+                  {{ v.codigoTipoCpModificado || '01' }} {{ v.serieCpModificado }}-{{ v.numeroCpModificado }}
+                </span>
+                <span *ngIf="!v.serieCpModificado && !v.numeroCpModificado">-</span>
+              </ng-container>
+              <ng-container *ngIf="v.esNuevo || v.editando">
+                <div class="flex items-center justify-center gap-1">
+                  <input
+                    type="text"
+                    placeholder="Serie"
+                    maxlength="4"
+                    [(ngModel)]="v.serieCpModificado"
+                    (ngModelChange)="verificarYMarcarModificacion(v)"
+                    (blur)="finalizarEdicion(v)"
+                    class="input-grid-cell font-mono text-center uppercase w-12" />
+                  <span>-</span>
+                  <input
+                    type="text"
+                    placeholder="Nro"
+                    maxlength="10"
+                    [(ngModel)]="v.numeroCpModificado"
+                    (ngModelChange)="verificarYMarcarModificacion(v)"
+                    (blur)="finalizarEdicion(v)"
+                    class="input-grid-cell font-mono text-center w-16" />
+                </div>
               </ng-container>
             </td>
 

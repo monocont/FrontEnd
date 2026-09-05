@@ -1,1 +1,10 @@
-/* Estilos complementarios para el modal de observaciones si fueran necesarios */
+/* Estilos de selección de texto para el modal de observaciones */
+::selection {
+  background-color: #bae6fd;
+  color: #0f172a;
+}
+
+td, th, span, p, h3 {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}

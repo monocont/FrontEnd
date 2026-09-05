@@ -22,6 +22,34 @@
 
     <!-- Acciones Rápidas Superior -->
     <div class="flex items-center gap-2">
+      <!-- Botón Exportar para SIRE (Anexo 2) -->
+      <button
+        type="button"
+        (click)="exportarParaSire()"
+        [disabled]="ventasMatch.length === 0"
+        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+        title="Descargar archivo plano comprimido (.zip) para importar en SUNAT SIRE RVIE (Anexo 2)"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        <span>Exportar para SIRE</span>
+      </button>
+
+      <!-- Botón Descarga SUNAT (CDP) -->
+      <button
+        type="button"
+        (click)="descargarSunatCdp()"
+        [disabled]="ventasMatch.length === 0"
+        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-sky-600 hover:bg-sky-700 active:bg-sky-800 disabled:opacity-50 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+        title="Descargar archivo comprimido (.zip) con archivos CDP (máx. 100 registros c/u) para validaciones en SUNAT"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span>Descarga SUNAT</span>
+      </button>
+
       <!-- Botón Ver Observaciones si existen -->
       <button
         *ngIf="totalObservaciones > 0"
@@ -798,7 +826,7 @@
           </tr>
 
           <tr
-            *ngFor="let v of ventasFiltradas; let i = index"
+            *ngFor="let v of ventasFiltradas; let i = index; trackBy: trackByVentaMatch"
             class="fila-contenedor group cursor-pointer"
             (dblclick)="iniciarEdicionFila(v, $event)"
             [ngClass]="obtenerClaseFilaMatch(v)">

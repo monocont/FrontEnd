@@ -5,13 +5,13 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { EmpresaContextService } from '../../../../../../core/services/empresa-context.service';
 import { EmpresaService, Empresa } from '../../../../empresa/services/empresa.service';
-import { OperacionesService, ArchivoCargaItem } from '../../../services/operaciones.service';
-import { extraerMensajeError } from '../../../../../../core/utils/error-handler.util';
 import {
-  VentasWorkspaceService,
+  OperacionesService,
+  ArchivoCargaItem,
   CargaEmpresaItem,
   PanelMatchItem
-} from '../../../services/ventas-workspace.service';
+} from '../../../services/operaciones.service';
+import { extraerMensajeError } from '../../../../../../core/utils/error-handler.util';
 import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
 import { ModalService } from '../../../../../../shared/ui/modal/modal.service';
 
@@ -30,7 +30,6 @@ export class VentasListComponent implements OnInit {
   private empresaService = inject(EmpresaService);
   private empresaContext = inject(EmpresaContextService);
   private operacionesService = inject(OperacionesService);
-  private workspaceService = inject(VentasWorkspaceService);
   private loadingService = inject(LoadingService);
   private modalService = inject(ModalService);
   private cdr = inject(ChangeDetectorRef);
@@ -45,7 +44,7 @@ export class VentasListComponent implements OnInit {
   tabActiva: TabActiva = 'sire';
 
   // ------------------------------------------------------------------
-  // Pestaña 1 — Historial SIRE (existente)
+  // Pestaña 1 — Historial SIRE
   // ------------------------------------------------------------------
   cargas: ArchivoCargaItem[] = [];
   cargando: boolean = true;
@@ -60,14 +59,14 @@ export class VentasListComponent implements OnInit {
   anioSeleccionado: number | null = null;
 
   // ------------------------------------------------------------------
-  // Pestaña 2 — Datos de la Empresa (maqueta mock)
+  // Pestaña 2 — Datos de la Empresa
   // ------------------------------------------------------------------
   cargasEmpresa: CargaEmpresaItem[] = [];
   cargandoEmpresa: boolean = true;
   mensajeErrorEmpresa: string | null = null;
 
   // ------------------------------------------------------------------
-  // Pestaña 3 — Match de Información (maqueta mock)
+  // Pestaña 3 — Match de Información
   // ------------------------------------------------------------------
   panelMatch: PanelMatchItem[] = [];
   cargandoMatch: boolean = true;
@@ -311,7 +310,7 @@ export class VentasListComponent implements OnInit {
   }
 
   // ------------------------------------------------------------------
-  // Pestaña 2 — Datos de la Empresa (mock)
+  // Pestaña 2 — Datos de la Empresa
   // ------------------------------------------------------------------
 
   cargarCargasEmpresa(): void {
@@ -499,6 +498,43 @@ export class VentasListComponent implements OnInit {
   verMatch(item: PanelMatchItem): void {
     if (!item.match) return;
     this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'ventas', 'match', item.match.idMatch]);
+  }
+
+  async eliminarMatch(item: PanelMatchItem, event?: Event): Promise<void> {
+    if (event) event.stopPropagation();
+    if (!item.match) return;
+
+    const confirmado = await this.modalService.open({
+      type: 'confirm',
+      title: 'Eliminar Match de Ventas',
+      message: `¿Está seguro de eliminar definitivamente los resultados del match del periodo ${this.formatearPeriodo(item.periodo)}? Se eliminarán todos los comprobantes consolidados y las observaciones de este cruce. Esta acción no se puede deshacer.`,
+      confirmText: 'Sí, eliminar match',
+      cancelText: 'Cancelar'
+    });
+
+    if (!confirmado) return;
+
+    this.loadingService.show();
+    this.operacionesService.eliminarMatchVentas(item.match.idMatch).subscribe({
+      next: () => {
+        this.loadingService.hide();
+        this.modalService.open({
+          type: 'info',
+          title: 'Match Eliminado',
+          message: `Los resultados del match del periodo ${this.formatearPeriodo(item.periodo)} fueron eliminados correctamente.`
+        });
+        this.cargarPanelMatch();
+      },
+      error: (err) => {
+        this.loadingService.hide();
+        const msg = extraerMensajeError(err, 'No se pudo eliminar el match de ventas.');
+        this.modalService.open({
+          type: 'error',
+          title: 'Error al Eliminar',
+          message: msg
+        });
+      }
+    });
   }
 
   formatearFecha(iso: string | undefined): string {

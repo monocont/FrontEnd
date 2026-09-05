@@ -103,18 +103,74 @@ export interface VentaEmpresaItem {
   empresaRuc?: string;
   periodo?: string;
   numeroLinea: number;
+  carSunat?: string;
   fechaEmision: string;
+  fechaVencimiento?: string;
   codigoTipoCp: string;
   serie: string;
   numero: string;
+  numeroFinal?: string;
   codigoTipoDocIdentidad: string;
   nroDocIdentidad: string;
+  razonSocial: string;
+  valorFacturadoExportacion?: number;
+  biGravada: number;
+  descuentoBi?: number;
+  igvIpm: number;
+  descuentoIgv?: number;
+  montoExonerado?: number;
+  montoInafecto?: number;
+  montoIsc?: number;
+  biGravadaIvap?: number;
+  montoIvap?: number;
+  montoIcbper?: number;
+  montoOtrosTributos?: number;
   totalCp: number;
   codigoMoneda: string;
   tipoCambio: number;
+  fechaEmisionDocModificado?: string;
+  codigoTipoCpModificado?: string;
+  serieCpModificado?: string;
+  numeroCpModificado?: string;
+  codigoEstadoComprobante?: string;
+  codigoTipoNota?: string;
+  tipoOperacion?: string;
+  camposLibres?: string;
   esNuevo?: boolean;
   editando?: boolean;
   modificado?: boolean;
+}
+
+export interface CargaEmpresaItem {
+  idCargaEmpresa: string;
+  periodo: string;
+  nombreOriginal: string;
+  numRegistros: number;
+  numObservaciones: number;
+  fechaCreacion: string;
+}
+
+export interface ObservacionEmpresaItem {
+  numeroLinea: number;
+  tipoError: string;
+  campoError: string | null;
+  valorLectura: string | null;
+  mensaje: string;
+  severidad: 'Error' | 'Advertencia';
+}
+
+export interface PanelMatchItem {
+  periodo: string;
+  sireCargado: boolean;
+  empresaCargada: boolean;
+  match: {
+    idMatch: string;
+    fechaEjecucion: string;
+    totalCoincidentes: number;
+    totalConflictos: number;
+    totalSoloSire: number;
+    totalSoloEmpresa: number;
+  } | null;
 }
 
 export interface VentaMatchItem {
@@ -392,6 +448,12 @@ export class OperacionesService {
     return this.http
       .post<any>(`${this.baseUrl}/cargas/${idCarga}/actualizar-ventas-match`, body, { withCredentials: true })
       .pipe(map(res => this.extractData<any>(res)));
+  }
+
+  eliminarMatchVentas(idCargaMatch: string): Observable<boolean> {
+    return this.http
+      .delete<any>(`${this.baseUrl}/ventas/match/${idCargaMatch}`, { withCredentials: true })
+      .pipe(map(res => this.extractData<boolean>(res)));
   }
 
   eliminarCarga(idCarga: string): Observable<boolean> {

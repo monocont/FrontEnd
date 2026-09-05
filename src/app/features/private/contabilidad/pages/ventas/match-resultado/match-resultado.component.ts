@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { zipSync, strToU8 } from 'fflate';
 import { EmpresaContextService } from '../../../../../../core/services/empresa-context.service';
 import { EmpresaService, Empresa } from '../../../../empresa/services/empresa.service';
 import {
@@ -61,9 +62,7 @@ export class MatchResultadoComponent implements OnInit {
 
   // Filtros internos tipo Excel con soporte Multi-Columna
   filtroTexto: string = '';
-  criteriosOrden: { columna: string; ascendente: boolean }[] = [
-    { columna: 'fechaEmision', ascendente: true }
-  ];
+  criteriosOrden: { columna: string; ascendente: boolean }[] = [];
 
   // Filtros Dropdown por columna
   menuFiltroFechaEmisionAbierto: boolean = false;
@@ -182,7 +181,11 @@ export class MatchResultadoComponent implements OnInit {
         this.cargando = false;
         this.cargandoDatos = false;
         this.cargaMatch = carga;
-        this.ventasMatch = ventas || [];
+        this.ventasMatch = (ventas || []).map(v => ({
+          ...v,
+          fechaEmision: this.formatearFechaInput(v.fechaEmision),
+          fechaVencimiento: v.fechaVencimiento ? this.formatearFechaInput(v.fechaVencimiento) : ''
+        }));
         this.erroresMatch = errores || [];
         this.recalcularTotales();
         this.cdr.detectChanges();
@@ -286,24 +289,21 @@ export class MatchResultadoComponent implements OnInit {
     }
 
     if (this.criteriosOrden.length > 0) {
-      list = [...list].sort((a, b) => {
+      list = list.slice().sort((a, b) => {
         for (const c of this.criteriosOrden) {
           let valA: any = (a as any)[c.columna];
           let valB: any = (b as any)[c.columna];
 
-          if (valA === undefined || valA === null) valA = '';
-          if (valB === undefined || valB === null) valB = '';
-
-          if (typeof valA === 'number' && typeof valB === 'number') {
-            if (valA !== valB) {
-              return c.ascendente ? valA - valB : valB - valA;
-            }
+          if (['biGravada', 'igvIpm', 'totalCp', 'tipoCambio', 'valorFacturadoExportacion', 'descuentoBi', 'descuentoIgv', 'montoExonerado', 'montoInafecto', 'montoIsc', 'montoIvap', 'montoIcbper', 'montoOtrosTributos'].includes(c.columna)) {
+            valA = Number(valA) || 0;
+            valB = Number(valB) || 0;
           } else {
-            const comp = valA.toString().localeCompare(valB.toString(), undefined, { numeric: true, sensitivity: 'base' });
-            if (comp !== 0) {
-              return c.ascendente ? comp : -comp;
-            }
+            valA = (valA ?? '').toString().toLowerCase();
+            valB = (valB ?? '').toString().toLowerCase();
           }
+
+          if (valA < valB) return c.ascendente ? -1 : 1;
+          if (valA > valB) return c.ascendente ? 1 : -1;
         }
         return 0;
       });
@@ -895,8 +895,19 @@ export class MatchResultadoComponent implements OnInit {
   insertarFilaVisual(referenciaVentaOIndice: VentaMatchItem | number, event?: Event): void {
     if (event) event.stopPropagation();
 
+    // Limpiar ordenamiento activo para mantener la fila en la posición exacta donde se insertó
+    if (this.criteriosOrden.length > 0) {
+      this.criteriosOrden = [];
+    }
+
     const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    const fechaDefecto = this.obtenerFechaDefecto();
+    const fechaDefecto = typeof referenciaVentaOIndice === 'object' && referenciaVentaOIndice?.fechaEmision
+      ? this.formatearFechaInput(referenciaVentaOIndice.fechaEmision)
+      : this.obtenerFechaDefecto();
+
+    const serieDefecto = typeof referenciaVentaOIndice === 'object' && referenciaVentaOIndice?.serie
+      ? referenciaVentaOIndice.serie
+      : 'F001';
 
     const nuevaFila: VentaMatchItem = {
       idVentaMatch: tempId,
@@ -910,7 +921,7 @@ export class MatchResultadoComponent implements OnInit {
       esSoloUnOrigen: false,
       carSunat: '',
       codigoTipoCp: '01',
-      serie: 'F001',
+      serie: serieDefecto,
       numero: '',
       fechaEmision: fechaDefecto,
       codigoTipoDocIdentidad: '6',
@@ -944,6 +955,10 @@ export class MatchResultadoComponent implements OnInit {
 
     this.recalcularTotales();
     this.cdr.detectChanges();
+  }
+
+  trackByVentaMatch(index: number, item: VentaMatchItem): string {
+    return item.idVentaMatch || `item_${index}`;
   }
 
   formatearFechaInput(fechaStr: string | null | undefined): string {
@@ -1431,5 +1446,356 @@ export class MatchResultadoComponent implements OnInit {
       mensaje: e.mensaje,
       severidad: e.severidad
     }));
+  }
+
+  // --------------------------------------------------------------------------
+  // Exportación para SUNAT SIRE (RVIE Anexo 2)
+  // --------------------------------------------------------------------------
+  async exportarParaSire(): Promise<void> {
+    if (!this.ventasMatch || this.ventasMatch.length === 0) {
+      await this.modalService.open({
+        type: 'alert',
+        title: 'Sin Datos',
+        message: 'No hay comprobantes disponibles en este match para exportar.'
+      });
+      return;
+    }
+
+    // Si existen observaciones uno o más, pedir confirmación previa
+    if (this.totalObservaciones > 0) {
+      const confirmado = await this.modalService.open({
+        type: 'confirm',
+        title: 'Observaciones Pendientes',
+        message: `El proceso de match contiene actualmente ${this.totalObservaciones} observación(es) pendiente(s) por corregir. ¿Desea continuar con la exportación y descarga para SIRE?`,
+        confirmText: 'Continuar y Descargar',
+        cancelText: 'Cancelar'
+      });
+      if (!confirmado) {
+        return;
+      }
+    }
+
+    // 1. Obtener Metadatos Emisor y Periodo
+    const rucEmisor = (this.ruc || this.empresa?.ruc || '').trim();
+    if (!rucEmisor || rucEmisor.length !== 11) {
+      await this.modalService.open({
+        type: 'alert',
+        title: 'RUC Inválido',
+        message: 'No se pudo determinar el RUC del emisor (debe contener 11 dígitos numéricos).'
+      });
+      return;
+    }
+
+    const razonSocialEmisor = (this.empresa?.razonSocial || '').trim().toUpperCase().replace(/\|/g, '');
+    const periodoRaw = (this.cargaMatch?.periodo || '').trim();
+    const periodo = periodoRaw.replace(/[^0-9]/g, '');
+    if (periodo.length !== 6) {
+      await this.modalService.open({
+        type: 'alert',
+        title: 'Periodo Inválido',
+        message: 'El periodo tributario debe contener exactamente 6 dígitos (AAAAMM).'
+      });
+      return;
+    }
+
+    const anio = periodo.substring(0, 4);
+    const mes = periodo.substring(4, 6);
+
+    // 2. Formatear cada línea con exactamente 29 campos delimitados por pipes (|)
+    const lineas: string[] = [];
+
+    for (const v of this.ventasMatch) {
+      // Col 1: RUC Emisor (11 dígitos numéricos)
+      const col1 = rucEmisor;
+
+      // Col 2: Razón Social Emisor (hasta 150 caracteres, mayúsculas, sin pipes)
+      const col2 = razonSocialEmisor;
+
+      // Col 3: Periodo Tributario (AAAAMM)
+      const col3 = periodo;
+
+      // Col 4: Código CAR SUNAT (Vacío en este flujo)
+      const col4 = '';
+
+      // Col 5: Fecha de Emisión (DD/MM/AAAA con ceros a la izquierda)
+      const col5 = this.formatearFechaDdMmYyyy(v.fechaEmision);
+
+      // Col 6: Fecha de Vencimiento (DD/MM/AAAA o vacío)
+      const col6 = v.fechaVencimiento ? this.formatearFechaDdMmYyyy(v.fechaVencimiento) : '';
+
+      // Col 7: Tipo de Comprobante (Fijo 2 caracteres: 01, 03, 07, 08)
+      const col7 = (v.codigoTipoCp || '01').trim().padStart(2, '0');
+
+      // Col 8: Serie del Comprobante (Fijo hasta 4 caracteres, mayúsculas)
+      const col8 = (v.serie || '').trim().toUpperCase();
+
+      // Col 9: Número de Comprobante (Hasta 12 caracteres, entero positivo sin ceros innecesarios a la izquierda)
+      const col9 = this.normalizarNumeroSunat(v.numero);
+
+      // Col 10: Número Final / Rango (Vacío en este flujo)
+      const col10 = '';
+
+      // Col 11: Tipo de Doc. Cliente (1 dígito: 6=RUC, 1=DNI, 4=CE, 0=Otros)
+      const col11 = (v.codigoTipoDocIdentidad || '6').trim();
+
+      // Col 12: Número Doc. Cliente (Hasta 15 caracteres alfanumérico, sin espacios ni guiones)
+      const col12 = (v.nroDocIdentidad || '').trim().replace(/[^a-zA-Z0-9]/g, '');
+
+      // Col 13: Razón Social Cliente (Hasta 150 caracteres, sin pipes)
+      const col13 = (v.razonSocial || '-').trim().toUpperCase().replace(/\|/g, '');
+
+      // Col 14: Valor Facturado Exp. (Decimal 2 decimales)
+      const col14 = this.formatearMonto(v.valorFacturadoExportacion);
+
+      // Col 15: Base Imponible Gravada (Decimal 2 decimales)
+      const col15 = this.formatearMonto(v.biGravada);
+
+      // Col 16: Descuento Base Imp. (Decimal 2 decimales)
+      const col16 = this.formatearMonto(v.descuentoBi);
+
+      // Col 17: Impuesto Gral. Ventas (IGV) (Decimal 2 decimales)
+      const col17 = this.formatearMonto(v.igvIpm);
+
+      // Col 18: Descuento del IGV (Decimal 2 decimales)
+      const col18 = this.formatearMonto(v.descuentoIgv);
+
+      // Col 19: Importe Op. Exonerada (Decimal 2 decimales)
+      const col19 = this.formatearMonto(v.montoExonerado);
+
+      // Col 20: Importe Op. Inafecta (Decimal 2 decimales)
+      const col20 = this.formatearMonto(v.montoInafecto);
+
+      // Col 21: Impuesto Selectivo (ISC) (Decimal 2 decimales)
+      const col21 = this.formatearMonto(v.montoIsc);
+
+      // Col 22: Base Imp. Arroz Pilado (Decimal 2 decimales)
+      const col22 = this.formatearMonto(v.biGravadaIvap);
+
+      // Col 23: Impuesto IVAP (Decimal 2 decimales)
+      const col23 = this.formatearMonto(v.montoIvap);
+
+      // Col 24: Impuesto ICBPER (Decimal 2 decimales)
+      const col24 = this.formatearMonto(v.montoIcbper);
+
+      // Col 25: Otros Conceptos / Tributos (Decimal 2 decimales)
+      const col25 = this.formatearMonto(v.montoOtrosTributos);
+
+      // Col 26: Importe Total (Decimal 2 decimales)
+      const col26 = this.formatearMonto(v.totalCp);
+
+      // Col 27: Código de Moneda (Fijo 3 caracteres: PEN, USD)
+      const moneda = (v.codigoMoneda || 'PEN').trim().toUpperCase();
+      const col27 = moneda;
+
+      // Col 28: Tipo de Cambio (3 decimales si no es PEN; si es PEN, vacío)
+      let col28 = '';
+      if (moneda !== 'PEN') {
+        const tc = Number(v.tipoCambio) || 1.0;
+        col28 = tc.toFixed(3);
+      }
+
+      // Col 29: Campos de Cierre (Cadena fija |||||| al final según regla Anexo 2)
+      const campos = [
+        col1, col2, col3, col4, col5, col6, col7, col8, col9, col10,
+        col11, col12, col13, col14, col15, col16, col17, col18, col19, col20,
+        col21, col22, col23, col24, col25, col26, col27, col28
+      ];
+
+      // Cada registro termina con pipe y los 6 pipes de cierre del Anexo 2
+      const linea = campos.join('|') + '|||||||';
+      lineas.push(linea);
+    }
+
+    // Unir con \r\n (estándar Windows/SUNAT) sin salto de línea al final del archivo (EOF limpio)
+    const contenidoPlano = lineas.join('\r\n');
+
+    // 3. Nomenclatura del Archivo Plano (exactamente 35 caracteres)
+    // LE[RUC][AÑO][MES]00140400021112.txt
+    const nombreBase = `LE${rucEmisor}${anio}${mes}00140400021112`;
+    const nombreTxt = `${nombreBase}.txt`;
+    const nombreZip = `${nombreBase}.zip`;
+
+    // 4. Compresión DEFLATE en cliente con fflate
+    try {
+      const txtBytes = strToU8(contenidoPlano);
+      const zipData = zipSync({
+        [nombreTxt]: [txtBytes, { level: 6 }]
+      });
+
+      const blob = new Blob([zipData], { type: 'application/zip' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombreZip;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error al generar archivo ZIP SIRE:', err);
+      this.modalService.open({
+        type: 'alert',
+        title: 'Error de Exportación',
+        message: 'No se pudo generar el archivo ZIP de exportación para SIRE.'
+      });
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Descarga SUNAT (CDP-AAAA-MM.txt)
+  // Formato: RUC|TIPO CP|SERIE|NUMERO|FECHA EMISION|TOTAL CP
+  // --------------------------------------------------------------------------
+  async descargarSunatCdp(): Promise<void> {
+    if (!this.ventasMatch || this.ventasMatch.length === 0) {
+      await this.modalService.open({
+        type: 'alert',
+        title: 'Sin Datos',
+        message: 'No hay comprobantes disponibles en este match para descargar.'
+      });
+      return;
+    }
+
+    // Si existen observaciones uno o más, pedir confirmación previa
+    if (this.totalObservaciones > 0) {
+      const confirmado = await this.modalService.open({
+        type: 'confirm',
+        title: 'Observaciones Pendientes',
+        message: `El proceso de match contiene actualmente ${this.totalObservaciones} observación(es) pendiente(s). ¿Desea continuar con la descarga para SUNAT?`,
+        confirmText: 'Continuar y Descargar',
+        cancelText: 'Cancelar'
+      });
+      if (!confirmado) {
+        return;
+      }
+    }
+
+    // 1. Obtener Metadatos Emisor y Periodo
+    const rucEmisor = (this.ruc || this.empresa?.ruc || '').trim();
+    if (!rucEmisor || rucEmisor.length !== 11) {
+      await this.modalService.open({
+        type: 'alert',
+        title: 'RUC Inválido',
+        message: 'No se pudo determinar el RUC del emisor (debe contener 11 dígitos numéricos).'
+      });
+      return;
+    }
+
+    const periodoRaw = (this.cargaMatch?.periodo || '').trim();
+    const periodo = periodoRaw.replace(/[^0-9]/g, '');
+    if (periodo.length !== 6) {
+      await this.modalService.open({
+        type: 'alert',
+        title: 'Periodo Inválido',
+        message: 'El periodo tributario debe contener exactamente 6 dígitos (AAAAMM).'
+      });
+      return;
+    }
+
+    const anio = periodo.substring(0, 4);
+    const mes = periodo.substring(4, 6);
+
+    // 2. Formatear cada línea con los 6 campos requeridos separados por pipe (|)
+    // Ejemplo: 20524546206|01|F004|73835|22/07/2026|1180.00
+    const lineas: string[] = [];
+
+    for (const v of this.ventasMatch) {
+      const col1 = rucEmisor;
+      const col2 = (v.codigoTipoCp || '01').trim().padStart(2, '0');
+      const col3 = (v.serie || '').trim().toUpperCase();
+      const col4 = this.normalizarNumeroSunat(v.numero);
+      const col5 = this.formatearFechaDdMmYyyy(v.fechaEmision);
+      // Formateo de monto para consulta masiva SUNAT:
+      // 1. Estrictamente positivo (Math.abs)
+      // 2. Si el T.C. es diferente de 1 (moneda extranjera), convertir dividiendo entre el T.C. y redondeando a 2 decimales
+      let montoCalculado = Math.abs(Number(v.totalCp) || 0);
+      const tc = Number(v.tipoCambio) || 1.0;
+      if (tc > 0 && Math.abs(tc - 1.0) > 0.0001) {
+        montoCalculado = montoCalculado / tc;
+      }
+      const col6 = this.formatearMonto(montoCalculado);
+
+      const linea = `${col1}|${col2}|${col3}|${col4}|${col5}|${col6}`;
+      lineas.push(linea);
+    }
+
+    // 3. Empaquetar en archivo .ZIP con bloques de máximo 100 registros por archivo .TXT
+    // Si total <= 100: CDP-{anio}-{mes}.txt
+    // Si total > 100: CDP-{anio}-{mes}-1.txt, CDP-{anio}-{mes}-2.txt, ...
+    const CHUNK_SIZE = 100;
+    const totalRegistros = lineas.length;
+    const zipEntries: { [filename: string]: Uint8Array } = {};
+
+    if (totalRegistros <= CHUNK_SIZE) {
+      const nombreTxt = `CDP-${anio}-${mes}.txt`;
+      zipEntries[nombreTxt] = strToU8(lineas.join('\r\n'));
+    } else {
+      const totalArchivos = Math.ceil(totalRegistros / CHUNK_SIZE);
+      for (let i = 0; i < totalArchivos; i++) {
+        const inicio = i * CHUNK_SIZE;
+        const fin = Math.min(inicio + CHUNK_SIZE, totalRegistros);
+        const bloqueLineas = lineas.slice(inicio, fin);
+        const nombreTxt = `CDP-${anio}-${mes}-${i + 1}.txt`;
+        zipEntries[nombreTxt] = strToU8(bloqueLineas.join('\r\n'));
+      }
+    }
+
+    const nombreZip = `CDP-${anio}-${mes}.zip`;
+
+    // 4. Compresión DEFLATE en cliente con fflate y descarga directa
+    try {
+      const zipData = zipSync(zipEntries);
+      const blob = new Blob([zipData], { type: 'application/zip' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombreZip;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error al generar archivo ZIP CDP SUNAT:', err);
+      await this.modalService.open({
+        type: 'alert',
+        title: 'Error de Descarga',
+        message: 'No se pudo generar el archivo ZIP para SUNAT.'
+      });
+    }
+  }
+
+  private formatearFechaDdMmYyyy(fecha: any): string {
+    if (!fecha) return '';
+    if (typeof fecha === 'string') {
+      const partes = fecha.substring(0, 10).split('-');
+      if (partes.length === 3) {
+        return `${partes[2].padStart(2, '0')}/${partes[1].padStart(2, '0')}/${partes[0]}`;
+      }
+      const partesSlash = fecha.split('/');
+      if (partesSlash.length === 3) {
+        return `${partesSlash[0].padStart(2, '0')}/${partesSlash[1].padStart(2, '0')}/${partesSlash[2]}`;
+      }
+    }
+    const d = new Date(fecha);
+    if (isNaN(d.getTime())) return '';
+    const dia = d.getDate().toString().padStart(2, '0');
+    const mes = (d.getMonth() + 1).toString().padStart(2, '0');
+    const anio = d.getFullYear();
+    return `${dia}/${mes}/${anio}`;
+  }
+
+  private normalizarNumeroSunat(numero: any): string {
+    if (!numero) return '0';
+    const str = String(numero).trim();
+    if (/^\d+$/.test(str)) {
+      const sinCeros = str.replace(/^0+/, '');
+      return sinCeros === '' ? '0' : sinCeros;
+    }
+    return str.toUpperCase();
+  }
+
+  private formatearMonto(monto: any): string {
+    const num = Number(monto);
+    if (isNaN(num)) return '0.00';
+    return num.toFixed(2);
   }
 }

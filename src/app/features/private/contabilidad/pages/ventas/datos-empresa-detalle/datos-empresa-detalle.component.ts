@@ -4,16 +4,16 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EmpresaContextService } from '../../../../../../core/services/empresa-context.service';
 import {
-  VentasWorkspaceService,
+  OperacionesService,
+  VentaEmpresaItem,
   CargaEmpresaItem,
   ObservacionEmpresaItem
-} from '../../../services/ventas-workspace.service';
-import { OperacionesService, VentaEmpresaItem } from '../../../services/operaciones.service';
+} from '../../../services/operaciones.service';
 import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
 import { ModalService } from '../../../../../../shared/ui/modal/modal.service';
 import { ModalObservacionesComponent } from '../../../../../../shared/ui/modal-observaciones/modal-observaciones.component';
 
-type FilaVenta = VentaEmpresaItem & { esNuevo?: boolean; editando?: boolean; modificado?: boolean; razonSocial?: string; biGravada?: number; igvIpm?: number };
+type FilaVenta = VentaEmpresaItem;
 
 interface CriterioOrden {
   columna: string;
@@ -36,7 +36,7 @@ export class DatosEmpresaDetalleComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private empresaContext = inject(EmpresaContextService);
-  private workspaceService = inject(VentasWorkspaceService);
+  private operacionesService = inject(OperacionesService);
   private loadingService = inject(LoadingService);
   private modalService = inject(ModalService);
   private cdr = inject(ChangeDetectorRef);
@@ -117,8 +117,6 @@ export class DatosEmpresaDetalleComponent implements OnInit {
   filtroTextoMonedaMenu: string = '';
 
   private readonly meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
-
-  private operacionesService = inject(OperacionesService);
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
@@ -214,6 +212,21 @@ export class DatosEmpresaDetalleComponent implements OnInit {
   get totalIgv(): number {
     return this.ventasFiltradas.filter(v => !this.idsParaEliminar.includes(v.idVentaEmpresa))
       .reduce((acc, v) => acc + (Number(v.igvIpm) || 0), 0);
+  }
+
+  get totalExonerado(): number {
+    return this.ventasFiltradas.filter(v => !this.idsParaEliminar.includes(v.idVentaEmpresa))
+      .reduce((acc, v) => acc + (Number(v.montoExonerado) || 0), 0);
+  }
+
+  get totalInafecto(): number {
+    return this.ventasFiltradas.filter(v => !this.idsParaEliminar.includes(v.idVentaEmpresa))
+      .reduce((acc, v) => acc + (Number(v.montoInafecto) || 0), 0);
+  }
+
+  get totalExportacion(): number {
+    return this.ventasFiltradas.filter(v => !this.idsParaEliminar.includes(v.idVentaEmpresa))
+      .reduce((acc, v) => acc + (Number(v.valorFacturadoExportacion) || 0), 0);
   }
 
   get totalGeneral(): number {
@@ -728,9 +741,17 @@ export class DatosEmpresaDetalleComponent implements OnInit {
     const cambia = (campo: keyof VentaEmpresaItem) =>
       String(orig[campo] ?? '') !== String((fila as any)[campo] ?? '');
 
-    if (cambia('codigoTipoCp') || cambia('serie') || cambia('numero') || cambia('fechaEmision') ||
-        cambia('codigoTipoDocIdentidad') || cambia('nroDocIdentidad') ||
-        cambia('totalCp') || cambia('codigoMoneda') || cambia('tipoCambio')) {
+    if (
+      cambia('codigoTipoCp') || cambia('serie') || cambia('numero') || cambia('numeroFinal') ||
+      cambia('fechaEmision') || cambia('fechaVencimiento') || cambia('codigoTipoDocIdentidad') ||
+      cambia('nroDocIdentidad') || cambia('razonSocial') || cambia('valorFacturadoExportacion') ||
+      cambia('biGravada') || cambia('descuentoBi') || cambia('igvIpm') || cambia('descuentoIgv') ||
+      cambia('montoExonerado') || cambia('montoInafecto') || cambia('montoIsc') ||
+      cambia('biGravadaIvap') || cambia('montoIvap') || cambia('montoIcbper') ||
+      cambia('montoOtrosTributos') || cambia('totalCp') || cambia('codigoMoneda') ||
+      cambia('tipoCambio') || cambia('fechaEmisionDocModificado') || cambia('codigoTipoCpModificado') ||
+      cambia('serieCpModificado') || cambia('numeroCpModificado') || cambia('codigoTipoNota')
+    ) {
       fila.modificado = true;
     } else {
       fila.modificado = false;
@@ -748,12 +769,33 @@ export class DatosEmpresaDetalleComponent implements OnInit {
       codigoTipoCp: '01',
       serie: 'F001',
       numero: '',
+      numeroFinal: '',
       fechaEmision: fechaBase,
+      fechaVencimiento: fechaBase,
       codigoTipoDocIdentidad: '6',
       nroDocIdentidad: '',
+      razonSocial: '',
+      valorFacturadoExportacion: 0,
+      biGravada: 0,
+      descuentoBi: 0,
+      igvIpm: 0,
+      descuentoIgv: 0,
+      montoExonerado: 0,
+      montoInafecto: 0,
+      montoIsc: 0,
+      biGravadaIvap: 0,
+      montoIvap: 0,
+      montoIcbper: 0,
+      montoOtrosTributos: 0,
       totalCp: 0,
       codigoMoneda: 'PEN',
       tipoCambio: 1.0000,
+      fechaEmisionDocModificado: '',
+      codigoTipoCpModificado: '',
+      serieCpModificado: '',
+      numeroCpModificado: '',
+      codigoEstadoComprobante: '1',
+      codigoTipoNota: '',
       esNuevo: true,
       editando: true
     };

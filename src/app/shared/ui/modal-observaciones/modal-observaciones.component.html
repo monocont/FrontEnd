@@ -4,11 +4,12 @@
   (click)="onCerrar()"
 >
   <div
-    class="bg-white w-full max-w-4xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[85vh] animate-scale-up"
+    class="bg-white w-full max-w-4xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[85vh] animate-scale-up select-text"
     (click)="$event.stopPropagation()"
+    (mousedown)="$event.stopPropagation()"
   >
     <!-- Cabecera del Modal -->
-    <div class="px-6 py-4 bg-amber-500/10 border-b border-amber-200/60 flex items-center justify-between shrink-0">
+    <div class="px-6 py-4 bg-amber-500/10 border-b border-amber-200/60 flex items-center justify-between shrink-0 select-none">
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-xs shrink-0">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,9 +35,9 @@
     </div>
 
     <!-- Tabla de Errores con Scroll Limpio -->
-    <div class="overflow-y-auto flex-1 relative bg-white">
-      <table class="w-full text-xs text-left border-collapse">
-        <thead class="bg-slate-100/95 backdrop-blur-md text-slate-700 sticky top-0 font-bold border-b border-slate-200 z-20 shadow-2xs">
+    <div class="overflow-y-auto flex-1 relative bg-white select-text">
+      <table class="w-full text-xs text-left border-collapse select-text">
+        <thead class="bg-slate-100/95 backdrop-blur-md text-slate-700 sticky top-0 font-bold border-b border-slate-200 z-20 shadow-2xs select-none">
           <tr>
             <th class="py-3 px-4 bg-slate-100">Tipo Error</th>
             <th class="py-3 px-4 bg-slate-100">Campo</th>
@@ -44,10 +45,10 @@
             <th class="py-3 px-4 bg-slate-100">Detalle / Mensaje de Inconsistencia</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100 text-slate-700">
-          <tr *ngFor="let err of observacionesOrdenadas" class="hover:bg-slate-50/70 transition-colors">
-            <td class="py-3 px-4 font-semibold text-slate-800 whitespace-nowrap">
-              <span class="inline-flex items-center gap-1.5">
+        <tbody class="divide-y divide-slate-100 text-slate-700 select-text">
+          <tr *ngFor="let err of listaOrdenada; trackBy: trackByObservacion" class="hover:bg-slate-50/70 transition-colors select-text">
+            <td class="py-3 px-4 font-semibold text-slate-800 whitespace-nowrap select-text">
+              <span class="inline-flex items-center gap-1.5 select-text">
                 <span
                   class="w-2 h-2 rounded-full"
                   [ngClass]="err.severidad?.toLowerCase() === 'error' ? 'bg-rose-500' : 'bg-amber-500'"
@@ -55,18 +56,18 @@
                 {{ err.tipoError || 'General' }}
               </span>
             </td>
-            <td class="py-3 px-4 font-mono text-slate-600 whitespace-nowrap font-medium">
+            <td class="py-3 px-4 font-mono text-slate-600 whitespace-nowrap font-medium select-text">
               {{ err.campoError || '-' }}
             </td>
-            <td class="py-3 px-4 text-center whitespace-nowrap">
+            <td class="py-3 px-4 text-center whitespace-nowrap select-text">
               <span
-                class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider inline-block"
+                class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider inline-block select-text"
                 [ngClass]="err.severidad?.toLowerCase() === 'error' ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-amber-100 text-amber-800 border border-amber-200'"
               >
                 {{ err.severidad }}
               </span>
             </td>
-            <td class="py-3 px-4 text-slate-700 leading-snug">
+            <td class="py-3 px-4 text-slate-700 leading-snug select-text cursor-text">
               {{ err.mensaje }}
             </td>
           </tr>
