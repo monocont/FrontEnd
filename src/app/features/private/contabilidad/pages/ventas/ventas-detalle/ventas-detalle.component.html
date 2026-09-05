@@ -981,6 +981,7 @@
           <tr
             *ngFor="let v of ventasFiltradas; let i = index"
             class="fila-contenedor group cursor-pointer"
+            [attr.data-id]="v.idVenta"
             (dblclick)="iniciarEdicionFila(v, $event)"
             [ngClass]="v.esNuevo || (v.idVenta && v.idVenta.startsWith('temp_')) ? 'fila-nueva' : (v.modificado ? 'fila-modificada' : (v.editando ? 'fila-editando' : obtenerClaseFilaPorEstado(v.codigoEstadoComprobante)))">
 

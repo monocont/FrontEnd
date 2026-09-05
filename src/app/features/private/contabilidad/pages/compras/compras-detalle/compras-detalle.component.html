@@ -360,6 +360,18 @@
         <thead>
           <tr>
             <th class="row-num text-center">#</th>
+            <!-- Columna RUC Empresa -->
+            <th class="relative font-semibold text-center" (click)="ordenarPor('empresaRuc')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+              <div class="sort-header justify-center">
+                <span>RUC Empresa</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('empresaRuc').activo && obtenerEstadoOrden('empresaRuc').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('empresaRuc').activo && !obtenerEstadoOrden('empresaRuc').ascendente">▼</span>
+                </span>
+                <span *ngIf="obtenerEstadoOrden('empresaRuc').ordenIndice > 0" class="sort-priority">{{ obtenerEstadoOrden('empresaRuc').ordenIndice }}</span>
+              </div>
+            </th>
+
             <!-- Columna Fecha Emisión -->
             <th class="relative" (click)="ordenarPor('fechaEmision')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
               <div class="sort-header">
@@ -988,7 +1000,7 @@
         <tbody>
           <!-- Botón para insertar el primer registro si la carga no tiene comprobantes -->
           <tr *ngIf="compras.length === 0 && !cargandoDatos" class="border-b border-dashed border-slate-200">
-            <td colspan="15" class="text-center py-4 bg-slate-50/50">
+            <td colspan="16" class="text-center py-4 bg-slate-50/50">
               <button
                 type="button"
                 (click)="insertarFilaVisual(0, $event)"
@@ -1002,6 +1014,7 @@
           <tr
             *ngFor="let c of comprasFiltradas; let i = index"
             class="fila-contenedor group"
+            [attr.data-id]="c.idCompra"
             (dblclick)="iniciarEdicionFila(c, $event)"
             [ngClass]="c.esNuevo ? 'bg-indigo-50/40' : (c.modificado ? 'bg-amber-50/50' : (c.editando ? 'bg-amber-50/30' : obtenerClaseFilaPorEstado(c.codigoEstadoComprobante)))">
             <td class="row-num relative">
@@ -1018,9 +1031,24 @@
               <span *ngIf="!c.esNuevo && c.modificado" class="text-amber-700 font-bold text-[9px] bg-amber-100 px-1 py-0.5 rounded">EDIT</span>
             </td>
 
+            <!-- RUC Empresa -->
+            <td class="font-mono text-center font-semibold text-slate-800" [title]="c.empresaRuc || ruc">
+              <input *ngIf="c.editando || c.esNuevo; else rucEmpresaView" type="text" [(ngModel)]="c.empresaRuc" (ngModelChange)="marcarFilaModificada(c)" maxlength="11"
+                     (keydown.enter)="finalizarEdicionFila(c)" (keydown.escape)="finalizarEdicionFila(c)"
+                     placeholder="RUC Empresa"
+                     [class.border-rose-400]="c.empresaRuc && c.empresaRuc !== ruc"
+                     class="w-[110px] px-1.5 py-0.5 border border-amber-300 rounded-lg text-xs bg-white text-center font-mono" />
+              <ng-template #rucEmpresaView>
+                <span [ngClass]="(c.empresaRuc && c.empresaRuc !== ruc) ? 'text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200 font-bold' : ''">
+                  {{ c.empresaRuc || ruc }}
+                </span>
+              </ng-template>
+            </td>
+
             <!-- Fecha Emisión -->
             <td class="font-medium">
               <input *ngIf="c.editando || c.esNuevo; else fechaView" type="date" [(ngModel)]="c.fechaEmision" (ngModelChange)="marcarFilaModificada(c)"
+                     (keydown.enter)="finalizarEdicionFila(c)" (keydown.escape)="finalizarEdicionFila(c)"
                      class="w-[125px] px-1.5 py-0.5 border border-amber-300 rounded-lg text-xs bg-white" />
               <ng-template #fechaView>{{ c.fechaEmision | date:'dd/MM/yyyy' }}</ng-template>
             </td>
@@ -1028,6 +1056,7 @@
             <!-- Tipo CP -->
             <td class="font-medium text-slate-800 bg-slate-50/50" [title]="c.codigoTipoCp + ' - ' + obtenerNombreTipoCp(c.codigoTipoCp)">
               <select *ngIf="c.editando || c.esNuevo; else tipoCpView" [(ngModel)]="c.codigoTipoCp" (ngModelChange)="marcarFilaModificada(c)"
+                      (keydown.enter)="finalizarEdicionFila(c)" (keydown.escape)="finalizarEdicionFila(c)"
                       class="w-[130px] px-1.5 py-0.5 border border-amber-300 rounded-lg text-xs bg-white">
                 <option *ngFor="let t of tiposCp" [ngValue]="t.codigo">{{ t.codigo }} - {{ t.nombre }}</option>
               </select>
@@ -1037,6 +1066,7 @@
             <!-- Serie -->
             <td class="font-mono text-center font-medium">
               <input *ngIf="c.editando || c.esNuevo; else serieView" type="text" [(ngModel)]="c.serie" (ngModelChange)="marcarFilaModificada(c)" maxlength="6"
+                     (keydown.enter)="finalizarEdicionFila(c)" (keydown.escape)="finalizarEdicionFila(c)"
                      class="w-[70px] px-1.5 py-0.5 border border-amber-300 rounded-lg text-xs bg-white text-center font-mono" />
               <ng-template #serieView>{{ c.serie }}</ng-template>
             </td>
@@ -1044,6 +1074,7 @@
             <!-- Número -->
             <td class="font-mono text-center font-medium">
               <input *ngIf="c.editando || c.esNuevo; else numeroView" type="text" [(ngModel)]="c.numero" (ngModelChange)="marcarFilaModificada(c)" maxlength="12"
+                     (keydown.enter)="finalizarEdicionFila(c)" (keydown.escape)="finalizarEdicionFila(c)"
                      class="w-[80px] px-1.5 py-0.5 border border-amber-300 rounded-lg text-xs bg-white text-center font-mono" />
               <ng-template #numeroView>{{ c.numero }}</ng-template>
             </td>
@@ -1051,6 +1082,7 @@
             <!-- Tipo Doc Identidad -->
             <td class="font-medium text-slate-700" [title]="(c.codigoTipoDocIdentidad || '6') + ' - ' + obtenerNombreTipoDocIdentidad(c.codigoTipoDocIdentidad || '6')">
               <select *ngIf="c.editando || c.esNuevo; else tipoDocView" [(ngModel)]="c.codigoTipoDocIdentidad" (ngModelChange)="onTipoDocIdentidadCambio(c)"
+                      (keydown.enter)="finalizarEdicionFila(c)" (keydown.escape)="finalizarEdicionFila(c)"
                       class="w-[110px] px-1.5 py-0.5 border border-amber-300 rounded-lg text-xs bg-white">
                 <option *ngFor="let d of tiposDocIdentidad" [ngValue]="d.codigo">{{ d.codigo }} - {{ d.nombre }}</option>
               </select>
@@ -1060,6 +1092,7 @@
             <!-- Nro Doc -->
             <td class="font-mono font-semibold text-slate-800">
               <input *ngIf="c.editando || c.esNuevo; else docView" type="text" [(ngModel)]="c.nroDocIdentidad" (ngModelChange)="onNroDocIdentidadInput(c)"
+                     (keydown.enter)="finalizarEdicionFila(c)" (keydown.escape)="finalizarEdicionFila(c)"
                      [maxlength]="obtenerLongitudMaxDocIdentidad(c.codigoTipoDocIdentidad)" [placeholder]="obtenerPlaceholderDocIdentidad(c.codigoTipoDocIdentidad)"
                      [class.border-rose-400]="esDocIdentidadInvalido(c)"
                      class="w-[110px] px-1.5 py-0.5 border border-amber-300 rounded-lg text-xs bg-white font-mono" />
@@ -1069,6 +1102,7 @@
             <!-- Razón Social -->
             <td class="max-w-[280px] truncate" [title]="c.razonSocial">
               <input *ngIf="c.editando || c.esNuevo; else rsView" type="text" [(ngModel)]="c.razonSocial" (ngModelChange)="marcarFilaModificada(c)" maxlength="255"
+                     (keydown.enter)="finalizarEdicionFila(c)" (keydown.escape)="finalizarEdicionFila(c)"
                      class="w-[240px] px-1.5 py-0.5 border border-amber-300 rounded-lg text-xs bg-white" />
               <ng-template #rsView>{{ c.razonSocial }}</ng-template>
             </td>
@@ -1076,6 +1110,7 @@
             <!-- BI Gravado DG -->
             <td class="text-right font-mono font-medium text-slate-800">
               <input *ngIf="c.editando || c.esNuevo; else biView" type="number" step="0.01" min="0" [(ngModel)]="c.biGravadoDg" (ngModelChange)="onMontoCambio(c)"
+                     (keydown.enter)="finalizarEdicionFila(c)" (keydown.escape)="finalizarEdicionFila(c)"
                      class="w-[95px] px-1.5 py-0.5 border border-amber-300 rounded-lg text-xs bg-white text-right font-mono" />
               <ng-template #biView>{{ c.biGravadoDg | number:'1.2-2' }}</ng-template>
             </td>
@@ -1083,6 +1118,7 @@
             <!-- IGV DG -->
             <td class="text-right font-mono text-slate-600">
               <input *ngIf="c.editando || c.esNuevo; else igvView" type="number" step="0.01" min="0" [(ngModel)]="c.igvIpmDg" (ngModelChange)="onMontoCambio(c)"
+                     (keydown.enter)="finalizarEdicionFila(c)" (keydown.escape)="finalizarEdicionFila(c)"
                      class="w-[95px] px-1.5 py-0.5 border border-amber-300 rounded-lg text-xs bg-white text-right font-mono" />
               <ng-template #igvView>{{ c.igvIpmDg | number:'1.2-2' }}</ng-template>
             </td>
@@ -1090,6 +1126,7 @@
             <!-- Total CP -->
             <td class="text-right font-mono font-bold text-slate-900 bg-slate-50/50">
               <input *ngIf="c.editando || c.esNuevo; else totalView" type="number" step="0.01" min="0" [(ngModel)]="c.totalCp" (ngModelChange)="onMontoCambio(c)"
+                     (keydown.enter)="finalizarEdicionFila(c)" (keydown.escape)="finalizarEdicionFila(c)"
                      class="w-[100px] px-1.5 py-0.5 border border-amber-300 rounded-lg text-xs bg-white text-right font-mono font-bold" />
               <ng-template #totalView>{{ c.totalCp | number:'1.2-2' }}</ng-template>
             </td>
@@ -1103,6 +1140,7 @@
             <!-- Estado Comprobante -->
             <td class="text-center">
               <select *ngIf="c.editando || c.esNuevo; else estadoView" [(ngModel)]="c.codigoEstadoComprobante" (ngModelChange)="marcarFilaModificada(c)"
+                      (keydown.enter)="finalizarEdicionFila(c)" (keydown.escape)="finalizarEdicionFila(c)"
                       class="w-[110px] px-1.5 py-0.5 border border-amber-300 rounded-lg text-xs bg-white"
                       [title]="obtenerDescripcionEstadoComprobante(c.codigoEstadoComprobante)">
                 <option *ngFor="let e of estadosComprobante" [ngValue]="e.codigo">{{ e.codigo }} - {{ e.nombre }}</option>

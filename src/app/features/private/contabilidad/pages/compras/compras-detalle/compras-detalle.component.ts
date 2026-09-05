@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -732,6 +732,7 @@ export class ComprasDetalleComponent implements OnInit {
       const txt = this.filtroTexto.toLowerCase().trim();
       list = list.filter(
         v =>
+          (v.empresaRuc && v.empresaRuc.toLowerCase().includes(txt)) ||
           (v.nroDocIdentidad && v.nroDocIdentidad.toLowerCase().includes(txt)) ||
           (v.razonSocial && v.razonSocial.toLowerCase().includes(txt)) ||
           `${v.serie}-${v.numero}`.toLowerCase().includes(txt) ||
@@ -1145,6 +1146,7 @@ export class ComprasDetalleComponent implements OnInit {
     if (this.compras.length === 0) return;
 
     const encabezados = [
+      'RUC Empresa',
       'CAR SUNAT',
       'Fecha Emisión',
       'Tipo CP',
@@ -1162,6 +1164,7 @@ export class ComprasDetalleComponent implements OnInit {
     ];
 
     const filas = this.comprasFiltradas.map(c => [
+      `"${c.empresaRuc || this.ruc || ''}"`,
       `"${c.carSunat || ''}"`,
       `"${c.fechaEmision ? c.fechaEmision.substring(0, 10) : ''}"`,
       `"${c.codigoTipoCp || ''}"`,
@@ -1237,6 +1240,7 @@ export class ComprasDetalleComponent implements OnInit {
 
     const nuevaFila: CompraItem & { esNuevo?: boolean } = {
       idCompra: tempId,
+      empresaRuc: this.ruc,
       carSunat: '',
       codigoTipoCp: '01',
       serie: 'F001',
@@ -1290,6 +1294,7 @@ export class ComprasDetalleComponent implements OnInit {
 
     if (!(compra as any)._original) {
       (compra as any)._original = {
+        empresaRuc: compra.empresaRuc,
         fechaEmision: compra.fechaEmision,
         codigoTipoCp: compra.codigoTipoCp,
         serie: compra.serie,
@@ -1316,6 +1321,7 @@ export class ComprasDetalleComponent implements OnInit {
     if (!orig) return;
 
     const haCambiado =
+      (compra.empresaRuc || '').trim() !== (orig.empresaRuc || '').trim() ||
       (compra.fechaEmision || '') !== (orig.fechaEmision || '') ||
       (compra.codigoTipoCp || '') !== (orig.codigoTipoCp || '') ||
       (compra.serie || '').trim().toUpperCase() !== (orig.serie || '').trim().toUpperCase() ||
@@ -1425,6 +1431,30 @@ export class ComprasDetalleComponent implements OnInit {
     this.verificarYMarcarModificacion(compra);
     compra.editando = false;
     this.cdr.detectChanges();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target) return;
+
+    // Si el clic ocurrió dentro de un modal, popup de periodo o menú desplegable, ignorar
+    if (target.closest('.modal-contenedor') || target.closest('.fixed') || target.closest('.animate-fade-in')) {
+      return;
+    }
+
+    // Buscar filas existentes en edición (excluye filas recién insertadas temporales)
+    const filasEditando = this.compras.filter(c => c.editando && !c.esNuevo);
+    if (filasEditando.length === 0) return;
+
+    const trClickeado = target.closest('tr.fila-contenedor');
+
+    filasEditando.forEach(c => {
+      // Si el clic fue fuera de la fila que se está editando, finalizar y cerrar edición
+      if (!trClickeado || trClickeado.getAttribute('data-id') !== c.idCompra) {
+        this.finalizarEdicionFila(c);
+      }
+    });
   }
 
   async eliminarFilaVisual(compra: CompraItem & { esNuevo?: boolean }, event?: Event): Promise<void> {
@@ -1556,6 +1586,7 @@ export class ComprasDetalleComponent implements OnInit {
 
     // 3. Payloads
     const nuevosPayload = nuevas.map(n => ({
+      empresaRuc: n.empresaRuc?.trim() || this.ruc,
       codigoTipoCp: n.codigoTipoCp,
       serie: n.serie?.trim().toUpperCase(),
       numero: n.numero?.trim(),
@@ -1575,6 +1606,7 @@ export class ComprasDetalleComponent implements OnInit {
 
     const modificadosPayload = modificadas.map(m => ({
       idCompra: m.idCompra,
+      empresaRuc: m.empresaRuc?.trim() || this.ruc,
       codigoTipoCp: m.codigoTipoCp,
       serie: m.serie?.trim().toUpperCase(),
       numero: m.numero?.trim(),

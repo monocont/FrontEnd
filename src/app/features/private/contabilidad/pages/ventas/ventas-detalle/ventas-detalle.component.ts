@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -1373,6 +1373,27 @@ export class VentasDetalleComponent implements OnInit {
     this.verificarYMarcarModificacion(venta);
     venta.editando = false;
     this.cdr.detectChanges();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target) return;
+
+    if (target.closest('.modal-contenedor') || target.closest('.fixed') || target.closest('.animate-fade-in')) {
+      return;
+    }
+
+    const filasEditando = this.ventas.filter(v => v.editando && !v.esNuevo);
+    if (filasEditando.length === 0) return;
+
+    const trClickeado = target.closest('tr.fila-contenedor');
+
+    filasEditando.forEach(v => {
+      if (!trClickeado || trClickeado.getAttribute('data-id') !== v.idVenta) {
+        this.finalizarEdicionFila(v);
+      }
+    });
   }
 
   onBiGravadaCambio(venta: any): void {

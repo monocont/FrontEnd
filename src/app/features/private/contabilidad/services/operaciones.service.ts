@@ -53,6 +53,8 @@ export interface ArchivoCargaErrorItem {
 
 export interface CompraItem {
   idCompra: string;
+  empresaRuc?: string;
+  periodo?: string;
   carSunat: string;
   codigoTipoCp: string;
   serie: string;
