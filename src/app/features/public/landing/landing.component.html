@@ -1,79 +1,500 @@
-<!-- Hero -->
-  <section class="hero">
-    <div class="max-width">
-      <span class="badge">Plataforma diseñada para el contador independiente peruano</span>
-      <h1>Gestiona tu cartera de clientes <span class="text-teal-light">sin complicaciones</span></h1>
-      <p>La plataforma web de gestión contable para MYPES peruanas. Automatiza tus registros, concilia con SUNAT y liquida impuestos desde un solo lugar.</p>
-      <div class="hero-actions">
-        <a routerLink="/auth/registro" class="btn btn-white">Prueba Gratis por 30 Días</a>
-        <a href="#features" class="btn btn-outline">Ver Demo</a>
+<div class="space-y-16 lg:space-y-24 pb-20">
+  
+  <!-- ============================================================================
+       1. HERO SECTION (Propuesta de Valor & Showcase Interactivo)
+       ============================================================================ -->
+  <section class="relative pt-6 sm:pt-10 lg:pt-14 overflow-hidden">
+    <!-- Fondos con Efectos de Gradiente Sutil -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] hero-glow-emerald pointer-events-none"></div>
+    <div class="absolute top-1/3 left-1/4 w-96 h-96 hero-glow-indigo pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      
+      <!-- Encabezado Principal del Hero -->
+      <div class="text-center max-w-4xl mx-auto space-y-5">
+        
+        <!-- Píldora de Estado Normativo -->
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200/70 shadow-2xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Plataforma Especializada en Gestión Contable y Tributaria SUNAT</span>
+        </div>
+
+        <!-- Titular Principal -->
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.18]">
+          Control tributario inteligente, conciliación SIRE y vigilancia de límites fiscales
+        </h1>
+
+        <!-- Subtítulo de Negocio -->
+        <p class="text-sm sm:text-base text-slate-600 max-w-3xl mx-auto leading-relaxed font-normal">
+          Diseñado para contadores y empresas en el Perú. Automatiza el cruce masivo de comprobantes SIRE vs ERP, monitorea en tiempo real los topes de regímenes NRUS, RER, RMT y RG, consulta tipos de cambio SBS y analiza XMLs al instante.
+        </p>
+
+        <!-- Botones de Acción Principales -->
+        <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4 pt-2">
+          <a
+            routerLink="/auth/login"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs sm:text-sm transition-all shadow-md shadow-emerald-600/25 hover:shadow-lg hover:shadow-emerald-600/35 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+          >
+            <span>Iniciar Sesión</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            </svg>
+          </a>
+
+          <a
+            href="#modulos"
+            class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-bold text-xs sm:text-sm border border-slate-200 shadow-xs transition-all cursor-pointer"
+          >
+            <span>Explorar Módulos</span>
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </a>
+        </div>
+
+        <!-- Badges de Capacidades Reales -->
+        <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-4 text-xs font-semibold text-slate-500">
+          <span class="inline-flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+            </svg>
+            Vigilancia Topes UIT 2026
+          </span>
+          <span class="inline-flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+            </svg>
+            SIRE RVIE y RCE (80 Col.)
+          </span>
+          <span class="inline-flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+            </svg>
+            Visor UBL 2.1 & CDR
+          </span>
+          <span class="inline-flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+            </svg>
+            Tipo de Cambio Oficial SBS
+          </span>
+        </div>
       </div>
-      <div class="hero-badges">
-        <span><svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>RER y RMT</span>
-        <span><svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Multi-tenant</span>
-        <span><svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>SIRE Integrado</span>
+
+      <!-- Hero Showcase: Mockup Visual del Tablero de Vigilancia y Conciliación -->
+      <div class="mt-10 sm:mt-14 max-w-5xl mx-auto">
+        <div class="bg-white/95 backdrop-blur-xl p-4 sm:p-6 rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/50 space-y-4">
+          
+          <!-- Barra Superior del Mockup -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <div class="flex gap-1.5">
+                <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+                <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+              </div>
+              <span class="text-xs font-bold text-slate-700 pl-2">Panel Ejecutivo MONOCONT — Ejercicio Fiscal 2026</span>
+            </div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-600">
+              <span>UIT Vigente: S/ 5,350.00</span>
+            </div>
+          </div>
+
+          <!-- Cuadrícula de Simulación de Widgets en Vivo -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            
+            <!-- Widget 1: Vigilancia de Límites Tributarios -->
+            <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/70 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase text-slate-500">Vigilancia Tributaria</span>
+                <span class="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">Riesgo Crítico</span>
+              </div>
+              <div>
+                <div class="text-xs font-extrabold text-slate-900">MONOCONT COMERCIAL S.A.C.</div>
+                <div class="text-[10.5px] text-slate-400">Régimen: NRUS (Compras al 370.5%)</div>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between text-[10px] font-bold">
+                  <span class="text-slate-600">S/ 355,636.73</span>
+                  <span class="text-rose-600">Tope: S/ 96,000</span>
+                </div>
+                <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                  <div class="w-full h-full bg-rose-500 rounded-full"></div>
+                </div>
+              </div>
+              <p class="text-[9.5px] text-rose-600/90 font-medium leading-tight pt-1">
+                Requiere migración de régimen a RER o RMT.
+              </p>
+            </div>
+
+            <!-- Widget 2: Conciliación SIRE vs ERP -->
+            <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/70 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase text-slate-500">Conciliación SIRE RCE</span>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">98.4% Match</span>
+              </div>
+              <div>
+                <div class="text-xs font-extrabold text-slate-900">MI EMPRESA SERVICIOS S.A.C.</div>
+                <div class="text-[10.5px] text-slate-400">Periodo 2026-02 (80 columnas)</div>
+              </div>
+              <div class="grid grid-cols-3 gap-1.5 text-center pt-1">
+                <div class="bg-emerald-50/80 p-1.5 rounded-xl border border-emerald-100">
+                  <div class="text-xs font-extrabold text-emerald-800">142</div>
+                  <div class="text-[9px] text-emerald-600">Coincidentes</div>
+                </div>
+                <div class="bg-amber-50/80 p-1.5 rounded-xl border border-amber-100">
+                  <div class="text-xs font-extrabold text-amber-800">3</div>
+                  <div class="text-[9px] text-amber-600">Diferencias</div>
+                </div>
+                <div class="bg-sky-50/80 p-1.5 rounded-xl border border-sky-100">
+                  <div class="text-xs font-extrabold text-sky-800">1</div>
+                  <div class="text-[9px] text-sky-600">Solo SIRE</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Widget 3: Tipo de Cambio del Día y Visor -->
+            <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/70 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase text-slate-500">Tipo de Cambio SBS</span>
+                <span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold">Oficial USD/PEN</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-center">
+                <div class="bg-white p-2 rounded-xl border border-slate-200 shadow-2xs">
+                  <div class="text-[10px] text-slate-400 font-semibold">Compra</div>
+                  <div class="text-sm font-extrabold text-slate-800 font-mono">S/ 3.742</div>
+                </div>
+                <div class="bg-white p-2 rounded-xl border border-slate-200 shadow-2xs">
+                  <div class="text-[10px] text-slate-400 font-semibold">Venta</div>
+                  <div class="text-sm font-extrabold text-slate-800 font-mono">S/ 3.751</div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
+                <span>Visor UBL 2.1: Listo</span>
+                <span class="text-emerald-700 font-bold">XML / CDR OK</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Features -->
-  <section id="features" class="features-section">
-    <div class="max-width">
-      <div class="section-header">
-        <span class="badge badge-teal">Funcionalidades</span>
-        <h2>Todo lo que necesitas en un solo lugar</h2>
-        <p>Diseñado específicamente para el contador independiente que gestiona múltiples clientes bajo los regímenes RER y RMT.</p>
+  <!-- ============================================================================
+       2. MATRIZ DE MÓDULOS Y FUNCIONALIDADES REALES (#modulos)
+       ============================================================================ -->
+  <section id="modulos" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+    
+    <!-- Encabezado de Sección -->
+    <div class="text-center max-w-3xl mx-auto space-y-3">
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+        Todo lo que necesitas para tu contabilidad tributaria
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">
+        Herramientas construidas para automatizar las tareas críticas del contador, desde la conciliación SIRE hasta la vigilancia preventiva ante fiscalizaciones SUNAT.
+      </p>
+    </div>
+
+    <!-- Cuadrícula de 6 Módulos Reales -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+      
+      <!-- Módulo 1: Vigilancia de Límites Tributarios -->
+      <div class="bg-white p-6 rounded-3xl border border-rose-100/90 shadow-xs hover:shadow-md transition-all space-y-4 group relative overflow-hidden">
+        <div class="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200/70 flex items-center justify-center font-bold">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-slate-900">Vigilancia de Límites Tributarios</h3>
+            <span class="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 text-[10px] font-bold border border-rose-200">SUNAT</span>
+          </div>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Supervisión continua de topes anuales y mensuales de ventas y compras para NRUS, RER, RMT (1,700 UIT) y RG con semáforos de riesgo y cálculo de saldo disponible.
+          </p>
+        </div>
+        <ul class="text-xs text-slate-600 space-y-1.5 pt-2 border-t border-slate-100">
+          <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Semáforo tricolor de riesgo (≥95%, 80-95%, &lt;80%)</li>
+          <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Detección y sugerencia de cambio de régimen</li>
+          <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Parámetros dinámicos por año fiscal (UIT 2026)</li>
+        </ul>
       </div>
-      <div class="features-grid">
-        <div class="card card-hover">
-          <div class="icon-box icon-teal">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-          </div>
-          <h3>Gestión de Cartera Multi-tenant</h3>
-          <p>Administra múltiples empresas clientes con aislamiento total de datos. Cada cliente es un inquilino independiente y seguro.</p>
+
+      <!-- Módulo 2: Conciliación SIRE vs ERP -->
+      <div class="bg-white p-6 rounded-3xl border border-indigo-100/90 shadow-xs hover:shadow-md transition-all space-y-4 group relative overflow-hidden">
+        <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-200/70 flex items-center justify-center font-bold">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
         </div>
-        <div class="card card-hover">
-          <div class="icon-box icon-violet">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-slate-900">Conciliación SIRE (RVIE & RCE)</h3>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-bold border border-indigo-200">Matching</span>
           </div>
-          <h3>Conciliación SIRE Automática</h3>
-          <p>Cruza tus registros de compras y ventas contra la propuesta de SUNAT. Identifica coincidencias, diferencias y omisiones.</p>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Motor de cruce masivo entre las propuestas de la SUNAT (RVIE y RCE de 80 columnas) y los registros internos del ERP o software contable de la empresa.
+          </p>
         </div>
-        <div class="card card-hover">
-          <div class="icon-box icon-amber">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          </div>
-          <h3>Liquidación de Impuestos</h3>
-          <p>Cálculo automatizado de IGV y Renta según régimen (RER o RMT). Incluye alertas de topes legales y saldos a favor.</p>
+        <ul class="text-xs text-slate-600 space-y-1.5 pt-2 border-t border-slate-100">
+          <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>Cruce por CAR SUNAT, comprobante y RUC</li>
+          <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>Matriz de Coincidentes, Diferencias y Faltantes</li>
+          <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>Edición en vivo de comprobantes y re-match</li>
+        </ul>
+      </div>
+
+      <!-- Módulo 3: Visor Universal de Comprobantes -->
+      <div class="bg-white p-6 rounded-3xl border border-teal-100/90 shadow-xs hover:shadow-md transition-all space-y-4 group relative overflow-hidden">
+        <div class="w-11 h-11 rounded-2xl bg-teal-50 text-teal-600 border border-teal-200/70 flex items-center justify-center font-bold">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
         </div>
-        <div class="card card-hover card-cta">
-          <div class="icon-box icon-cyan">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-slate-900">Visor de Comprobantes XML & CDR</h3>
+            <span class="px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 text-[10px] font-bold border border-teal-200">Abierto</span>
           </div>
-          <h3>Consulta Tipo de Cambio</h3>
-          <p>Accede al tipo de cambio oficial USD/PEN publicado por la SUNAT. Consulta valores actuales y históricos al instante.</p>
-          <a routerLink="/tipo-cambio" class="btn-card">Ver Consulta →</a>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Visualizador instantáneo de Facturas, Boletas, Notas de Crédito, Débito y respuestas CDR de SUNAT en estándar UBL 2.1 sin almacenar archivos sensibles.
+          </p>
         </div>
-        <div class="card card-hover card-cta card-cta-teal">
-          <div class="icon-box icon-teal">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+          <span class="text-xs text-slate-400">Acceso libre en la web</span>
+          <a routerLink="/visor-comprobantes" class="text-xs font-extrabold text-teal-700 hover:text-teal-900 inline-flex items-center gap-1 cursor-pointer">
+            <span>Abrir Visor</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Módulo 4: Consulta de Tipo de Cambio -->
+      <div class="bg-white p-6 rounded-3xl border border-amber-100/90 shadow-xs hover:shadow-md transition-all space-y-4 group relative overflow-hidden">
+        <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200/70 flex items-center justify-center font-bold">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-slate-900">Tipo de Cambio Oficial (SBS/SUNAT)</h3>
+            <span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-200">Diario</span>
           </div>
-          <h3>Visor de Comprobantes</h3>
-          <p>Visualiza facturas, boletas, notas y CDR de la SUNAT cargando tu archivo .XML o .ZIP. Sin registros, directo en tu navegador.</p>
-          <a routerLink="/visor-comprobantes" class="btn-card">Ver Comprobante →</a>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Consulta automática y almacenamiento histórico del tipo de cambio oficial compra/venta con calendario mensual de promedios ponderados.
+          </p>
+        </div>
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+          <span class="text-xs text-slate-400">Actualizado diariamente</span>
+          <a routerLink="/tipo-cambio" class="text-xs font-extrabold text-amber-700 hover:text-amber-900 inline-flex items-center gap-1 cursor-pointer">
+            <span>Ver Calendario</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Módulo 5: Gestión de Empresas y Consulta RUC -->
+      <div class="bg-white p-6 rounded-3xl border border-emerald-100/90 shadow-xs hover:shadow-md transition-all space-y-4 group relative overflow-hidden">
+        <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200/70 flex items-center justify-center font-bold">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+        </div>
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-slate-900">Gestión de Empresas & RUC</h3>
+            <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">Cartera</span>
+          </div>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Administración centralizada de carteras de clientes con consulta en línea a SUNAT para autocompletar razón social, estado, condición y régimen.
+          </p>
+        </div>
+        <ul class="text-xs text-slate-600 space-y-1.5 pt-2 border-t border-slate-100">
+          <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Aislamiento seguro multi-tenant por empresa</li>
+          <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Validación de RUC Activo y Habido</li>
+          <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Hub contable con accesos modulares</li>
+        </ul>
+      </div>
+
+      <!-- Módulo 6: Seguridad & Autenticación Empresarial -->
+      <div class="bg-white p-6 rounded-3xl border border-sky-100/90 shadow-xs hover:shadow-md transition-all space-y-4 group relative overflow-hidden">
+        <div class="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 border border-sky-200/70 flex items-center justify-center font-bold">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </div>
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-slate-900">Seguridad & Autenticación</h3>
+            <span class="px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 text-[10px] font-bold border border-sky-200">OAuth 2.0</span>
+          </div>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Mecanismos avanzados de protección con tokens JWT, Refresh Tokens con rotación automática y soporte para inicio de sesión federado con Google.
+          </p>
+        </div>
+        <ul class="text-xs text-slate-600 space-y-1.5 pt-2 border-t border-slate-100">
+          <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>Cifrado de credenciales con BCrypt</li>
+          <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>Guards de protección de rutas y RUC</li>
+          <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>Auditoría y control de perfiles</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================================
+       3. SECCIÓN DE REGÍMENES TRIBUTARIOS PERUANOS (#regimenes)
+       ============================================================================ -->
+  <section id="regimenes" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 sm:p-10 text-white relative overflow-hidden shadow-xl">
+      <div class="absolute -right-16 -top-16 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="relative z-10 space-y-8">
+        
+        <!-- Cabecera de Regímenes -->
+        <div class="text-center max-w-2xl mx-auto space-y-2.5">
+          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 text-emerald-400 text-xs font-bold border border-slate-700">
+            Marco Normativo SUNAT 2026
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            Cobertura Total por Régimen Fiscal
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+            Parámetros y límites legales calculados automáticamente según el marco tributario peruano con valor UIT 2026 de S/ 5,350.00.
+          </p>
+        </div>
+
+        <!-- Grid de 4 Regímenes -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <!-- NRUS -->
+          <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/80 space-y-2">
+            <div class="text-emerald-400 font-black text-xl">NRUS</div>
+            <div class="text-xs font-bold text-slate-200">Nuevo RUS</div>
+            <div class="text-[11px] text-slate-400 leading-relaxed">
+              Tope mensual de S/ 8,000.00 y límite anual acumulado de S/ 96,000.00 en compras y ventas.
+            </div>
+            <div class="pt-2 text-[10px] text-emerald-400 font-mono font-bold">Tope Anual: S/ 96,000</div>
+          </div>
+
+          <!-- RER -->
+          <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/80 space-y-2">
+            <div class="text-indigo-400 font-black text-xl">RER</div>
+            <div class="text-xs font-bold text-slate-200">Régimen Especial (Renta)</div>
+            <div class="text-[11px] text-slate-400 leading-relaxed">
+              Límite anual de ingresos netos y compras de S/ 525,000.00 con liquidación definitiva mensual.
+            </div>
+            <div class="pt-2 text-[10px] text-indigo-400 font-mono font-bold">Tope Anual: S/ 525,000</div>
+          </div>
+
+          <!-- RMT -->
+          <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/80 space-y-2">
+            <div class="text-teal-400 font-black text-xl">RMT</div>
+            <div class="text-xs font-bold text-slate-200">MYPE Tributario</div>
+            <div class="text-[11px] text-slate-400 leading-relaxed">
+              Tope de ventas de 1,700 UIT (S/ 9,095,000.00 en 2026). Compras sin límite normativo legal.
+            </div>
+            <div class="pt-2 text-[10px] text-teal-400 font-mono font-bold">Tope Ventas: 1,700 UIT</div>
+          </div>
+
+          <!-- RG -->
+          <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/80 space-y-2">
+            <div class="text-sky-400 font-black text-xl">RG</div>
+            <div class="text-xs font-bold text-slate-200">Régimen General</div>
+            <div class="text-[11px] text-slate-400 leading-relaxed">
+              Sin tope anual de compras ni ventas. Monitoreo financiero global y balance de comprobación.
+            </div>
+            <div class="pt-2 text-[10px] text-sky-400 font-mono font-bold">Sin Límite Anual</div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Regimes -->
-  <section class="regimes-section">
-    <div class="max-width">
-      <div class="regimes-grid">
-        <div><p class="regime-value">RER</p><p class="regime-label">Régimen Especial de Renta</p></div>
-        <div><p class="regime-value">RMT</p><p class="regime-label">Régimen MYPE Tributario</p></div>
-        <div><p class="regime-value">PLE</p><p class="regime-label">Programa de Libros Electrónicos</p></div>
-        <div><p class="regime-value">SIRE</p><p class="regime-label">Sistema Integrado de Registros</p></div>
+  <!-- ============================================================================
+       4. FLUJO DE TRABAJO EN 3 PASOS
+       ============================================================================ -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+    
+    <div class="text-center max-w-2xl mx-auto space-y-2.5">
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+        Flujo de Trabajo Simplificado
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">
+        Pasa de archivos dispersos a una conciliación fiscal clara y automatizada en tres simples pasos.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- Paso 1 -->
+      <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-3 text-center relative">
+        <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 font-black text-sm flex items-center justify-center mx-auto border border-emerald-200">
+          01
+        </div>
+        <h3 class="text-sm font-extrabold text-slate-900">Registra tus Empresas</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Ingresa el RUC para autocompletar la información oficial desde SUNAT y define el régimen tributario correspondiente.
+        </p>
+      </div>
+
+      <!-- Paso 2 -->
+      <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-3 text-center relative">
+        <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 font-black text-sm flex items-center justify-center mx-auto border border-indigo-200">
+          02
+        </div>
+        <h3 class="text-sm font-extrabold text-slate-900">Importa Comprobantes SIRE</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Carga las propuestas RVIE / RCE de SUNAT y los registros de tu sistema interno (TXT, CSV o ZIP).
+        </p>
+      </div>
+
+      <!-- Paso 3 -->
+      <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-3 text-center relative">
+        <div class="w-10 h-10 rounded-2xl bg-teal-50 text-teal-700 font-black text-sm flex items-center justify-center mx-auto border border-teal-200">
+          03
+        </div>
+        <h3 class="text-sm font-extrabold text-slate-900">Concilia y Vigila Límites</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Visualiza discrepancias al instante y supervisa tus semáforos de límites tributarios en tiempo real.
+        </p>
       </div>
     </div>
   </section>
+
+  <!-- ============================================================================
+       5. LLAMADO A LA ACCIÓN EJECUTIVO (CTA)
+       ============================================================================ -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 rounded-3xl p-8 sm:p-12 text-white text-center space-y-6 shadow-xl shadow-emerald-600/20 relative overflow-hidden">
+      <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+
+      <div class="max-w-2xl mx-auto space-y-3 relative z-10">
+        <h2 class="text-2xl sm:text-3xl font-black tracking-tight">
+          Optimiza el control contable y la seguridad fiscal de tus empresas
+        </h2>
+        <p class="text-xs sm:text-sm text-emerald-100 leading-relaxed">
+          Centraliza comprobantes, automatiza la conciliación SIRE y mantén tu cartera de clientes siempre dentro del marco tributario.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4 relative z-10 pt-2">
+        <a
+          routerLink="/auth/login"
+          class="px-6 py-3 bg-white hover:bg-emerald-50 text-emerald-800 font-extrabold text-xs sm:text-sm rounded-2xl shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+        >
+          Iniciar Sesión
+        </a>
+        <a
+          routerLink="/auth/registro"
+          class="px-6 py-3 bg-emerald-800/60 hover:bg-emerald-800/80 text-white font-extrabold text-xs sm:text-sm rounded-2xl border border-white/20 transition-all cursor-pointer"
+        >
+          Crear Cuenta de Contador
+        </a>
+      </div>
+    </div>
+  </section>
+
+</div>
