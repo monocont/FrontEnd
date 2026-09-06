@@ -2,3 +2,267 @@
   display: block;
   width: 100%;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Tabla Estilo Hoja de Cálculo (Excel Sheet UX) */
+.excel-grid-container {
+  height: calc(100vh - 195px);
+  min-height: 460px;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background-color: #ffffff;
+}
+
+.excel-grid {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 11.5px;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.excel-grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #e0f2f5;
+  color: #014d5e;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  font-size: 10.5px;
+  padding: 6px 10px;
+  border-bottom: 2px solid #b8e2e9;
+  border-right: 1px solid #b8e2e9;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.excel-grid thead th:hover {
+  background-color: #cdebf0;
+}
+
+.sort-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  justify-content: inherit;
+}
+
+.sort-icons {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 5px;
+  font-size: 8px;
+  margin-left: 2px;
+  user-select: none;
+}
+
+.excel-grid thead th.row-num {
+  background-color: #cdebf0 !important;
+  color: #014d5e !important;
+  border-right: 1px solid #9ecec6 !important;
+}
+
+.sort-icon-up, .sort-icon-down {
+  color: #8accd7;
+  transition: color 0.15s ease;
+}
+
+.sort-icon-up.active, .sort-icon-down.active {
+  color: #01697f;
+  font-weight: bold;
+}
+
+.sort-priority {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #ffffff;
+  background: #01697f;
+  border-radius: 9999px;
+  padding: 0 3px;
+  line-height: 11px;
+}
+
+.excel-grid thead th > .sort-header button {
+  color: #01697f;
+}
+
+.excel-grid thead th > .sort-header button:hover {
+  background-color: #b8e2e9;
+  color: #014d5e;
+}
+
+.excel-grid tbody td {
+  padding: 4.5px 8px;
+  border-bottom: 1px solid #f1f5f9;
+  border-right: 1px solid #f1f5f9;
+  white-space: nowrap;
+  color: #334155;
+}
+
+.excel-grid tbody tr:hover td {
+  background-color: #f0f9fa !important;
+}
+
+.excel-grid tbody tr:nth-child(even) td {
+  background-color: #fafbfc;
+}
+
+/* Columna de Enumeración (#) con fondo azul-petróleo/teal mate suave */
+.excel-grid tbody td.row-num {
+  background-color: #f0f9fa !important;
+  color: #01697f !important;
+  font-weight: 600;
+  text-align: center;
+  width: 40px;
+  border-right: 1px solid #e0f2f5 !important;
+  border-bottom: 1px solid #cdebf0 !important;
+}
+
+.excel-grid tbody tr:hover td.row-num {
+  background-color: #e0f2f5 !important;
+  color: #014d5e !important;
+}
+
+/* Colores de Fondo Exclusivos para Estados de Match (DIFERENCIA y SOLO UN ORIGEN) */
+.excel-grid tbody tr.fila-match-diferencia td:not(.row-num) {
+  background-color: #fffbeb !important;
+  color: #92400e;
+}
+.excel-grid tbody tr.fila-match-diferencia:hover td:not(.row-num) {
+  background-color: #fef3c7 !important;
+}
+
+.excel-grid tbody tr.fila-match-solo-un-origen td:not(.row-num) {
+  background-color: #f8fbfe !important;
+  color: #1e3a5f;
+}
+.excel-grid tbody tr.fila-match-solo-un-origen:hover td:not(.row-num) {
+  background-color: #dbeefc !important;
+}
+
+/* Fila Editable Nueva (Texto Verde Esmeralda) */
+.excel-grid tbody tr.fila-nueva td {
+  color: #15803d !important;
+  padding: 3px 4px !important;
+}
+
+.excel-grid tbody tr.fila-nueva input,
+.excel-grid tbody tr.fila-nueva select {
+  color: #15803d !important;
+  font-weight: 600;
+}
+
+/* Fila Existente en Edición Activa */
+.excel-grid tbody tr.fila-editando {
+  outline: 1.5px solid #3b82f6 !important;
+  outline-offset: -1.5px;
+}
+
+/* Fila Modificada (Texto Ámbar / Naranja Oscuro) */
+.excel-grid tbody tr.fila-modificada td {
+  color: #b45309 !important;
+  padding: 3px 4px !important;
+}
+
+.excel-grid tbody tr.fila-modificada input,
+.excel-grid tbody tr.fila-modificada select {
+  color: #b45309 !important;
+  font-weight: 600;
+}
+
+.input-grid-cell {
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  padding: 3px 6px;
+  font-size: 11px;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.input-grid-cell:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 1px #10b981;
+}
+
+.input-grid-cell.invalido {
+  border-color: #f43f5e;
+}
+
+/* Botón flotante (+) entre filas */
+.fila-contenedor {
+  position: relative;
+}
+
+.btn-insertar-flotante {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 25;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background-color: #10b981;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-insertar-flotante:hover {
+  background-color: #059669;
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+.fila-contenedor:hover .btn-insertar-flotante,
+th.row-num:hover .btn-insertar-flotante {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Custom Scrollbars Teal / Azul Petróleo Mate (#01697f) */
+.excel-grid-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.excel-grid-container::-webkit-scrollbar-track {
+  background: #f0f9fa;
+  border-radius: 4px;
+}
+.excel-grid-container::-webkit-scrollbar-thumb {
+  background: #8accd7;
+  border-radius: 6px;
+  border: 2px solid #f0f9fa;
+}
+.excel-grid-container::-webkit-scrollbar-thumb:hover {
+  background: #5eb6c5;
+}
+.excel-grid-container::-webkit-scrollbar-corner {
+  background: #f0f9fa;
+}

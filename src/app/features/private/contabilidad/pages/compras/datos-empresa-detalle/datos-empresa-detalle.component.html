@@ -11,7 +11,7 @@
       <span class="text-slate-300">/</span>
       <a [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'compras']" [queryParams]="{ tab: 'empresa' }" class="text-slate-400 hover:text-indigo-600 font-medium transition-colors">Compras</a>
       <span class="text-slate-300">/</span>
-      <span class="font-semibold text-slate-800 bg-violet-50 text-violet-700 px-2 py-0.5 rounded-md">
+      <span class="font-semibold text-slate-800 bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-md">
         Datos Empresa · {{ periodoLabel }}
       </span>
     </div>
@@ -28,6 +28,9 @@
         <span>{{ errores.length }} Observaciones</span>
       </button>
 
+
+
+      <!-- Volver -->
       <a
         [routerLink]="['/home/contabilidad/empresa', idEmpresa, 'compras']"
         [queryParams]="{ tab: 'empresa' }"
@@ -43,7 +46,7 @@
         type="button"
         (click)="guardarCambios()"
         [disabled]="guardando"
-        class="px-4 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold shadow-sm shadow-violet-500/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+        class="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-500/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
       >
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
         Guardar Cambios ({{ totalCambiosPendientes }})
@@ -54,7 +57,7 @@
   <!-- Barra Compacta de Métricas y Filtro Rápido -->
   <div *ngIf="compras.length > 0 || carga" class="bg-white px-3 py-2 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
     <!-- Métricas en línea -->
-    <div class="flex items-center gap-4 flex-wrap">
+    <div class="flex items-center gap-3 flex-wrap">
       <div class="flex items-center gap-1.5">
         <span class="text-slate-400 font-medium uppercase text-[10px]">Registros:</span>
         <span class="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">{{ comprasFiltradas.length | number }}</span>
@@ -63,66 +66,73 @@
       <div class="h-3.5 w-px bg-slate-200"></div>
 
       <div class="flex items-center gap-1.5">
-        <span class="text-slate-400 font-medium uppercase text-[10px]">Base Imponible:</span>
-        <span class="font-bold text-emerald-700">S/ {{ sumaBiGravada | number:'1.2-2' }}</span>
+        <span class="text-slate-400 font-medium uppercase text-[10px]">BI Gravada:</span>
+        <span class="font-bold text-emerald-700">S/ {{ totalBi | number:'1.2-2' }}</span>
       </div>
 
       <div class="h-3.5 w-px bg-slate-200"></div>
 
       <div class="flex items-center gap-1.5">
         <span class="text-slate-400 font-medium uppercase text-[10px]">IGV / IPM:</span>
-        <span class="font-bold text-sky-700">S/ {{ sumaIgvIpm | number:'1.2-2' }}</span>
+        <span class="font-bold text-sky-700">S/ {{ totalIgv | number:'1.2-2' }}</span>
+      </div>
+
+      <div class="h-3.5 w-px bg-slate-200"></div>
+
+      <div class="flex items-center gap-1.5">
+        <span class="text-slate-400 font-medium uppercase text-[10px]">No Gravadas:</span>
+        <span class="font-bold text-slate-700">S/ {{ totalNoGravadas | number:'1.2-2' }}</span>
       </div>
 
       <div class="h-3.5 w-px bg-slate-200"></div>
 
       <div class="flex items-center gap-1.5">
         <span class="text-slate-400 font-medium uppercase text-[10px]">Total General:</span>
-        <span class="font-bold text-slate-900 bg-amber-50 text-amber-800 px-2 py-0.5 rounded border border-amber-100">S/ {{ sumaTotal | number:'1.2-2' }}</span>
+        <span class="font-bold text-slate-900 bg-amber-50 text-amber-800 px-2 py-0.5 rounded border border-amber-100">S/ {{ totalGeneral | number:'1.2-2' }}</span>
       </div>
     </div>
 
     <!-- Buscador en tiempo real de la Grilla Excel y badges de filtro -->
     <div class="flex items-center gap-2 min-w-[320px] flex-wrap">
       <!-- Badges de filtro activos -->
-      <div *ngIf="fechasSeleccionadas.length > 0" class="flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
-        <span>Fecha: {{ fechasSeleccionadas.length }}</span>
-        <button type="button" (click)="removerFiltroColumna('fecha')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold">✕</button>
+      <div *ngIf="fechasEmisionSeleccionadas.length > 0" class="flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
+        <span>Fecha: {{ fechasEmisionSeleccionadas.length }}</span>
+        <button type="button" (click)="removerFiltroColumna('fechaEmision')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold cursor-pointer">✕</button>
       </div>
 
       <div *ngIf="tiposCpSeleccionados.length > 0" class="flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
         <span>Tipo CP: {{ tiposCpSeleccionados.length }}</span>
-        <button type="button" (click)="removerFiltroColumna('tipoCp')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold">✕</button>
+        <button type="button" (click)="removerFiltroColumna('tipoCp')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold cursor-pointer">✕</button>
       </div>
 
       <div *ngIf="seriesSeleccionadas.length > 0" class="flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
         <span>Serie: {{ seriesSeleccionadas.length }}</span>
-        <button type="button" (click)="removerFiltroColumna('serie')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold">✕</button>
+        <button type="button" (click)="removerFiltroColumna('serie')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold cursor-pointer">✕</button>
       </div>
 
       <div *ngIf="numerosSeleccionados.length > 0" class="flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
         <span>Número: {{ numerosSeleccionados.length }}</span>
-        <button type="button" (click)="removerFiltroColumna('numero')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold">✕</button>
+        <button type="button" (click)="removerFiltroColumna('numero')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold cursor-pointer">✕</button>
       </div>
 
       <div *ngIf="tiposDocSeleccionados.length > 0" class="flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
         <span>Tipo Doc: {{ tiposDocSeleccionados.length }}</span>
-        <button type="button" (click)="removerFiltroColumna('tipoDoc')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold">✕</button>
+        <button type="button" (click)="removerFiltroColumna('tipoDoc')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold cursor-pointer">✕</button>
       </div>
 
-      <div *ngIf="docsClienteSeleccionados.length > 0" class="flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
-        <span>RUC Prov: {{ docsClienteSeleccionados.length }}</span>
-        <button type="button" (click)="removerFiltroColumna('docCliente')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold">✕</button>
+      <div *ngIf="docsProveedorSeleccionados.length > 0" class="flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
+        <span>RUC Prov: {{ docsProveedorSeleccionados.length }}</span>
+        <button type="button" (click)="removerFiltroColumna('docProveedor')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold cursor-pointer">✕</button>
       </div>
 
       <div *ngIf="razonesSocialesSeleccionadas.length > 0" class="flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
         <span>Proveedor: {{ razonesSocialesSeleccionadas.length }}</span>
-        <button type="button" (click)="removerFiltroColumna('razonSocial')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold">✕</button>
+        <button type="button" (click)="removerFiltroColumna('razonSocial')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold cursor-pointer">✕</button>
       </div>
 
       <div *ngIf="monedasSeleccionadas.length > 0" class="flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-1 rounded-xl text-[11px] font-medium shrink-0 animate-fade-in">
         <span>Moneda: {{ monedasSeleccionadas.length }}</span>
-        <button type="button" (click)="removerFiltroColumna('moneda')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold">✕</button>
+        <button type="button" (click)="removerFiltroColumna('moneda')" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold cursor-pointer">✕</button>
       </div>
 
       <!-- Caja de Búsqueda Global -->
@@ -140,7 +150,7 @@
           *ngIf="filtroTexto"
           type="button"
           (click)="filtroTexto = ''"
-          class="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-600 font-bold text-xs"
+          class="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-600 font-bold text-xs cursor-pointer"
         >
           ✕
         </button>
@@ -158,7 +168,7 @@
     <button type="button" (click)="volver()" class="mt-4 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold cursor-pointer">Volver</button>
   </div>
 
-  <!-- GRILLA EXCEL-LIKE EN VERDE MATE: Compras de la Empresa -->
+  <!-- GRILLA EXCEL-LIKE (27 Columnas completas): Compras de la Empresa -->
   <div *ngIf="!cargando && !mensajeError && compras.length > 0" class="w-full">
     <div class="excel-grid-container shadow-xs">
       <table class="excel-grid">
@@ -166,8 +176,8 @@
           <tr>
             <th class="row-num text-center">#</th>
 
-            <!-- Columna Fecha Emisión -->
-            <th class="relative" (click)="ordenarPor('fechaEmision')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+            <!-- 1. FECHA EMISION -->
+            <th class="relative" (click)="ordenarPor('fechaEmision')" title="Fecha de Emisión">
               <div class="sort-header">
                 <span>Fecha Emisión</span>
                 <span class="sort-icons">
@@ -177,51 +187,62 @@
                 <span *ngIf="obtenerEstadoOrden('fechaEmision').ordenIndice > 0" class="sort-priority">{{ obtenerEstadoOrden('fechaEmision').ordenIndice }}</span>
 
                 <button
-                  *ngIf="opcionesFechaDisponibles.length > 1"
+                  *ngIf="opcionesFechaEmisionDisponibles.length > 1"
                   type="button"
-                  (click)="toggleMenuFiltroFecha($event)"
+                  (click)="toggleMenuFiltroFechaEmision($event)"
                   class="ml-1 p-0.5 rounded hover:bg-emerald-200 transition-colors text-emerald-800"
-                  [ngClass]="{'bg-emerald-100 text-emerald-900 font-bold ring-1 ring-emerald-400': fechasSeleccionadas.length > 0}"
-                  title="Filtrar por Fecha">
+                  [ngClass]="{'bg-emerald-100 text-emerald-900 font-bold ring-1 ring-emerald-400': fechasEmisionSeleccionadas.length > 0}"
+                  title="Filtrar por Fecha Emisión">
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
                 </button>
               </div>
 
-              <!-- Popup Fecha -->
+              <!-- Popup Fecha Emisión -->
               <div
-                *ngIf="menuFiltroFechaAbierto"
+                *ngIf="menuFiltroFechaEmisionAbierto"
                 (click)="$event.stopPropagation()"
                 class="absolute left-0 top-full mt-1 w-56 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 z-50 text-left normal-case tracking-normal font-normal text-xs animate-fade-in">
                 <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2 font-semibold text-slate-800 text-[11.5px]">
-                  <span>Filtrar Fecha</span>
-                  <button type="button" (click)="menuFiltroFechaAbierto = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                  <span>Filtrar Fecha Emisión</span>
+                  <button type="button" (click)="menuFiltroFechaEmisionAbierto = false" class="text-slate-400 hover:text-slate-600">✕</button>
                 </div>
                 <div class="mb-2">
-                  <input type="text" [(ngModel)]="filtroTextoFechaMenu" placeholder="Buscar fecha dd/mm/yyyy..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                  <input type="text" [(ngModel)]="filtroTextoFechaEmisionMenu" placeholder="Buscar fecha..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
                 </div>
                 <div class="flex items-center justify-between text-[10px] text-emerald-600 font-semibold mb-2 px-0.5">
-                  <button type="button" (click)="seleccionarTodasFechas()" class="hover:underline">Seleccionar todo</button>
+                  <button type="button" (click)="seleccionarTodasFechasEmision()" class="hover:underline">Seleccionar todo</button>
                   <span class="text-slate-300">|</span>
-                  <button type="button" (click)="limpiarFiltroFechas()" class="text-rose-600 hover:underline">Borrar filtro</button>
+                  <button type="button" (click)="limpiarFiltroFechasEmision()" class="text-rose-600 hover:underline">Borrar filtro</button>
                 </div>
                 <div class="max-h-40 overflow-y-auto space-y-1 py-1 border-t border-b border-slate-100">
-                  <label *ngFor="let op of opcionesFechaFiltradas" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
+                  <label *ngFor="let op of opcionesFechaEmisionFiltradas" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer select-none">
                     <div class="flex items-center gap-2 overflow-hidden pr-2">
-                      <input type="checkbox" [checked]="estaFechaSeleccionada(op.fecha)" (change)="toggleSeleccionFecha(op.fecha)" class="rounded text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5" />
-                      <span class="truncate font-medium text-slate-700 text-[11px] font-mono">{{ op.fecha }}</span>
+                      <input type="checkbox" [checked]="estaFechaEmisionSeleccionada(op.fechaIso)" (change)="toggleSeleccionFechaEmision(op.fechaIso)" class="rounded text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5" />
+                      <span class="truncate font-medium text-slate-700 text-[11px] font-mono">{{ op.fechaFormato }}</span>
                     </div>
                     <span class="bg-slate-100 text-slate-500 text-[9.5px] font-bold px-1.5 py-0.5 rounded-full">{{ op.cantidad }}</span>
                   </label>
                 </div>
                 <div class="mt-2 pt-1 flex items-center justify-between text-[10px] text-slate-400">
-                  <span>{{ fechasSeleccionadas.length }} seleccionado(s)</span>
-                  <button type="button" (click)="menuFiltroFechaAbierto = false" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-2.5 py-1 rounded-md">Aceptar</button>
+                  <span>{{ fechasEmisionSeleccionadas.length }} seleccionado(s)</span>
+                  <button type="button" (click)="menuFiltroFechaEmisionAbierto = false" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-2.5 py-1 rounded-md cursor-pointer">Aceptar</button>
                 </div>
               </div>
             </th>
 
-            <!-- Columna Tipo CP -->
-            <th class="relative" (click)="ordenarPor('codigoTipoCp')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+            <!-- 2. FECHA VCTO -->
+            <th class="relative" (click)="ordenarPor('fechaVencimiento')" title="Fecha de Vencimiento">
+              <div class="sort-header">
+                <span>Fecha Vcto</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('fechaVencimiento').activo && obtenerEstadoOrden('fechaVencimiento').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('fechaVencimiento').activo && !obtenerEstadoOrden('fechaVencimiento').ascendente">▼</span>
+                </span>
+              </div>
+            </th>
+
+            <!-- 3. TIPO CP -->
+            <th class="relative" (click)="ordenarPor('codigoTipoCp')" title="Tipo de Comprobante">
               <div class="sort-header">
                 <span>Tipo CP</span>
                 <span class="sort-icons">
@@ -269,13 +290,13 @@
                 </div>
                 <div class="mt-2 pt-1 flex items-center justify-between text-[10px] text-slate-400">
                   <span>{{ tiposCpSeleccionados.length }} seleccionado(s)</span>
-                  <button type="button" (click)="menuFiltroTipoCpAbierto = false" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-2.5 py-1 rounded-md">Aceptar</button>
+                  <button type="button" (click)="menuFiltroTipoCpAbierto = false" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-2.5 py-1 rounded-md cursor-pointer">Aceptar</button>
                 </div>
               </div>
             </th>
 
-            <!-- Columna Serie -->
-            <th class="relative text-center" (click)="ordenarPor('serie')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+            <!-- 4. SERIE -->
+            <th class="relative text-center" (click)="ordenarPor('serie')" title="Serie del Comprobante">
               <div class="sort-header justify-center">
                 <span>Serie</span>
                 <span class="sort-icons">
@@ -296,8 +317,19 @@
               </div>
             </th>
 
-            <!-- Columna Número -->
-            <th class="relative text-center" (click)="ordenarPor('numero')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+            <!-- 5. AÑO DUA -->
+            <th class="relative text-center" (click)="ordenarPor('anioDocumento')" title="Año DUA / DSI">
+              <div class="sort-header justify-center">
+                <span>Año DUA</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('anioDocumento').activo && obtenerEstadoOrden('anioDocumento').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('anioDocumento').activo && !obtenerEstadoOrden('anioDocumento').ascendente">▼</span>
+                </span>
+              </div>
+            </th>
+
+            <!-- 6. NUMERO -->
+            <th class="relative text-center" (click)="ordenarPor('numero')" title="Número del Comprobante">
               <div class="sort-header justify-center">
                 <span>Número</span>
                 <span class="sort-icons">
@@ -318,15 +350,15 @@
               </div>
             </th>
 
-            <!-- Columna Tipo Doc -->
-            <th class="relative text-center" (click)="ordenarPor('codigoTipoDocIdentidad')">
+            <!-- 7. TIPO DOC -->
+            <th class="relative text-center" (click)="ordenarPor('codigoTipoDocIdentidad')" title="Tipo Doc Identidad Proveedor">
               <div class="sort-header justify-center">
                 <span>Tipo Doc</span>
               </div>
             </th>
 
-            <!-- Columna RUC / Doc Proveedor -->
-            <th class="relative" (click)="ordenarPor('nroDocIdentidad')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+            <!-- 8. RUC / DOC PROVEEDOR -->
+            <th class="relative" (click)="ordenarPor('nroDocIdentidad')" title="Documento o RUC del Proveedor">
               <div class="sort-header">
                 <span>RUC / Doc Proveedor</span>
                 <span class="sort-icons">
@@ -336,21 +368,21 @@
                 <span *ngIf="obtenerEstadoOrden('nroDocIdentidad').ordenIndice > 0" class="sort-priority">{{ obtenerEstadoOrden('nroDocIdentidad').ordenIndice }}</span>
 
                 <button
-                  *ngIf="opcionesDocClienteDisponibles.length > 1"
+                  *ngIf="opcionesDocProveedorDisponibles.length > 1"
                   type="button"
-                  (click)="toggleMenuFiltroDocCliente($event)"
+                  (click)="toggleMenuFiltroDocProveedor($event)"
                   class="ml-1 p-0.5 rounded hover:bg-emerald-200 transition-colors text-emerald-800"
-                  [ngClass]="{'bg-emerald-100 text-emerald-900 font-bold ring-1 ring-emerald-400': docsClienteSeleccionados.length > 0}"
+                  [ngClass]="{'bg-emerald-100 text-emerald-900 font-bold ring-1 ring-emerald-400': docsProveedorSeleccionados.length > 0}"
                   title="Filtrar por Documento">
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
                 </button>
               </div>
             </th>
 
-            <!-- Columna Razón Social / Proveedor -->
-            <th class="relative" (click)="ordenarPor('razonSocial')" title="1er clic: Ascendente | 2do clic: Descendente | 3er clic: Quitar">
+            <!-- 9. RAZON SOCIAL PROVEEDOR -->
+            <th class="relative" (click)="ordenarPor('razonSocial')" title="Razón Social / Nombre Proveedor">
               <div class="sort-header">
-                <span>Razón Social / Proveedor</span>
+                <span>Razón Social Proveedor</span>
                 <span class="sort-icons">
                   <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('razonSocial').activo && obtenerEstadoOrden('razonSocial').ascendente">▲</span>
                   <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('razonSocial').activo && !obtenerEstadoOrden('razonSocial').ascendente">▼</span>
@@ -369,30 +401,99 @@
               </div>
             </th>
 
-            <!-- Base Imponible -->
-            <th class="text-right" (click)="ordenarPor('biGravada')">
+            <!-- 10. BASE IMPONIBLE GRAVADA -->
+            <th class="text-right" (click)="ordenarPor('biGravadoDg')" title="Base Imponible Operaciones Gravadas">
               <div class="sort-header justify-end">
-                <span>Base Imponible</span>
+                <span>BI Gravada</span>
                 <span class="sort-icons">
-                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('biGravada').activo && obtenerEstadoOrden('biGravada').ascendente">▲</span>
-                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('biGravada').activo && !obtenerEstadoOrden('biGravada').ascendente">▼</span>
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('biGravadoDg').activo && obtenerEstadoOrden('biGravadoDg').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('biGravadoDg').activo && !obtenerEstadoOrden('biGravadoDg').ascendente">▼</span>
                 </span>
               </div>
             </th>
 
-            <!-- IGV / IPM -->
-            <th class="text-right" (click)="ordenarPor('igvIpm')">
+            <!-- 11. IGV / IPM -->
+            <th class="text-right" (click)="ordenarPor('igvIpmDg')" title="IGV e IPM Operaciones Gravadas">
               <div class="sort-header justify-end">
-                <span>IGV / IPM</span>
+                <span>IGV Gravado</span>
                 <span class="sort-icons">
-                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('igvIpm').activo && obtenerEstadoOrden('igvIpm').ascendente">▲</span>
-                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('igvIpm').activo && !obtenerEstadoOrden('igvIpm').ascendente">▼</span>
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('igvIpmDg').activo && obtenerEstadoOrden('igvIpmDg').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('igvIpmDg').activo && !obtenerEstadoOrden('igvIpmDg').ascendente">▼</span>
                 </span>
               </div>
             </th>
 
-            <!-- Total CP -->
-            <th class="text-right font-bold" (click)="ordenarPor('totalCp')">
+            <!-- 12. BI MIXTAS -->
+            <th class="text-right" (click)="ordenarPor('biGravadoDgng')" title="Base Imponible Operaciones Mixtas">
+              <div class="sort-header justify-end">
+                <span>BI Mixtas</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('biGravadoDgng').activo && obtenerEstadoOrden('biGravadoDgng').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('biGravadoDgng').activo && !obtenerEstadoOrden('biGravadoDgng').ascendente">▼</span>
+                </span>
+              </div>
+            </th>
+
+            <!-- 13. IGV MIXTAS -->
+            <th class="text-right" (click)="ordenarPor('igvIpmDgng')" title="IGV Operaciones Mixtas">
+              <div class="sort-header justify-end">
+                <span>IGV Mixtas</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('igvIpmDgng').activo && obtenerEstadoOrden('igvIpmDgng').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('igvIpmDgng').activo && !obtenerEstadoOrden('igvIpmDgng').ascendente">▼</span>
+                </span>
+              </div>
+            </th>
+
+            <!-- 14. BI SIN CREDITO -->
+            <th class="text-right" (click)="ordenarPor('biGravadoDng')" title="Base Imponible Sin Crédito Fiscal">
+              <div class="sort-header justify-end">
+                <span>BI Sin Crédito</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('biGravadoDng').activo && obtenerEstadoOrden('biGravadoDng').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('biGravadoDng').activo && !obtenerEstadoOrden('biGravadoDng').ascendente">▼</span>
+                </span>
+              </div>
+            </th>
+
+            <!-- 15. IGV SIN CREDITO -->
+            <th class="text-right" (click)="ordenarPor('igvIpmDng')" title="IGV Sin Crédito Fiscal">
+              <div class="sort-header justify-end">
+                <span>IGV Sin Crédito</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('igvIpmDng').activo && obtenerEstadoOrden('igvIpmDng').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('igvIpmDng').activo && !obtenerEstadoOrden('igvIpmDng').ascendente">▼</span>
+                </span>
+              </div>
+            </th>
+
+            <!-- 16. NO GRAVADAS -->
+            <th class="text-right" (click)="ordenarPor('valorAdqNg')" title="Valor Adquisiciones No Gravadas">
+              <div class="sort-header justify-end">
+                <span>No Gravadas</span>
+                <span class="sort-icons">
+                  <span class="sort-icon-up" [class.active]="obtenerEstadoOrden('valorAdqNg').activo && obtenerEstadoOrden('valorAdqNg').ascendente">▲</span>
+                  <span class="sort-icon-down" [class.active]="obtenerEstadoOrden('valorAdqNg').activo && !obtenerEstadoOrden('valorAdqNg').ascendente">▼</span>
+                </span>
+              </div>
+            </th>
+
+            <!-- 17. ISC -->
+            <th class="text-right" (click)="ordenarPor('montoIsc')" title="Impuesto Selectivo al Consumo">
+              <div class="sort-header justify-end">
+                <span>ISC</span>
+              </div>
+            </th>
+
+            <!-- 18. OTROS TRIBUTOS Y CARGOS -->
+            <th class="text-right" (click)="ordenarPor('montoOtrosTributos')" title="Otros Tributos y Cargos">
+              <div class="sort-header justify-end">
+                <span>Otros Trib</span>
+              </div>
+            </th>
+
+            <!-- 19. TOTAL CP -->
+            <th class="text-right font-bold" (click)="ordenarPor('totalCp')" title="Importe Total Comprobante">
               <div class="sort-header justify-end">
                 <span>Total CP</span>
                 <span class="sort-icons">
@@ -402,14 +503,63 @@
               </div>
             </th>
 
-            <!-- Moneda -->
+            <!-- 20. NO DOMICILIADOS -->
+            <th class="text-center" title="Comprobante No Domiciliado">
+              <div class="sort-header justify-center">
+                <span>No Domicil</span>
+              </div>
+            </th>
+
+            <!-- 21. DETRACCION -->
+            <th class="text-center" (click)="ordenarPor('detraccion')" title="Detracción (Nro / Fecha)">
+              <div class="sort-header justify-center">
+                <span>Detracción</span>
+              </div>
+            </th>
+
+            <!-- 22. TIPO CAMBIO -->
+            <th class="text-right" (click)="ordenarPor('tipoCambio')" title="Tipo de Cambio">
+              <div class="sort-header justify-end">
+                <span>TC</span>
+              </div>
+            </th>
+
+            <!-- 23. REF: FECHA EMISION -->
+            <th class="text-center" title="Fecha Emisión Doc Modificado">
+              <div class="sort-header justify-center">
+                <span>Ref Fecha</span>
+              </div>
+            </th>
+
+            <!-- 24. REF: TIPO CP -->
+            <th class="text-center" title="Tipo CP Modificado">
+              <div class="sort-header justify-center">
+                <span>Ref Tipo</span>
+              </div>
+            </th>
+
+            <!-- 25. REF: SERIE CP -->
+            <th class="text-center" title="Serie CP Modificado">
+              <div class="sort-header justify-center">
+                <span>Ref Serie</span>
+              </div>
+            </th>
+
+            <!-- 26. REF: NUMERO CP -->
+            <th class="text-center" title="Número CP Modificado">
+              <div class="sort-header justify-center">
+                <span>Ref Núm</span>
+              </div>
+            </th>
+
+            <!-- 27. MONEDA -->
             <th class="text-center" (click)="ordenarPor('codigoMoneda')">
               <div class="sort-header justify-center">
                 <span>Mon</span>
               </div>
             </th>
 
-            <!-- Acciones -->
+            <!-- ACCIÓN -->
             <th class="text-center w-16">Acción</th>
           </tr>
         </thead>
@@ -417,6 +567,7 @@
           <tr
             *ngFor="let c of comprasFiltradas; let i = index"
             class="fila-contenedor group cursor-pointer"
+            [attr.data-id]="c.idCompraEmpresa"
             (dblclick)="iniciarEdicion(c, $event)"
             [ngClass]="c.esNuevo ? 'fila-nueva' : (c.modificado ? 'fila-modificada' : (c.editando ? 'fila-editando' : ''))"
           >
@@ -424,7 +575,7 @@
             <td class="row-num relative font-mono text-center">
               <button
                 type="button"
-                (click)="insertarFilaEnPosicion(i)"
+                (click)="insertarFila(c, $event)"
                 class="btn-insertar-flotante"
                 title="Insertar fila aquí">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
@@ -435,7 +586,7 @@
               <span *ngIf="!c.esNuevo && c.modificado" class="text-amber-700 font-bold text-[9px] bg-amber-100 px-1 py-0.5 rounded">EDIT</span>
             </td>
 
-            <!-- Fecha Emisión -->
+            <!-- 1. Fecha Emisión -->
             <td class="font-mono">
               <ng-container *ngIf="!c.esNuevo && !c.editando">
                 {{ c.fechaEmision }}
@@ -445,25 +596,39 @@
                   type="text"
                   [(ngModel)]="c.fechaEmision"
                   (ngModelChange)="verificarYMarcarModificacion(c)"
-                  (blur)="finalizarEdicion(c)"
-                  class="input-grid-cell font-sans text-xs"
+                  placeholder="YYYY-MM-DD"
+                  class="input-grid-cell font-mono text-xs"
                   [ngClass]="{'invalido': !c.fechaEmision}"
                   required />
               </ng-container>
             </td>
 
-            <!-- Tipo CP -->
+            <!-- 2. Fecha Vcto -->
+            <td class="font-mono">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ c.fechaVencimiento || '—' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="text"
+                  [(ngModel)]="c.fechaVencimiento"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="YYYY-MM-DD"
+                  class="input-grid-cell font-mono text-xs" />
+              </ng-container>
+            </td>
+
+            <!-- 3. Tipo CP -->
             <td class="font-medium text-slate-800 bg-slate-50/50">
               <ng-container *ngIf="!c.esNuevo && !c.editando">
                 <span [title]="c.codigoTipoCp + ' - ' + obtenerNombreTipoCp(c.codigoTipoCp)">
-                  {{ obtenerNombreTipoCp(c.codigoTipoCp) }}
+                  {{ c.codigoTipoCp }} - {{ obtenerNombreTipoCp(c.codigoTipoCp) }}
                 </span>
               </ng-container>
               <ng-container *ngIf="c.esNuevo || c.editando">
                 <select
                   [(ngModel)]="c.codigoTipoCp"
                   (ngModelChange)="verificarYMarcarModificacion(c)"
-                  (blur)="finalizarEdicion(c)"
                   class="input-grid-cell font-sans text-xs bg-white"
                   required>
                   <option *ngFor="let tcp of tiposCp" [value]="tcp.codigo">{{ tcp.codigo }} - {{ tcp.nombre }}</option>
@@ -471,7 +636,7 @@
               </ng-container>
             </td>
 
-            <!-- Serie -->
+            <!-- 4. Serie -->
             <td class="font-mono text-center font-medium">
               <ng-container *ngIf="!c.esNuevo && !c.editando">
                 {{ c.serie }}
@@ -481,7 +646,6 @@
                   type="text"
                   [(ngModel)]="c.serie"
                   (ngModelChange)="verificarYMarcarModificacion(c)"
-                  (blur)="finalizarEdicion(c)"
                   placeholder="F001"
                   maxlength="4"
                   class="input-grid-cell font-mono text-center uppercase"
@@ -490,7 +654,23 @@
               </ng-container>
             </td>
 
-            <!-- Número -->
+            <!-- 5. Año DUA -->
+            <td class="font-mono text-center">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ c.anioDocumento || '—' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="text"
+                  [(ngModel)]="c.anioDocumento"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="2026"
+                  maxlength="4"
+                  class="input-grid-cell font-mono text-center" />
+              </ng-container>
+            </td>
+
+            <!-- 6. Número -->
             <td class="font-mono text-center font-medium">
               <ng-container *ngIf="!c.esNuevo && !c.editando">
                 {{ c.numero }}
@@ -500,25 +680,23 @@
                   type="text"
                   [(ngModel)]="c.numero"
                   (ngModelChange)="verificarYMarcarModificacion(c)"
-                  (blur)="finalizarEdicion(c)"
                   placeholder="12345"
-                  maxlength="10"
+                  maxlength="15"
                   class="input-grid-cell font-mono text-center"
                   [ngClass]="{'invalido': !c.numero}"
                   required />
               </ng-container>
             </td>
 
-            <!-- Tipo Doc Identidad -->
+            <!-- 7. Tipo Doc Identidad -->
             <td class="font-medium text-slate-700">
               <ng-container *ngIf="!c.esNuevo && !c.editando">
-                <span>{{ obtenerNombreTipoDoc(c.codigoTipoDocIdentidad || '6') }}</span>
+                <span>{{ obtenerNombreTipoDocIdentidad(c.codigoTipoDocIdentidad || '6') }}</span>
               </ng-container>
               <ng-container *ngIf="c.esNuevo || c.editando">
                 <select
                   [(ngModel)]="c.codigoTipoDocIdentidad"
                   (ngModelChange)="verificarYMarcarModificacion(c)"
-                  (blur)="finalizarEdicion(c)"
                   class="input-grid-cell font-sans text-xs bg-white"
                   required>
                   <option *ngFor="let tdoc of tiposDocIdentidad" [value]="tdoc.codigo">{{ tdoc.codigo }} - {{ tdoc.nombre }}</option>
@@ -526,7 +704,7 @@
               </ng-container>
             </td>
 
-            <!-- Nro Doc Identidad -->
+            <!-- 8. Nro Doc Identidad (RUC / Doc Prov) -->
             <td class="font-mono font-semibold text-slate-800">
               <ng-container *ngIf="!c.esNuevo && !c.editando">
                 {{ c.nroDocIdentidad }}
@@ -536,7 +714,6 @@
                   type="text"
                   [(ngModel)]="c.nroDocIdentidad"
                   (ngModelChange)="verificarYMarcarModificacion(c)"
-                  (blur)="finalizarEdicion(c)"
                   placeholder="RUC / DNI"
                   maxlength="15"
                   class="input-grid-cell font-mono font-semibold"
@@ -545,7 +722,7 @@
               </ng-container>
             </td>
 
-            <!-- Razón Social -->
+            <!-- 9. Razón Social Proveedor -->
             <td class="max-w-[280px]">
               <ng-container *ngIf="!c.esNuevo && !c.editando">
                 <span class="truncate block" [title]="c.razonSocial">{{ c.razonSocial }}</span>
@@ -555,7 +732,6 @@
                   type="text"
                   [(ngModel)]="c.razonSocial"
                   (ngModelChange)="verificarYMarcarModificacion(c)"
-                  (blur)="finalizarEdicion(c)"
                   placeholder="Proveedor"
                   class="input-grid-cell uppercase"
                   [ngClass]="{'invalido': !c.razonSocial}"
@@ -563,42 +739,151 @@
               </ng-container>
             </td>
 
-            <!-- Base Imponible -->
+            <!-- 10. Base Imponible Gravada -->
             <td class="text-right font-mono font-medium text-slate-800">
               <ng-container *ngIf="!c.esNuevo && !c.editando">
-                {{ c.biGravada | number:'1.2-2' }}
+                {{ (c.biGravadoDg || 0) | number:'1.2-2' }}
               </ng-container>
               <ng-container *ngIf="c.esNuevo || c.editando">
                 <input
                   type="number"
                   step="0.01"
-                  [(ngModel)]="c.biGravada"
+                  [(ngModel)]="c.biGravadoDg"
                   (ngModelChange)="verificarYMarcarModificacion(c)"
-                  (blur)="finalizarEdicion(c)"
-                  placeholder="0.00"
-                  class="input-grid-cell font-mono text-right"
-                  required />
-              </ng-container>
-            </td>
-
-            <!-- IGV / IPM -->
-            <td class="text-right font-mono text-slate-600">
-              <ng-container *ngIf="!c.esNuevo && !c.editando">
-                {{ c.igvIpm | number:'1.2-2' }}
-              </ng-container>
-              <ng-container *ngIf="c.esNuevo || c.editando">
-                <input
-                  type="number"
-                  step="0.01"
-                  [(ngModel)]="c.igvIpm"
-                  (ngModelChange)="verificarYMarcarModificacion(c)"
-                  (blur)="finalizarEdicion(c)"
                   placeholder="0.00"
                   class="input-grid-cell font-mono text-right" />
               </ng-container>
             </td>
 
-            <!-- Total CP -->
+            <!-- 11. IGV / IPM Gravado -->
+            <td class="text-right font-mono text-slate-600">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ (c.igvIpmDg || 0) | number:'1.2-2' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="c.igvIpmDg"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="0.00"
+                  class="input-grid-cell font-mono text-right" />
+              </ng-container>
+            </td>
+
+            <!-- 12. BI Mixtas -->
+            <td class="text-right font-mono text-slate-600">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ (c.biGravadoDgng || 0) | number:'1.2-2' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="c.biGravadoDgng"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="0.00"
+                  class="input-grid-cell font-mono text-right" />
+              </ng-container>
+            </td>
+
+            <!-- 13. IGV Mixtas -->
+            <td class="text-right font-mono text-slate-600">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ (c.igvIpmDgng || 0) | number:'1.2-2' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="c.igvIpmDgng"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="0.00"
+                  class="input-grid-cell font-mono text-right" />
+              </ng-container>
+            </td>
+
+            <!-- 14. BI Sin Crédito -->
+            <td class="text-right font-mono text-slate-600">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ (c.biGravadoDng || 0) | number:'1.2-2' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="c.biGravadoDng"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="0.00"
+                  class="input-grid-cell font-mono text-right" />
+              </ng-container>
+            </td>
+
+            <!-- 15. IGV Sin Crédito -->
+            <td class="text-right font-mono text-slate-600">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ (c.igvIpmDng || 0) | number:'1.2-2' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="c.igvIpmDng"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="0.00"
+                  class="input-grid-cell font-mono text-right" />
+              </ng-container>
+            </td>
+
+            <!-- 16. No Gravadas -->
+            <td class="text-right font-mono text-slate-600">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ (c.valorAdqNg || 0) | number:'1.2-2' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="c.valorAdqNg"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="0.00"
+                  class="input-grid-cell font-mono text-right" />
+              </ng-container>
+            </td>
+
+            <!-- 17. ISC -->
+            <td class="text-right font-mono text-slate-600">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ (c.montoIsc || 0) | number:'1.2-2' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="c.montoIsc"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="0.00"
+                  class="input-grid-cell font-mono text-right" />
+              </ng-container>
+            </td>
+
+            <!-- 18. Otros Tributos -->
+            <td class="text-right font-mono text-slate-600">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ (c.montoOtrosTributos || 0) | number:'1.2-2' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="c.montoOtrosTributos"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="0.00"
+                  class="input-grid-cell font-mono text-right" />
+              </ng-container>
+            </td>
+
+            <!-- 19. Total CP -->
             <td class="text-right font-mono font-bold text-slate-900 bg-slate-50/50">
               <ng-container *ngIf="!c.esNuevo && !c.editando">
                 {{ c.totalCp | number:'1.2-2' }}
@@ -609,14 +894,121 @@
                   step="0.01"
                   [(ngModel)]="c.totalCp"
                   (ngModelChange)="verificarYMarcarModificacion(c)"
-                  (blur)="finalizarEdicion(c)"
                   placeholder="0.00"
                   class="input-grid-cell font-mono font-bold text-right"
                   required />
               </ng-container>
             </td>
 
-            <!-- Moneda -->
+            <!-- 20. Compr No Domicil -->
+            <td class="font-mono text-xs text-center text-slate-600">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ c.carOrigIndEI || '—' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="text"
+                  [(ngModel)]="c.carOrigIndEI"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="—"
+                  class="input-grid-cell text-xs font-mono text-center" />
+              </ng-container>
+            </td>
+
+            <!-- 21. Detracción -->
+            <td class="font-mono text-xs text-center text-slate-600 max-w-[140px]">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                <span class="truncate block" [title]="c.detraccion || ''">{{ c.detraccion || '—' }}</span>
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="text"
+                  [(ngModel)]="c.detraccion"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="Nro / Fecha"
+                  class="input-grid-cell text-xs font-mono" />
+              </ng-container>
+            </td>
+
+            <!-- 22. Tipo de Cambio -->
+            <td class="text-right font-mono text-xs">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ (c.tipoCambio || 1) | number:'1.3-4' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="number"
+                  step="0.0001"
+                  [(ngModel)]="c.tipoCambio"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="1.0000"
+                  class="input-grid-cell font-mono text-right" />
+              </ng-container>
+            </td>
+
+            <!-- 23. Ref: Fecha -->
+            <td class="font-mono text-center text-xs">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ c.fechaEmisionDocModificado || '—' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="text"
+                  [(ngModel)]="c.fechaEmisionDocModificado"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="YYYY-MM-DD"
+                  class="input-grid-cell font-mono text-xs" />
+              </ng-container>
+            </td>
+
+            <!-- 24. Ref: Tipo CP -->
+            <td class="font-mono text-center text-xs">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ c.codigoTipoCpModificado || '—' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="text"
+                  [(ngModel)]="c.codigoTipoCpModificado"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="01"
+                  maxlength="2"
+                  class="input-grid-cell font-mono text-center text-xs" />
+              </ng-container>
+            </td>
+
+            <!-- 25. Ref: Serie -->
+            <td class="font-mono text-center text-xs">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ c.serieCpModificado || '—' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="text"
+                  [(ngModel)]="c.serieCpModificado"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="F001"
+                  maxlength="4"
+                  class="input-grid-cell font-mono text-center uppercase text-xs" />
+              </ng-container>
+            </td>
+
+            <!-- 26. Ref: Número -->
+            <td class="font-mono text-center text-xs">
+              <ng-container *ngIf="!c.esNuevo && !c.editando">
+                {{ c.numeroCpModificado || '—' }}
+              </ng-container>
+              <ng-container *ngIf="c.esNuevo || c.editando">
+                <input
+                  type="text"
+                  [(ngModel)]="c.numeroCpModificado"
+                  (ngModelChange)="verificarYMarcarModificacion(c)"
+                  placeholder="12345"
+                  class="input-grid-cell font-mono text-center text-xs" />
+              </ng-container>
+            </td>
+
+            <!-- 27. Moneda -->
             <td class="text-center font-semibold text-[10px] text-slate-500">
               <ng-container *ngIf="!c.esNuevo && !c.editando">
                 {{ c.codigoMoneda || 'PEN' }}
@@ -627,7 +1019,6 @@
                   maxlength="3"
                   [(ngModel)]="c.codigoMoneda"
                   (ngModelChange)="verificarYMarcarModificacion(c)"
-                  (blur)="finalizarEdicion(c)"
                   class="input-grid-cell uppercase text-center font-mono text-[10px]" />
               </ng-container>
             </td>
@@ -667,48 +1058,11 @@
   </div>
 </div>
 
-<!-- ======================= Modal: Observaciones ======================= -->
-<div *ngIf="mostrarObservaciones && errores.length > 0" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs" (click)="mostrarObservaciones = false">
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col" (click)="$event.stopPropagation()">
-    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-      <div>
-        <h3 class="text-base font-bold text-slate-800">Observaciones de la Carga de Compras</h3>
-        <p class="text-xs text-slate-400 mt-0.5">Detectadas durante la validación del archivo de compras de la empresa</p>
-      </div>
-      <button type="button" (click)="mostrarObservaciones = false" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-    </div>
-
-    <div class="overflow-auto p-6">
-      <table class="w-full text-xs text-left border-collapse">
-        <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider">
-          <tr>
-            <th class="py-2.5 px-3 rounded-l-lg">Línea</th>
-            <th class="py-2.5 px-3">Tipo</th>
-            <th class="py-2.5 px-3">Campo</th>
-            <th class="py-2.5 px-3">Detalle</th>
-            <th class="py-2.5 px-3 rounded-r-lg">Severidad</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100">
-          <tr *ngFor="let e of errores" class="hover:bg-slate-50/60">
-            <td class="py-2.5 px-3 font-mono font-bold text-slate-600">{{ e.numeroLinea }}</td>
-            <td class="py-2.5 px-3">
-              <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold">{{ e.tipoError }}</span>
-            </td>
-            <td class="py-2.5 px-3 font-mono text-slate-600">{{ e.campoError || '—' }}</td>
-            <td class="py-2.5 px-3 text-slate-700">{{ e.mensaje }}</td>
-            <td class="py-2.5 px-3">
-              <span [class]="e.severidad === 'Error'
-                ? 'px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 text-[10px] font-bold border border-rose-100'
-                : 'px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-100'">
-                {{ e.severidad }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
+<!-- Modal: Observaciones -->
+<app-modal-observaciones
+  [visible]="mostrarObservaciones"
+  [observaciones]="errores"
+  [titulo]="'Observaciones de la Carga de Compras'"
+  [subtitulo]="'Detectadas durante la validación del archivo de compras de la empresa'"
+  (cerrar)="mostrarObservaciones = false"
+></app-modal-observaciones>

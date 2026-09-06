@@ -143,6 +143,56 @@ export interface VentaEmpresaItem {
   modificado?: boolean;
 }
 
+export interface CompraEmpresaItem {
+  idCompraEmpresa: string;
+  idCarga?: string;
+  empresaRuc?: string;
+  periodo?: string;
+  numeroLinea: number;
+  carSunat?: string;
+  fechaEmision: string;
+  fechaVencimiento?: string;
+  codigoTipoCp: string;
+  serie: string;
+  anioDocumento?: string;
+  numero: string;
+  numeroFinal?: string;
+  codigoTipoDocIdentidad: string;
+  nroDocIdentidad: string;
+  razonSocial: string;
+  biGravadoDg: number;
+  igvIpmDg: number;
+  biGravadoDgng?: number;
+  igvIpmDgng?: number;
+  biGravadoDng?: number;
+  igvIpmDng?: number;
+  valorAdqNg: number;
+  montoIsc?: number;
+  montoIcbper?: number;
+  montoOtrosTributos?: number;
+  totalCp: number;
+  codigoMoneda: string;
+  tipoCambio: number;
+  fechaEmisionDocModificado?: string;
+  codigoTipoCpModificado?: string;
+  serieCpModificado?: string;
+  codDamDsi?: string;
+  numeroCpModificado?: string;
+  clasifBssSss?: string;
+  idProyectoOp?: string;
+  porcPart?: number;
+  imb?: number;
+  carOrigIndEI?: string;
+  detraccion?: string;
+  codigoTipoNota?: string;
+  codigoEstadoComprobante?: string;
+  incal?: string;
+  camposLibres?: string;
+  esNuevo?: boolean;
+  editando?: boolean;
+  modificado?: boolean;
+}
+
 export interface CargaEmpresaItem {
   idCargaEmpresa: string;
   periodo: string;
@@ -223,6 +273,60 @@ export interface VentaMatchItem {
   modificado?: boolean;
 }
 
+export interface CompraMatchItem {
+  idCompraMatch: string;
+  idCarga: string;
+  empresaRuc: string;
+  periodo: string;
+  numeroLinea: number;
+  origenDato: string;
+  esCoincidenciaExacta: boolean;
+  esDiferencia: boolean;
+  esSoloUnOrigen: boolean;
+  carSunat?: string;
+  codigoTipoCp: string;
+  serie: string;
+  anioDocumento?: string;
+  numero: string;
+  numeroFinal?: string;
+  fechaEmision: string;
+  fechaVencimiento?: string;
+  codigoTipoDocIdentidad: string;
+  nroDocIdentidad: string;
+  razonSocial: string;
+  biGravadoDg: number;
+  igvIpmDg: number;
+  biGravadoDgng?: number;
+  igvIpmDgng?: number;
+  biGravadoDng?: number;
+  igvIpmDng?: number;
+  valorAdqNg: number;
+  montoIsc?: number;
+  montoIcbper?: number;
+  montoOtrosTributos?: number;
+  totalCp: number;
+  codigoMoneda: string;
+  tipoCambio: number;
+  fechaEmisionDocModificado?: string;
+  codigoTipoCpModificado?: string;
+  serieCpModificado?: string;
+  codDamDsi?: string;
+  numeroCpModificado?: string;
+  clasifBssSss?: string;
+  idProyectoOp?: string;
+  porcPart?: number;
+  imb?: number;
+  carOrigIndEI?: string;
+  detraccion?: string;
+  codigoTipoNota?: string;
+  codigoEstadoComprobante: string;
+  incal?: string;
+  camposLibres?: string;
+  esNuevo?: boolean;
+  editando?: boolean;
+  modificado?: boolean;
+}
+
 export interface EjecutarMatchResponseDTO {
   idCarga: string;
   empresaRuc: string;
@@ -274,6 +378,17 @@ export class OperacionesService {
 
     return this.http
       .post<any>(`${this.baseUrl}/cargas/ventas`, formData, { withCredentials: true })
+      .pipe(map(res => this.extractData<CargarArchivoSunatDTO>(res)));
+  }
+
+  cargarComprasEmpresa(empresaRuc: string, periodo: string, file: File): Observable<CargarArchivoSunatDTO> {
+    const formData = new FormData();
+    formData.append('EmpresaRuc', empresaRuc);
+    formData.append('Periodo', periodo);
+    formData.append('Archivo', file, file.name);
+
+    return this.http
+      .post<any>(`${this.baseUrl}/cargas/compras-empresa`, formData, { withCredentials: true })
       .pipe(map(res => this.extractData<CargarArchivoSunatDTO>(res)));
   }
 
@@ -368,6 +483,19 @@ export class OperacionesService {
       );
   }
 
+  listarComprasEmpresaPorCarga(idCarga: string): Observable<CompraEmpresaItem[]> {
+    return this.http
+      .get<any>(`${this.baseUrl}/cargas/${idCarga}/compras-empresa`, { withCredentials: true })
+      .pipe(
+        map(res => {
+          const data = this.extractData<any>(res);
+          if (Array.isArray(data)) return data as CompraEmpresaItem[];
+          if (data && Array.isArray(data.items)) return data.items as CompraEmpresaItem[];
+          return [];
+        })
+      );
+  }
+
   actualizarVentas(
     idCarga: string,
     eliminadosIds: string[] = [],
@@ -389,6 +517,18 @@ export class OperacionesService {
     const body = { eliminadosIds, nuevos, modificados };
     return this.http
       .post<any>(`${this.baseUrl}/cargas/${idCarga}/actualizar-ventas-empresa`, body, { withCredentials: true })
+      .pipe(map(res => this.extractData<any>(res)));
+  }
+
+  actualizarComprasEmpresa(
+    idCarga: string,
+    eliminadosIds: string[] = [],
+    nuevos: any[] = [],
+    modificados: any[] = []
+  ): Observable<{ idCarga: string; mensaje: string; numRegistros: number; numRegistrosError: number; totalGeneral: number }> {
+    const body = { eliminadosIds, nuevos, modificados };
+    return this.http
+      .post<any>(`${this.baseUrl}/cargas/${idCarga}/actualizar-compras-empresa`, body, { withCredentials: true })
       .pipe(map(res => this.extractData<any>(res)));
   }
 
@@ -455,6 +595,60 @@ export class OperacionesService {
   eliminarMatchVentas(idCargaMatch: string): Observable<boolean> {
     return this.http
       .delete<any>(`${this.baseUrl}/ventas/match/${idCargaMatch}`, { withCredentials: true })
+      .pipe(map(res => this.extractData<boolean>(res)));
+  }
+
+  ejecutarMatchCompras(empresaRuc: string, periodo: string): Observable<EjecutarMatchResponseDTO> {
+    const body = { empresaRuc, periodo };
+    return this.http
+      .post<any>(`${this.baseUrl}/compras/ejecutar-match`, body, { withCredentials: true })
+      .pipe(map(res => this.extractData<EjecutarMatchResponseDTO>(res)));
+  }
+
+  reejecutarMatchCompras(empresaRuc: string, periodo: string): Observable<EjecutarMatchResponseDTO> {
+    const body = { empresaRuc, periodo };
+    return this.http
+      .post<any>(`${this.baseUrl}/compras/re-ejecutar-match`, body, { withCredentials: true })
+      .pipe(map(res => this.extractData<EjecutarMatchResponseDTO>(res)));
+  }
+
+  listarComprasMatch(idCarga: string): Observable<CompraMatchItem[]> {
+    return this.http
+      .get<any>(`${this.baseUrl}/cargas/${idCarga}/compras-match`, { withCredentials: true })
+      .pipe(
+        map(res => {
+          const data = this.extractData<any>(res);
+          if (Array.isArray(data)) return data as CompraMatchItem[];
+          if (data && Array.isArray(data.items)) return data.items as CompraMatchItem[];
+          return [];
+        })
+      );
+  }
+
+  actualizarComprasMatch(
+    idCarga: string,
+    eliminadosIds: string[] = [],
+    nuevos: any[] = [],
+    modificados: any[] = []
+  ): Observable<{
+    idCarga: string;
+    exito: boolean;
+    mensaje: string;
+    numRegistros: number;
+    numObservaciones: number;
+    totalBaseImponible: number;
+    totalIgv: number;
+    totalGeneral: number;
+  }> {
+    const body = { eliminadosIds, nuevos, modificados };
+    return this.http
+      .post<any>(`${this.baseUrl}/cargas/${idCarga}/actualizar-compras-match`, body, { withCredentials: true })
+      .pipe(map(res => this.extractData<any>(res)));
+  }
+
+  eliminarMatchCompras(idCargaMatch: string): Observable<boolean> {
+    return this.http
+      .delete<any>(`${this.baseUrl}/compras/match/${idCargaMatch}`, { withCredentials: true })
       .pipe(map(res => this.extractData<boolean>(res)));
   }
 

@@ -2,14 +2,16 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { EmpresaContextService } from '../../../../../../core/services/empresa-context.service';
 import { EmpresaService, Empresa } from '../../../../empresa/services/empresa.service';
-import { OperacionesService, ArchivoCargaItem } from '../../../services/operaciones.service';
 import {
-  ComprasWorkspaceService,
-  CargaEmpresaComprasItem,
-  PanelMatchComprasItem
-} from '../../../services/compras-workspace.service';
+  OperacionesService,
+  ArchivoCargaItem,
+  CargaEmpresaItem,
+  PanelMatchItem
+} from '../../../services/operaciones.service';
+import { extraerMensajeError } from '../../../../../../core/utils/error-handler.util';
 import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
 import { ModalService } from '../../../../../../shared/ui/modal/modal.service';
 
@@ -28,7 +30,6 @@ export class ComprasListComponent implements OnInit {
   private empresaService = inject(EmpresaService);
   private empresaContext = inject(EmpresaContextService);
   private operacionesService = inject(OperacionesService);
-  private workspaceService = inject(ComprasWorkspaceService);
   private loadingService = inject(LoadingService);
   private modalService = inject(ModalService);
   private cdr = inject(ChangeDetectorRef);
@@ -46,12 +47,12 @@ export class ComprasListComponent implements OnInit {
   tabActiva: TabActiva = 'sire';
 
   // Pestaña 2 — Cargas Empresa
-  cargasEmpresa: CargaEmpresaComprasItem[] = [];
+  cargasEmpresa: CargaEmpresaItem[] = [];
   cargandoEmpresa: boolean = false;
   mensajeErrorEmpresa: string | null = null;
 
   // Pestaña 3 — Match
-  panelMatch: PanelMatchComprasItem[] = [];
+  panelMatch: PanelMatchItem[] = [];
   cargandoMatch: boolean = false;
   mensajeErrorMatch: string | null = null;
 
@@ -142,6 +143,8 @@ export class ComprasListComponent implements OnInit {
     this.periodoSeleccionado = `${this.anioSeleccionado}${mesStr}`;
     this.mostrarSelector = false;
     this.cargarCargasCompras();
+    this.cargarCargasEmpresa();
+    this.cargarPanelMatch();
   }
 
   mesBloqueado(valor: number): boolean {
@@ -167,6 +170,8 @@ export class ComprasListComponent implements OnInit {
     this.anioSeleccionado = null;
     this.mostrarSelector = false;
     this.cargarCargasCompras();
+    this.cargarCargasEmpresa();
+    this.cargarPanelMatch();
   }
 
   get etiquetaBotonPeriodo(): string {
@@ -214,15 +219,34 @@ export class ComprasListComponent implements OnInit {
     this.cargandoEmpresa = true;
     this.mensajeErrorEmpresa = null;
     this.cdr.detectChanges();
-    this.workspaceService.obtenerCargasEmpresa(this.periodoSeleccionado || undefined).subscribe({
-      next: (cargas) => {
-        this.cargasEmpresa = cargas;
+
+    this.operacionesService.listarCargas(this.ruc, 'ComprasEmpresa', this.periodoSeleccionado, 1, 50).subscribe({
+      next: (res: any) => {
         this.cargandoEmpresa = false;
+        const data = res?.data || res?.Data || res;
+        let list: any[] = [];
+        if (Array.isArray(data)) {
+          list = data;
+        } else if (data && Array.isArray(data.items)) {
+          list = data.items;
+        } else if (res && Array.isArray(res.items)) {
+          list = res.items;
+        }
+
+        this.cargasEmpresa = list.map(c => ({
+          idCargaEmpresa: c.idCarga,
+          periodo: c.periodo,
+          nombreOriginal: c.nombreOriginal,
+          numRegistros: c.numRegistros,
+          numObservaciones: c.numRegistrosError,
+          fechaCreacion: c.fechaCreacion
+        }));
+
         this.cdr.detectChanges();
       },
       error: () => {
         this.cargandoEmpresa = false;
-        this.mensajeErrorEmpresa = 'No se pudieron cargar los datos de compras de la empresa.';
+        this.mensajeErrorEmpresa = 'No se pudo cargar el historial de compras de la empresa.';
         this.cdr.detectChanges();
       }
     });
@@ -236,22 +260,22 @@ export class ComprasListComponent implements OnInit {
     this.irNuevaCargaEmpresa();
   }
 
-  verDatosEmpresa(carga: CargaEmpresaComprasItem): void {
+  verDatosEmpresa(carga: CargaEmpresaItem): void {
     this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'compras', 'empresa', carga.idCargaEmpresa]);
   }
 
-  async eliminarCargaEmpresa(carga: CargaEmpresaComprasItem): Promise<void> {
+  async eliminarCargaEmpresa(carga: CargaEmpresaItem): Promise<void> {
     const confirmado = await this.modalService.open({
       type: 'confirm',
       title: 'Eliminar Datos de Compras de la Empresa',
-      message: `¿Eliminar definitivamente el archivo "${carga.nombreOriginal}" del periodo ${this.formatearPeriodo(carga.periodo)}? Se eliminarán sus registros y observaciones, y el match del periodo quedará invalidado.`,
+      message: `¿Eliminar definitivamente el archivo "${carga.nombreOriginal}" del periodo ${this.formatearPeriodo(carga.periodo)}? Se eliminarán sus registros y observaciones.`,
       confirmText: 'Sí, eliminar',
       cancelText: 'Cancelar'
     });
     if (!confirmado) return;
 
     this.loadingService.show();
-    this.workspaceService.eliminarCargaEmpresa(carga.idCargaEmpresa).subscribe({
+    this.operacionesService.eliminarCarga(carga.idCargaEmpresa).subscribe({
       next: () => {
         this.loadingService.hide();
         this.modalService.open({
@@ -260,11 +284,10 @@ export class ComprasListComponent implements OnInit {
           message: `El archivo "${carga.nombreOriginal}" fue eliminado correctamente.`
         });
         this.cargarCargasEmpresa();
-        this.cargarPanelMatch();
       },
       error: (err) => {
         this.loadingService.hide();
-        this.modalService.open({ type: 'error', title: 'Error', message: err?.message || 'No se pudo eliminar el archivo.' });
+        this.modalService.open({ type: 'error', title: 'Error', message: err?.error?.message || err?.message || 'No se pudo eliminar el archivo.' });
       }
     });
   }
@@ -274,13 +297,48 @@ export class ComprasListComponent implements OnInit {
   // ------------------------------------------------------------------
 
   cargarPanelMatch(): void {
+    if (!this.ruc) return;
+
     this.cargandoMatch = true;
     this.mensajeErrorMatch = null;
     this.cdr.detectChanges();
-    this.workspaceService.obtenerPanelMatch().subscribe({
-      next: (items) => {
-        this.panelMatch = items;
+
+    // Consultamos cargas de SIRE, Empresa y Match para el RUC
+    forkJoin({
+      sire: this.operacionesService.listarCargas(this.ruc, 'Compras', this.periodoSeleccionado, 1, 100),
+      empresa: this.operacionesService.listarCargas(this.ruc, 'ComprasEmpresa', this.periodoSeleccionado, 1, 100),
+      matches: this.operacionesService.listarCargas(this.ruc, 'CompraMatch', this.periodoSeleccionado, 1, 100)
+    }).subscribe({
+      next: ({ sire, empresa, matches }) => {
         this.cargandoMatch = false;
+
+        const periodosSet = new Set<string>();
+        sire.forEach(c => c.periodo && periodosSet.add(c.periodo));
+        empresa.forEach(c => c.periodo && periodosSet.add(c.periodo));
+        matches.forEach(c => c.periodo && periodosSet.add(c.periodo));
+
+        const periodos = Array.from(periodosSet).sort((a, b) => b.localeCompare(a));
+
+        this.panelMatch = periodos.map(periodo => {
+          const cSire = sire.find(s => s.periodo === periodo);
+          const cEmp = empresa.find(e => e.periodo === periodo);
+          const cMatch = matches.find(m => m.periodo === periodo);
+
+          return {
+            periodo,
+            sireCargado: !!cSire && (cSire.numRegistros || 0) > 0,
+            empresaCargada: !!cEmp && (cEmp.numRegistros || 0) > 0,
+            match: cMatch ? {
+              idMatch: cMatch.idCarga,
+              fechaEjecucion: cMatch.fechaCreacion,
+              totalCoincidentes: cMatch.numRegistrosValidos || cMatch.numRegistros || 0,
+              totalConflictos: cMatch.numRegistrosError || 0,
+              totalSoloSire: 0,
+              totalSoloEmpresa: 0
+            } : null
+          };
+        });
+
         this.cdr.detectChanges();
       },
       error: () => {
@@ -291,53 +349,103 @@ export class ComprasListComponent implements OnInit {
     });
   }
 
-  puedeEjecutarMatch(item: PanelMatchComprasItem): boolean {
+  puedeEjecutarMatch(item: PanelMatchItem): boolean {
     return item.sireCargado && item.empresaCargada;
   }
 
-  async ejecutarMatch(item: PanelMatchComprasItem): Promise<void> {
+  async ejecutarMatch(item: PanelMatchItem): Promise<void> {
     if (!this.puedeEjecutarMatch(item)) return;
+
+    const esReejecucion = !!item.match;
+
+    const mensajeModal = esReejecucion
+      ? `Al continuar se eliminarán definitivamente los resultados del match actual y las observaciones registradas para el periodo ${this.formatearPeriodo(item.periodo)}, y se volverá a procesar el cruce entre SIRE y la Empresa. ¿Desea continuar?`
+      : `Se procesará el cruce entre los comprobantes de SIRE y los registros de compras de la empresa para el periodo ${this.formatearPeriodo(item.periodo)}. ¿Desea continuar?`;
 
     const confirmado = await this.modalService.open({
       type: 'confirm',
-      title: item.match ? 'Re-ejecutar Match de Compras' : 'Ejecutar Match de Compras',
-      message: `Se cruzarán los comprobantes de SIRE contra los datos de compras de la empresa para ${this.formatearPeriodo(item.periodo)}. ¿Desea continuar?`,
-      confirmText: 'Sí, ejecutar',
+      title: esReejecucion ? 'Re-ejecutar Match de Compras' : 'Ejecutar Match de Compras',
+      message: mensajeModal,
+      confirmText: esReejecucion ? 'Sí, re-ejecutar' : 'Sí, ejecutar match',
       cancelText: 'Cancelar'
     });
     if (!confirmado) return;
 
     this.loadingService.show();
-    this.workspaceService.ejecutarMatch(item.periodo).subscribe({
-      next: (resumen) => {
+
+    const request$ = esReejecucion
+      ? this.operacionesService.reejecutarMatchCompras(this.ruc, item.periodo)
+      : this.operacionesService.ejecutarMatchCompras(this.ruc, item.periodo);
+
+    request$.subscribe({
+      next: async (res) => {
         this.loadingService.hide();
-        this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'compras', 'match', resumen.idMatch]);
+        await this.modalService.open({
+          type: 'info',
+          title: esReejecucion ? 'Match Re-ejecutado con Éxito' : 'Match Ejecutado con Éxito',
+          message: `Se procesaron ${res.totalConsolidado} comprobantes consolidados: ${res.coincidenciasExactas} coincidencias exactas, ${res.diferencias} con diferencias y ${res.soloUnOrigen} en un solo origen. Observaciones detectadas: ${res.totalObservaciones}.`
+        });
+        this.cargarPanelMatch();
+        this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'compras', 'match', res.idCarga]);
       },
       error: async (err) => {
         this.loadingService.hide();
+        const msg = extraerMensajeError(err, 'Ocurrió un error al procesar el match de compras.');
         await this.modalService.open({
           type: 'error',
-          title: 'No se pudo ejecutar el match',
-          message: err?.message || 'Ocurrió un error al cruzar las compras.',
-          confirmText: 'Volver'
+          title: esReejecucion ? 'No se pudo re-ejecutar el match' : 'No se pudo ejecutar el match',
+          message: msg,
+          confirmText: 'Entendido'
         });
       }
     });
   }
 
-  verMatch(item: PanelMatchComprasItem): void {
+  verMatch(item: PanelMatchItem): void {
     if (!item.match) return;
     this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'compras', 'match', item.match.idMatch]);
   }
 
-  formatearFecha(fechaStr?: string): string {
-    if (!fechaStr) return '-';
-    try {
-      const f = new Date(fechaStr);
-      return f.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    } catch {
-      return fechaStr;
-    }
+  async eliminarMatch(item: PanelMatchItem, event?: Event): Promise<void> {
+    if (event) event.stopPropagation();
+    if (!item.match) return;
+
+    const confirmado = await this.modalService.open({
+      type: 'confirm',
+      title: 'Eliminar Match de Compras',
+      message: `¿Está seguro de eliminar definitivamente los resultados del match del periodo ${this.formatearPeriodo(item.periodo)}? Se eliminarán todos los comprobantes consolidados y las observaciones de este cruce. Esta acción no se puede deshacer.`,
+      confirmText: 'Sí, eliminar match',
+      cancelText: 'Cancelar'
+    });
+
+    if (!confirmado) return;
+
+    this.loadingService.show();
+    this.operacionesService.eliminarMatchCompras(item.match.idMatch).subscribe({
+      next: () => {
+        this.loadingService.hide();
+        this.modalService.open({
+          type: 'info',
+          title: 'Match Eliminado',
+          message: `Los resultados del match del periodo ${this.formatearPeriodo(item.periodo)} fueron eliminados correctamente.`
+        });
+        this.cargarPanelMatch();
+      },
+      error: (err) => {
+        this.loadingService.hide();
+        const msg = extraerMensajeError(err, 'No se pudo eliminar el match de compras.');
+        this.modalService.open({
+          type: 'error',
+          title: 'Error al Eliminar',
+          message: msg
+        });
+      }
+    });
+  }
+
+  formatearFecha(iso: string | undefined): string {
+    if (!iso) return '-';
+    return new Date(iso).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 
   cargarCargasCompras(): void {

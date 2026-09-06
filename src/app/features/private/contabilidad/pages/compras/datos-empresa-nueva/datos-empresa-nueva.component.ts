@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EmpresaContextService } from '../../../../../../core/services/empresa-context.service';
 import { EmpresaService, Empresa } from '../../../../empresa/services/empresa.service';
-import { ComprasWorkspaceService, CompraEmpresaItem, ObservacionEmpresaItem } from '../../../services/compras-workspace.service';
+import { OperacionesService } from '../../../services/operaciones.service';
 import { LoadingService } from '../../../../../../shared/ui/loading/loading.service';
 import { ModalService } from '../../../../../../shared/ui/modal/modal.service';
 import * as XLSX from 'xlsx';
@@ -21,7 +21,7 @@ export class DatosEmpresaNuevaComprasComponent implements OnInit {
   private router = inject(Router);
   private empresaContext = inject(EmpresaContextService);
   private empresaService = inject(EmpresaService);
-  private workspaceService = inject(ComprasWorkspaceService);
+  private operacionesService = inject(OperacionesService);
   private loadingService = inject(LoadingService);
   private modalService = inject(ModalService);
   private cdr = inject(ChangeDetectorRef);
@@ -148,14 +148,19 @@ export class DatosEmpresaNuevaComprasComponent implements OnInit {
   }
 
   anioSiguienteHabilitado(): boolean {
-    return this.anioSelector < this.obtenerMesAnterior().anio;
+    const max = this.obtenerMesAnterior();
+    return this.anioSelector < max.anio;
   }
 
   get etiquetaPeriodo(): string {
-    if (!this.periodoSeleccionado || !this.mesSeleccionado) return 'Seleccionar periodo';
+    if (!this.mesSeleccionado || !this.anioSeleccionado) return 'Seleccionar periodo';
     const mesObj = this.listaMeses.find(m => m.value === this.mesSeleccionado);
     return `${mesObj?.nombreCompleto || ''} ${this.anioSeleccionado}`;
   }
+
+  // --------------------------------------------------------------------------
+  // Manejo de archivo y Drag & Drop
+  // --------------------------------------------------------------------------
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -191,7 +196,7 @@ export class DatosEmpresaNuevaComprasComponent implements OnInit {
       this.modalService.open({
         type: 'error',
         title: 'Formato no soportado',
-        message: 'Solo se permiten archivos en formato XLSX o CSV.'
+        message: 'Solo se permiten archivos en formato XLSX, XLS o CSV.'
       });
       return;
     }
@@ -205,74 +210,257 @@ export class DatosEmpresaNuevaComprasComponent implements OnInit {
     this.archivoSeleccionado = null;
     this.nombreArchivo = '';
     this.tamanoArchivoKB = 0;
+    const input = document.getElementById('archivoEmpresaInput') as HTMLInputElement | null;
+    if (input) input.value = '';
     this.cdr.detectChanges();
   }
 
   descargarPlantilla(): void {
-    // Cabeceras en mayúsculas limpias
+    // 27 Cabeceras ordenadas según formato completo RCE del archivo adjunto y con nomenclatura estándar del sistema
     const cabeceras = [
       'FECHA EMISION',
+      'FECHA VCTO',
       'TIPO CP',
       'SERIE',
+      'AÑO DUA',
       'NUMERO',
       'TIPO DOC',
-      'NRO DOC PROVEEDOR',
-      'RAZON SOCIAL',
-      'BASE IMPONIBLE',
-      'IGV',
+      'RUC / DOC PROVEEDOR',
+      'RAZON SOCIAL PROVEEDOR',
+      'BASE IMPONIBLE GRAVADA',
+      'IGV / IPM',
+      'BI OPERACIONES MIXTAS',
+      'IGV OPERACIONES MIXTAS',
+      'BI SIN CREDITO FISCAL',
+      'IGV SIN CREDITO FISCAL',
+      'NO GRAVADAS',
+      'ISC',
+      'OTROS TRIBUTOS Y CARGOS',
       'TOTAL CP',
-      'MONEDA'
+      'COMPROBANTE NO DOMICILIADO',
+      'NUMERO DETRACCION',
+      'FECHA DETRACCION',
+      'TIPO CAMBIO',
+      'FECHA EMISION DOC MODIFICADO',
+      'TIPO CP MODIFICADO',
+      'SERIE CP MODIFICADO',
+      'NUMERO CP MODIFICADO'
     ];
 
-    // 2 filas de ejemplo con ceros a la izquierda preservados
+    // Filas de ejemplo con datos tributarios y preservación de formato
     const filasEjemplo = [
       [
-        '2026-05-02',
+        '2026-07-01',
+        '2026-07-01',
         '01',
-        'F001',
-        '00215',
+        'FV01',
+        '',
+        '00007354',
         '6',
-        '20100070970',
-        'SUPERMERCADOS PERUANOS S.A.',
-        1250.00,
-        225.00,
-        1475.00,
-        'PEN'
+        '20546872654',
+        'PCSOFT TECNOLOGIA SOCIEDAD ANONIMA CERRADA',
+        694.58,
+        125.02,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        819.60,
+        '',
+        '',
+        '',
+        3.415,
+        '',
+        '',
+        '',
+        ''
       ],
       [
-        '2026-05-05',
+        '2026-07-01',
+        '2026-07-31',
         '01',
-        'F002',
-        '000450',
+        'F009',
+        '',
+        '00637020',
         '6',
-        '20504012345',
-        'DISTRIBUIDORA LIMA NORTE S.A.C.',
-        3400.00,
-        612.00,
-        4012.00,
-        'PEN'
+        '20123053037',
+        'COMPUDISKETT S R L',
+        5722.75,
+        1030.10,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        6752.86,
+        '',
+        '',
+        '',
+        3.415,
+        '',
+        '',
+        '',
+        ''
+      ],
+      [
+        '2026-07-01',
+        '2026-07-31',
+        '01',
+        'F016',
+        '',
+        '00005954',
+        '6',
+        '20474136991',
+        'MACRO WORK S.A.C.',
+        5473.56,
+        985.26,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        6458.82,
+        '',
+        '',
+        '',
+        3.415,
+        '',
+        '',
+        '',
+        ''
+      ],
+      [
+        '2026-07-01',
+        '2026-07-01',
+        '01',
+        'FC01',
+        '',
+        '00623660',
+        '6',
+        '20100047218',
+        'BANCO DE CREDITO DEL PERU',
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        153.50,
+        0.00,
+        0.00,
+        153.50,
+        '',
+        '',
+        '',
+        1.000,
+        '',
+        '',
+        '',
+        ''
+      ],
+      [
+        '2026-07-01',
+        '2026-07-01',
+        '01',
+        'FN01',
+        '',
+        '47963079',
+        '6',
+        '20100047218',
+        'BANCO DE CREDITO DEL PERU',
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        4.30,
+        0.00,
+        0.00,
+        4.30,
+        '',
+        '',
+        '',
+        1.000,
+        '',
+        '',
+        '',
+        ''
+      ],
+      [
+        '2026-07-05',
+        '',
+        '07',
+        'FC01',
+        '',
+        '00000042',
+        '6',
+        '20546872654',
+        'PCSOFT TECNOLOGIA SOCIEDAD ANONIMA CERRADA',
+        -100.00,
+        -18.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        0.00,
+        -118.00,
+        '',
+        '',
+        '',
+        3.415,
+        '2026-07-01',
+        '01',
+        'FV01',
+        '00007354'
       ]
     ];
 
     const data = [cabeceras, ...filasEjemplo];
     const ws = XLSX.utils.aoa_to_sheet(data);
 
+    // Ancho sugerido para cada una de las 27 columnas
     ws['!cols'] = [
-      { wch: 18 }, // FECHA EMISION
-      { wch: 12 }, // TIPO CP
-      { wch: 10 }, // SERIE
-      { wch: 16 }, // NUMERO
-      { wch: 12 }, // TIPO DOC
-      { wch: 22 }, // NRO DOC PROVEEDOR
-      { wch: 38 }, // RAZON SOCIAL
-      { wch: 18 }, // BASE IMPONIBLE
-      { wch: 14 }, // IGV
-      { wch: 16 }, // TOTAL CP
-      { wch: 12 }  // MONEDA
+      { wch: 15 }, // 0: FECHA EMISION
+      { wch: 15 }, // 1: FECHA VCTO
+      { wch: 10 }, // 2: TIPO CP
+      { wch: 10 }, // 3: SERIE
+      { wch: 10 }, // 4: AÑO DUA
+      { wch: 14 }, // 5: NUMERO
+      { wch: 10 }, // 6: TIPO DOC
+      { wch: 22 }, // 7: RUC / DOC PROVEEDOR
+      { wch: 38 }, // 8: RAZON SOCIAL PROVEEDOR
+      { wch: 22 }, // 9: BASE IMPONIBLE GRAVADA
+      { wch: 14 }, // 10: IGV / IPM
+      { wch: 22 }, // 11: BI OPERACIONES MIXTAS
+      { wch: 22 }, // 12: IGV OPERACIONES MIXTAS
+      { wch: 22 }, // 13: BI SIN CREDITO FISCAL
+      { wch: 22 }, // 14: IGV SIN CREDITO FISCAL
+      { wch: 14 }, // 15: NO GRAVADAS
+      { wch: 12 }, // 16: ISC
+      { wch: 24 }, // 17: OTROS TRIBUTOS Y CARGOS
+      { wch: 16 }, // 18: TOTAL CP
+      { wch: 28 }, // 19: COMPROBANTE NO DOMICILIADO
+      { wch: 20 }, // 20: NUMERO DETRACCION
+      { wch: 18 }, // 21: FECHA DETRACCION
+      { wch: 12 }, // 22: TIPO CAMBIO
+      { wch: 28 }, // 23: FECHA EMISION DOC MODIFICADO
+      { wch: 20 }, // 24: TIPO CP MODIFICADO
+      { wch: 20 }, // 25: SERIE CP MODIFICADO
+      { wch: 22 }  // 26: NUMERO CP MODIFICADO
     ];
 
-    // Formatear columnas como texto explícito (@) para preservar ceros a la izquierda (ej. 00215, 08123456, F001)
-    const columnasTexto = [1, 2, 3, 4, 5]; // B: TIPO CP, C: SERIE, D: NUMERO, E: TIPO DOC, F: NRO DOC PROVEEDOR
+    // Formatear columnas de códigos/texto como texto explícito (@) para preservar ceros a la izquierda
+    const columnasTexto = [2, 3, 4, 5, 6, 7, 19, 20, 24, 25, 26];
     for (let r = 1; r <= 1000; r++) {
       for (const col of columnasTexto) {
         const cellRef = XLSX.utils.encode_cell({ r, c: col });
@@ -284,104 +472,52 @@ export class DatosEmpresaNuevaComprasComponent implements OnInit {
         }
       }
     }
-    ws['!ref'] = 'A1:K1000';
+    ws['!ref'] = 'A1:AA1000';
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Compras_Empresa');
     XLSX.writeFile(wb, 'plantilla_compras_empresa.xlsx');
   }
 
+  // --------------------------------------------------------------------------
+  // Carga
+  // --------------------------------------------------------------------------
+
   async procesarCarga(): Promise<void> {
-    if (!this.archivoSeleccionado) {
+    if (!this.archivoSeleccionado || !this.periodoSeleccionado) {
       this.modalService.open({
         type: 'warning',
-        title: 'Archivo requerido',
-        message: 'Por favor, selecciona un archivo para procesar.'
+        title: 'Datos requeridos',
+        message: 'Por favor, selecciona el periodo y un archivo para procesar.'
       });
       return;
     }
 
     this.procesando = true;
     this.loadingService.show();
+    this.cdr.detectChanges();
 
-    // Generar registros simulados de compras
-    const mockRegistros: CompraEmpresaItem[] = [
-      {
-        idCompraEmpresa: 'c-new-' + Date.now() + '-1',
-        numeroLinea: 1,
-        codigoTipoCp: '01',
-        serie: 'F001',
-        numero: '10452',
-        fechaEmision: `02/${String(this.mesSeleccionado).padStart(2, '0')}/${this.anioSeleccionado}`,
-        codigoTipoDocIdentidad: '6',
-        nroDocIdentidad: '20100070970',
-        razonSocial: 'SUPERMERCADOS PERUANOS S.A.',
-        biGravada: 1250.00,
-        igvIpm: 225.00,
-        totalCp: 1475.00,
-        codigoMoneda: 'PEN'
-      },
-      {
-        idCompraEmpresa: 'c-new-' + Date.now() + '-2',
-        numeroLinea: 2,
-        codigoTipoCp: '01',
-        serie: 'F002',
-        numero: '8841',
-        fechaEmision: `05/${String(this.mesSeleccionado).padStart(2, '0')}/${this.anioSeleccionado}`,
-        codigoTipoDocIdentidad: '6',
-        nroDocIdentidad: '20504012345',
-        razonSocial: 'DISTRIBUIDORA LIMA NORTE S.A.C.',
-        biGravada: 3400.00,
-        igvIpm: 612.00,
-        totalCp: 4012.00,
-        codigoMoneda: 'PEN'
-      },
-      {
-        idCompraEmpresa: 'c-new-' + Date.now() + '-3',
-        numeroLinea: 3,
-        codigoTipoCp: '03',
-        serie: 'B001',
-        numero: '5012',
-        fechaEmision: `10/${String(this.mesSeleccionado).padStart(2, '0')}/${this.anioSeleccionado}`,
-        codigoTipoDocIdentidad: '6',
-        nroDocIdentidad: '20601234567',
-        razonSocial: 'SERVICIOS GRAFICOS DEL SUR E.I.R.L.',
-        biGravada: 450.00,
-        igvIpm: 81.00,
-        totalCp: 531.00,
-        codigoMoneda: 'PEN'
-      }
-    ];
-
-    const mockErrores: ObservacionEmpresaItem[] = [
-      {
-        numeroLinea: 3,
-        tipoError: 'Formato RUC',
-        campoError: 'nroDocIdentidad',
-        valorLectura: '20601234567',
-        mensaje: 'Se sugiere verificar dígito verificador del proveedor.',
-        severidad: 'Advertencia'
-      }
-    ];
-
-    this.workspaceService.crearCargaEmpresa({
-      periodo: this.periodo,
-      nombreArchivo: this.nombreArchivo,
-      registros: mockRegistros,
-      errores: mockErrores
-    }).subscribe({
-      next: (carga) => {
+    this.operacionesService.cargarComprasEmpresa(this.ruc, this.periodoSeleccionado, this.archivoSeleccionado).subscribe({
+      next: async (res) => {
         this.procesando = false;
         this.loadingService.hide();
-        this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'compras', 'empresa', carga.idCargaEmpresa]);
+        await this.modalService.open({
+          type: 'info',
+          title: 'Carga Completada',
+          message: `${res.observaciones || 'Carga procesada correctamente.'} Puedes revisar y ajustar los comprobantes en la siguiente pantalla.`,
+          confirmText: 'Ir a los datos'
+        });
+        this.router.navigate(['/home/contabilidad/empresa', this.idEmpresa, 'compras', 'empresa', res.idCarga]);
       },
       error: async (err) => {
         this.procesando = false;
         this.loadingService.hide();
+        this.cdr.detectChanges();
         await this.modalService.open({
           type: 'error',
-          title: 'Error al procesar',
-          message: err?.message || 'No se pudo cargar el archivo.'
+          title: 'Error al Cargar',
+          message: err?.error?.message || err?.message || 'No se pudo procesar el archivo de compras de la empresa.',
+          confirmText: 'Volver'
         });
       }
     });

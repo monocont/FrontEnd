@@ -866,7 +866,7 @@ export class MatchResultadoComponent implements OnInit {
   obtenerBadgeClaseEstadoMatch(v: VentaMatchItem): string {
     if (v.esCoincidenciaExacta) return 'bg-emerald-50 text-emerald-700 border-emerald-200';
     if (v.esDiferencia) return 'bg-amber-50 text-amber-700 border-amber-200';
-    if (v.esSoloUnOrigen) return 'bg-rose-50 text-rose-700 border-rose-200';
+    if (v.esSoloUnOrigen) return 'bg-sky-50 text-sky-700 border-sky-200';
     return 'bg-slate-50 text-slate-600 border-slate-200';
   }
 
@@ -1719,14 +1719,14 @@ export class MatchResultadoComponent implements OnInit {
     }
 
     // 3. Empaquetar en archivo .ZIP con bloques de máximo 100 registros por archivo .TXT
-    // Si total <= 100: CDP-{anio}-{mes}.txt
-    // Si total > 100: CDP-{anio}-{mes}-1.txt, CDP-{anio}-{mes}-2.txt, ...
+    // Si total <= 100: VENTA-{anio}-{mes}.txt
+    // Si total > 100: VENTA-{anio}-{mes}-1.txt, VENTA-{anio}-{mes}-2.txt, ...
     const CHUNK_SIZE = 100;
     const totalRegistros = lineas.length;
     const zipEntries: { [filename: string]: Uint8Array } = {};
 
     if (totalRegistros <= CHUNK_SIZE) {
-      const nombreTxt = `CDP-${anio}-${mes}.txt`;
+      const nombreTxt = `VENTA-${anio}-${mes}.txt`;
       zipEntries[nombreTxt] = strToU8(lineas.join('\r\n'));
     } else {
       const totalArchivos = Math.ceil(totalRegistros / CHUNK_SIZE);
@@ -1734,12 +1734,12 @@ export class MatchResultadoComponent implements OnInit {
         const inicio = i * CHUNK_SIZE;
         const fin = Math.min(inicio + CHUNK_SIZE, totalRegistros);
         const bloqueLineas = lineas.slice(inicio, fin);
-        const nombreTxt = `CDP-${anio}-${mes}-${i + 1}.txt`;
+        const nombreTxt = `VENTA-${anio}-${mes}-${i + 1}.txt`;
         zipEntries[nombreTxt] = strToU8(bloqueLineas.join('\r\n'));
       }
     }
 
-    const nombreZip = `CDP-${anio}-${mes}.zip`;
+    const nombreZip = `VENTA-${anio}-${mes}.zip`;
 
     // 4. Compresión DEFLATE en cliente con fflate y descarga directa
     try {

@@ -720,6 +720,7 @@
           <tr
             *ngFor="let v of ventasFiltradas; let i = index"
             class="fila-contenedor group cursor-pointer"
+            [attr.data-id]="v.idVentaEmpresa"
             (dblclick)="iniciarEdicion(v, $event)"
             [ngClass]="v.esNuevo ? 'fila-nueva' : (v.modificado ? 'fila-modificada' : (v.editando ? 'fila-editando' : ''))">
 
@@ -749,7 +750,6 @@
                   type="date"
                   [(ngModel)]="v.fechaEmision"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   class="input-grid-cell font-sans text-xs"
                   [ngClass]="{'invalido': !v.fechaEmision}"
                   required />
@@ -766,7 +766,6 @@
                   type="date"
                   [(ngModel)]="v.fechaVencimiento"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   class="input-grid-cell font-sans text-xs" />
               </ng-container>
             </td>
@@ -782,7 +781,6 @@
                 <select
                   [(ngModel)]="v.codigoTipoCp"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   class="input-grid-cell font-sans text-xs bg-white"
                   required>
                   <option *ngFor="let tcp of tiposCp" [value]="tcp.codigo">{{ tcp.codigo }} - {{ tcp.nombre }}</option>
@@ -804,7 +802,6 @@
                   type="text"
                   [(ngModel)]="v.serie"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   placeholder="F001"
                   maxlength="4"
                   class="input-grid-cell font-mono text-center uppercase"
@@ -823,7 +820,6 @@
                   type="text"
                   [(ngModel)]="v.numero"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   placeholder="12345"
                   maxlength="10"
                   class="input-grid-cell font-mono text-center"
@@ -843,7 +839,6 @@
                 <select
                   [(ngModel)]="v.codigoTipoDocIdentidad"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   class="input-grid-cell font-sans text-xs bg-white"
                   required>
                   <option *ngFor="let tdoc of tiposDocIdentidad" [value]="tdoc.codigo">{{ tdoc.codigo }} - {{ tdoc.nombre }}</option>
@@ -865,7 +860,6 @@
                   type="text"
                   [(ngModel)]="v.nroDocIdentidad"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   placeholder="Nro Documento"
                   maxlength="15"
                   class="input-grid-cell font-mono font-semibold"
@@ -884,7 +878,6 @@
                   type="text"
                   [(ngModel)]="v.razonSocial"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   placeholder="Razón Social / Nombre"
                   class="input-grid-cell uppercase"
                   [ngClass]="{'invalido': !v.razonSocial}"
@@ -903,7 +896,6 @@
                   step="0.01"
                   [(ngModel)]="v.biGravada"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   placeholder="0.00"
                   class="input-grid-cell font-mono text-right"
                   required />
@@ -921,7 +913,6 @@
                   step="0.01"
                   [(ngModel)]="v.igvIpm"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   placeholder="0.00"
                   class="input-grid-cell font-mono text-right" />
               </ng-container>
@@ -938,7 +929,6 @@
                   step="0.01"
                   [(ngModel)]="v.montoExonerado"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   placeholder="0.00"
                   class="input-grid-cell font-mono text-right" />
               </ng-container>
@@ -955,7 +945,6 @@
                   step="0.01"
                   [(ngModel)]="v.montoInafecto"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   placeholder="0.00"
                   class="input-grid-cell font-mono text-right" />
               </ng-container>
@@ -972,7 +961,6 @@
                   step="0.01"
                   [(ngModel)]="v.totalCp"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   placeholder="0.00"
                   class="input-grid-cell font-mono font-bold text-right"
                   required />
@@ -990,7 +978,6 @@
                   maxlength="3"
                   [(ngModel)]="v.codigoMoneda"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   class="input-grid-cell uppercase text-center font-mono text-[10px]" />
               </ng-container>
             </td>
@@ -1006,7 +993,6 @@
                   step="0.001"
                   [(ngModel)]="v.tipoCambio"
                   (ngModelChange)="verificarYMarcarModificacion(v)"
-                  (blur)="finalizarEdicion(v)"
                   placeholder="1.000"
                   class="input-grid-cell font-mono text-right" />
               </ng-container>
@@ -1028,7 +1014,6 @@
                     maxlength="4"
                     [(ngModel)]="v.serieCpModificado"
                     (ngModelChange)="verificarYMarcarModificacion(v)"
-                    (blur)="finalizarEdicion(v)"
                     class="input-grid-cell font-mono text-center uppercase w-12" />
                   <span>-</span>
                   <input
@@ -1037,7 +1022,6 @@
                     maxlength="10"
                     [(ngModel)]="v.numeroCpModificado"
                     (ngModelChange)="verificarYMarcarModificacion(v)"
-                    (blur)="finalizarEdicion(v)"
                     class="input-grid-cell font-mono text-center w-16" />
                 </div>
               </ng-container>

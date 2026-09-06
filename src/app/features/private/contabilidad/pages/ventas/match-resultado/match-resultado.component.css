@@ -151,11 +151,11 @@
 }
 
 .excel-grid tbody tr.fila-match-solo-un-origen td:not(.row-num) {
-  background-color: #fff1f2 !important;
-  color: #9f1239;
+  background-color: #f8fbfe !important;
+  color: #1e3a5f;
 }
 .excel-grid tbody tr.fila-match-solo-un-origen:hover td:not(.row-num) {
-  background-color: #ffe4e6 !important;
+  background-color: #dbeefc !important;
 }
 
 /* Fila Editable Nueva (Texto Verde Esmeralda) */
