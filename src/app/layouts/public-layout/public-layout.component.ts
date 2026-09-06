@@ -201,7 +201,7 @@ import { RouterLink, RouterOutlet } from '@angular/router';
           <div class="mt-12 pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
             <p>© 2026 MONOCONT. Todos los derechos reservados. Diseñado para la contabilidad peruana.</p>
             <div class="flex items-center gap-4">
-              <span>UIT 2026: S/ 5,350.00</span>
+              <span>UIT 2026: S/ 5,500.00</span>
               <span>•</span>
               <span>SIRE RVIE / RCE 80 col.</span>
             </div>

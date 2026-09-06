@@ -6,10 +6,11 @@ export const environment = {
     inactividadMs: 30 * 60 * 1000,
     avisoMs: 1 * 60 * 1000
   },
+  gateway: 'http://localhost:5050',
   microservicios: {
-    seguridad: 'http://localhost:5000/api/v1',
-    empresa: 'http://localhost:5001/api/v1',
-    catalogos: 'http://localhost:5002/api/v1',
-    operaciones: 'http://localhost:5003/api/v1',
+    seguridad:   'seguridad_service',
+    empresa:     'empresa_service',
+    catalogos:   'catalogos_service',
+    operaciones: 'operaciones_service',
   }
 };

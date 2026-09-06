@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 import { IdleTimeoutService } from '../../core/auth/idle-timeout.service';
+import { ModalService } from '../../shared/ui/modal/modal.service';
 
 @Component({
   selector: 'app-private-layout',
@@ -16,6 +17,7 @@ export class PrivateLayoutComponent implements OnDestroy {
   private router = inject(Router);
   authService = inject(AuthService);
   private idleTimeoutService = inject(IdleTimeoutService);
+  private modalService = inject(ModalService);
 
   esVistaDetalleCompleta: boolean = false;
   sidebarColapsado: boolean = false;
@@ -56,8 +58,18 @@ export class PrivateLayoutComponent implements OnDestroy {
     }
   }
 
-  cerrarSesion(): void {
-    this.authService.logout();
+  async cerrarSesion(): Promise<void> {
+    const confirmado = await this.modalService.open({
+      type: 'confirm',
+      title: '¿Cerrar sesión?',
+      message: '¿Estás seguro de que deseas salir de tu cuenta?',
+      confirmText: 'Cerrar sesión',
+      cancelText: 'Cancelar'
+    });
+
+    if (confirmado) {
+      this.authService.logout();
+    }
   }
 
   ngOnDestroy(): void {
