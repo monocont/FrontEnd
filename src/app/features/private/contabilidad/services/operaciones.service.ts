@@ -3,6 +3,44 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ApiRegistry } from '../../../../core/config/api.registry';
 
+export interface ConsumoLimiteDTO {
+  acumuladoAnual: number;
+  acumuladoBaseImponible: number;
+  limiteAnual: number | null;
+  porcentajeConsumo: number | null;
+  saldoDisponible: number | null;
+  semaforo: 'VERDE' | 'AMBAR' | 'ROJO';
+  alertaMensaje: string | null;
+  sinLimite: boolean;
+  limiteMensual: number | null;
+  maximoMensualRegistrado: number | null;
+}
+
+export interface EmpresaLimiteItemDTO {
+  idEmpresa: string;
+  empresaRuc: string;
+  razonSocial: string;
+  nombreComercial: string;
+  codigoRegimenTributario: string;
+  regimenDescripcion: string;
+  anio: number;
+  valorUit: number;
+  estadoGeneralSemaforo: 'VERDE' | 'AMBAR' | 'ROJO';
+  requiereAtencion: boolean;
+  ventas: ConsumoLimiteDTO;
+  compras: ConsumoLimiteDTO;
+}
+
+export interface LimitesTributariosEmpresasResponseDTO {
+  anio: number;
+  valorUitReferencia: number;
+  totalEmpresas: number;
+  totalEmpresasEnRiesgoCritico: number;
+  totalEmpresasEnAlerta: number;
+  totalEmpresasNormales: number;
+  empresas: EmpresaLimiteItemDTO[];
+}
+
 export interface CargarArchivoSunatDTO {
   idCarga: string;
   empresaRuc: string;
@@ -656,5 +694,12 @@ export class OperacionesService {
     return this.http
       .delete<any>(`${this.baseUrl}/cargas/${idCarga}`, { withCredentials: true })
       .pipe(map(res => this.extractData<boolean>(res)));
+  }
+
+  obtenerLimitesEmpresas(anio?: number): Observable<LimitesTributariosEmpresasResponseDTO> {
+    const params = anio ? `?anio=${anio}` : '';
+    return this.http
+      .get<any>(`${this.baseUrl}/operaciones/limites-tributarios/empresas${params}`, { withCredentials: true })
+      .pipe(map(res => this.extractData<LimitesTributariosEmpresasResponseDTO>(res)));
   }
 }

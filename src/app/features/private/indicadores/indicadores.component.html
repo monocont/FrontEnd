@@ -1,291 +1,614 @@
-<div class="space-y-6 max-w-7xl mx-auto pb-12 animate-card">
+<div class="space-y-6 max-w-7xl mx-auto pb-12 animate-fade-in">
   
-  <!-- Cabecera Premium con Colores Pasteles Suaves y Armoniosos -->
-  <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden">
-    <div class="absolute -right-8 -top-8 w-44 h-44 bg-gradient-to-br from-emerald-100/50 via-teal-50/30 to-transparent rounded-full blur-2xl pointer-events-none"></div>
+  <!-- ============================================================================
+       1. CABECERA CON CONTEXTO FISCAL & DATEPICKER DE SOLO AÑO
+       ============================================================================ -->
+  <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs relative z-30">
+    <!-- Capa aislada para el efecto visual sin recortar los popovers/dropdowns -->
+    <div class="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+      <div class="absolute -right-10 -top-10 w-52 h-52 bg-gradient-to-br from-emerald-100/40 via-teal-50/20 to-transparent rounded-full blur-3xl"></div>
+      <div class="absolute -left-10 -bottom-10 w-44 h-44 bg-gradient-to-tr from-indigo-100/30 via-slate-50/20 to-transparent rounded-full blur-2xl"></div>
+    </div>
     
-    <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
       <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold tracking-wide mb-2 border border-emerald-200/60">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold tracking-wide mb-2.5 border border-emerald-200/60 shadow-2xs">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Panel de Control & Vigilancia Tributaria</span>
+          <span>Panel de Vigilancia Tributaria SUNAT</span>
         </div>
         <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">
           Indicadores y Límites Tributarios
         </h1>
         <p class="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-2xl leading-relaxed">
-          Monitoreo preventivo del volumen anual de compras y ventas respecto a los topes fijados por SUNAT para cada régimen tributario.
+          Supervisión continua de los topes acumulados de compras y ventas anuales respecto a las normativas de la SUNAT por cada régimen fiscal.
         </p>
       </div>
 
-      <!-- Widget Resumen de Contingencias -->
-      <div class="flex items-center gap-3.5 bg-gradient-to-r from-amber-50/80 to-rose-50/70 p-4 rounded-2xl border border-amber-200/60 shadow-2xs">
-        <div class="w-11 h-11 rounded-2xl bg-white shadow-xs border border-amber-200/80 text-amber-600 flex items-center justify-center font-bold shrink-0">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+      <!-- Controles de Cabecera: Datepicker de Año + Widget de Estado -->
+      <div class="flex flex-wrap sm:flex-nowrap items-center gap-3">
+        
+        <!-- Datepicker de Solo Año (Popover Calendario con Límite de Año Actual) -->
+        <div class="relative">
+          <button
+            type="button"
+            (click)="toggleYearPicker($event)"
+            class="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs transition-all shadow-xs hover:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
+            title="Seleccionar Año Fiscal"
+          >
+            <div class="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                <line x1="16" x2="16" y1="2" y2="6"/>
+                <line x1="8" x2="8" y1="2" y2="6"/>
+                <line x1="3" x2="21" y1="10" y2="10"/>
+              </svg>
+            </div>
+            <div class="text-left">
+              <div class="text-[10px] text-slate-400 font-semibold leading-tight">Año Fiscal</div>
+              <div class="text-xs font-extrabold text-slate-900 leading-tight">{{ anioSeleccionado }}</div>
+            </div>
+            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" [ngClass]="{'rotate-180': mostrarYearPicker}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+
+          <!-- Popover Modal de Años (Fondo Sólido Opaco, Máximo Año Actual) -->
+          <div
+            *ngIf="mostrarYearPicker"
+            (click)="$event.stopPropagation()"
+            class="year-picker-popover absolute right-0 top-full mt-2.5 z-50 bg-white border border-slate-200 rounded-2xl p-4 shadow-2xl w-72 animate-scale-up"
+          >
+            <!-- Cabecera de Década -->
+            <div class="flex items-center justify-between mb-3 px-1">
+              <button
+                type="button"
+                (click)="navegarDecada(-1, $event)"
+                class="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+                title="Década anterior"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+              <div class="text-xs font-bold text-slate-800">
+                {{ decadaInicio }} – {{ decadaInicio + 9 }}
+              </div>
+              <button
+                type="button"
+                (click)="navegarDecada(1, $event)"
+                [disabled]="!puedeAvanzarDecada"
+                class="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-slate-50 disabled:cursor-not-allowed text-slate-600 transition-colors cursor-pointer"
+                title="Década siguiente"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Cuadrícula de Años (Años Futuros Deshabilitados) -->
+            <div class="grid grid-cols-3 gap-2 mb-3">
+              <button
+                *ngFor="let a of listaAniosDecada"
+                type="button"
+                (click)="seleccionarAnio(a, $event)"
+                [disabled]="a > anioActual"
+                [class]="a === anioSeleccionado
+                  ? 'py-2.5 rounded-xl text-xs font-extrabold bg-emerald-600 text-white shadow-xs'
+                  : (a > anioActual
+                    ? 'py-2.5 rounded-xl text-xs font-medium bg-slate-50 text-slate-300 opacity-40 cursor-not-allowed border border-dashed border-slate-200'
+                    : 'py-2.5 rounded-xl text-xs font-bold bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors cursor-pointer')"
+              >
+                {{ a }}
+                <span *ngIf="a === anioActual" class="block text-[8px] font-normal opacity-80">(Actual)</span>
+              </button>
+            </div>
+
+            <!-- Acceso Rápido Año Actual y Cerrar -->
+            <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
+              <button
+                type="button"
+                (click)="seleccionarAnioActual($event)"
+                class="font-bold text-emerald-700 hover:text-emerald-900 cursor-pointer"
+              >
+                Año actual ({{ anioActual }})
+              </button>
+              <button
+                type="button"
+                (click)="cerrarYearPicker()"
+                class="font-medium text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
         </div>
-        <div>
-          <div class="text-xs font-extrabold text-slate-800">{{ cantidadEnRiesgo }} de {{ totalEmpresas }} empresas bajo seguimiento</div>
-          <div class="text-[11px] text-amber-700 font-medium mt-0.5">Próximas al tope de régimen o cambio forzoso</div>
+
+        <!-- Widget de Alertas Globales -->
+        <div class="flex items-center gap-3 bg-gradient-to-r from-amber-50/80 to-rose-50/70 px-4 py-2.5 rounded-2xl border border-amber-200/60 shadow-2xs">
+          <div class="w-9 h-9 rounded-xl bg-white shadow-xs border border-amber-200 text-amber-600 flex items-center justify-center font-bold shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="text-xs font-extrabold text-slate-800 leading-tight">
+              {{ empresasEnRiesgo + empresasEnAlerta }} de {{ totalEmpresas }} en atención
+            </div>
+            <div class="text-[10.5px] text-amber-800/80 font-medium mt-0.5 leading-tight">
+              UIT {{ anioSeleccionado }}: S/ {{ valorUitReferencia | number:'1.2-2' }}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Tarjetas KPI / Regímenes Tributarios con Colores Pastel -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    <!-- Card 1: RER (Azul Lavanda Pastel) -->
-    <div class="bg-white p-5 rounded-3xl border border-indigo-100/90 shadow-xs hover:shadow-md transition-all group relative overflow-hidden">
-      <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50/60 rounded-bl-full pointer-events-none"></div>
+  <!-- ============================================================================
+       2. TARJETAS KPI DE RESUMEN EJECUTIVO (Soft-Modern Pastel)
+       ============================================================================ -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
+    
+    <!-- Card 1: Riesgo Crítico (Rosa / Coral Mate) -->
+    <div class="bg-white p-5 rounded-3xl border border-rose-100/90 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-rose-50/60 rounded-bl-full pointer-events-none"></div>
       <div class="flex items-center justify-between relative z-10">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-900/60">Régimen RER</span>
-        <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold text-xs border border-indigo-100">{{ cantidadRer }}</span>
+        <span class="text-[11px] font-bold uppercase tracking-wider text-rose-800/70">Riesgo Crítico</span>
+        <span class="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200/80">≥ 95%</span>
       </div>
-      <div class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-3 relative z-10">
-        {{ cantidadRer }} <span class="text-xs font-medium text-slate-400">empresas</span>
+      <div class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-3 relative z-10 flex items-baseline gap-1.5">
+        {{ empresasEnRiesgo }} <span class="text-xs font-medium text-slate-400">empresas</span>
       </div>
       <div class="text-xs text-slate-500 mt-2 flex items-center justify-between relative z-10 pt-2 border-t border-slate-100/80">
-        <span class="text-slate-400">Tope máx:</span>
-        <span class="font-bold text-indigo-700 bg-indigo-50/70 px-2 py-0.5 rounded-md">S/ 525,000 / año</span>
+        <span class="text-slate-400">Acción:</span>
+        <span class="font-bold text-rose-700 bg-rose-50/80 px-2 py-0.5 rounded-md">Cambio de régimen</span>
       </div>
     </div>
 
-    <!-- Card 2: MYPE Tributario (Menta Pastel) -->
-    <div class="bg-white p-5 rounded-3xl border border-emerald-100/90 shadow-xs hover:shadow-md transition-all group relative overflow-hidden">
-      <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-50/60 rounded-bl-full pointer-events-none"></div>
-      <div class="flex items-center justify-between relative z-10">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-900/60">MYPE Tributario</span>
-        <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-100">{{ cantidadMype }}</span>
-      </div>
-      <div class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-3 relative z-10">
-        {{ cantidadMype }} <span class="text-xs font-medium text-slate-400">empresas</span>
-      </div>
-      <div class="text-xs text-slate-500 mt-2 flex items-center justify-between relative z-10 pt-2 border-t border-slate-100/80">
-        <span class="text-slate-400">Tope máx:</span>
-        <span class="font-bold text-emerald-700 bg-emerald-50/70 px-2 py-0.5 rounded-md">1,700 UIT</span>
-      </div>
-    </div>
-
-    <!-- Card 3: Régimen General (Cielo Pastel) -->
-    <div class="bg-white p-5 rounded-3xl border border-sky-100/90 shadow-xs hover:shadow-md transition-all group relative overflow-hidden">
-      <div class="absolute top-0 right-0 w-24 h-24 bg-sky-50/60 rounded-bl-full pointer-events-none"></div>
-      <div class="flex items-center justify-between relative z-10">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-sky-900/60">Régimen General</span>
-        <span class="px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 font-bold text-xs border border-sky-100">{{ cantidadGeneral }}</span>
-      </div>
-      <div class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-3 relative z-10">
-        {{ cantidadGeneral }} <span class="text-xs font-medium text-slate-400">empresas</span>
-      </div>
-      <div class="text-xs text-slate-500 mt-2 flex items-center justify-between relative z-10 pt-2 border-t border-slate-100/80">
-        <span class="text-slate-400">Límite:</span>
-        <span class="font-bold text-sky-700 bg-sky-50/70 px-2 py-0.5 rounded-md">Sin restricción</span>
-      </div>
-    </div>
-
-    <!-- Card 4: NRUS (Melocotón / Ámbar Pastel) -->
-    <div class="bg-white p-5 rounded-3xl border border-amber-100/90 shadow-xs hover:shadow-md transition-all group relative overflow-hidden">
+    <!-- Card 2: Alerta Preventiva (Ámbar / Miel Suave) -->
+    <div class="bg-white p-5 rounded-3xl border border-amber-100/90 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
       <div class="absolute top-0 right-0 w-24 h-24 bg-amber-50/60 rounded-bl-full pointer-events-none"></div>
       <div class="flex items-center justify-between relative z-10">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-amber-900/60">NRUS</span>
-        <span class="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-bold text-xs border border-amber-100">{{ cantidadNrus }}</span>
+        <span class="text-[11px] font-bold uppercase tracking-wider text-amber-800/70">Alerta Preventiva</span>
+        <span class="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-bold text-xs border border-amber-200/80">80% – 95%</span>
       </div>
-      <div class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-3 relative z-10">
-        {{ cantidadNrus }} <span class="text-xs font-medium text-slate-400">empresas</span>
+      <div class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-3 relative z-10 flex items-baseline gap-1.5">
+        {{ empresasEnAlerta }} <span class="text-xs font-medium text-slate-400">empresas</span>
       </div>
       <div class="text-xs text-slate-500 mt-2 flex items-center justify-between relative z-10 pt-2 border-t border-slate-100/80">
-        <span class="text-slate-400">Tope máx:</span>
-        <span class="font-bold text-amber-700 bg-amber-50/70 px-2 py-0.5 rounded-md">S/ 96,000 / año</span>
+        <span class="text-slate-400">Monitoreo:</span>
+        <span class="font-bold text-amber-700 bg-amber-50/80 px-2 py-0.5 rounded-md">Cierre de periodo</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Estado Seguro (Esmeralda / Menta Pastel) -->
+    <div class="bg-white p-5 rounded-3xl border border-emerald-100/90 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-50/60 rounded-bl-full pointer-events-none"></div>
+      <div class="flex items-center justify-between relative z-10">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-800/70">Estado Óptimo</span>
+        <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200/80">&lt; 80%</span>
+      </div>
+      <div class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-3 relative z-10 flex items-baseline gap-1.5">
+        {{ empresasNormales }} <span class="text-xs font-medium text-slate-400">empresas</span>
+      </div>
+      <div class="text-xs text-slate-500 mt-2 flex items-center justify-between relative z-10 pt-2 border-t border-slate-100/80">
+        <span class="text-slate-400">Margen:</span>
+        <span class="font-bold text-emerald-700 bg-emerald-50/80 px-2 py-0.5 rounded-md">Dentro de límite</span>
+      </div>
+    </div>
+
+    <!-- Card 4: Total Empresas Vigiladas (Lavanda / Índigo Pastel) -->
+    <div class="bg-white p-5 rounded-3xl border border-indigo-100/90 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50/60 rounded-bl-full pointer-events-none"></div>
+      <div class="flex items-center justify-between relative z-10">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-800/70">Total Empresas</span>
+        <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold text-xs border border-indigo-200/80">{{ anioSeleccionado }}</span>
+      </div>
+      <div class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-3 relative z-10 flex items-baseline gap-1.5">
+        {{ totalEmpresas }} <span class="text-xs font-medium text-slate-400">activas</span>
+      </div>
+      <div class="text-xs text-slate-500 mt-2 flex items-center justify-between relative z-10 pt-2 border-t border-slate-100/80">
+        <span class="text-slate-400">UIT Vigente:</span>
+        <span class="font-bold text-indigo-700 bg-indigo-50/80 px-2 py-0.5 rounded-md">S/ {{ valorUitReferencia | number:'1.2-2' }}</span>
       </div>
     </div>
   </div>
 
-  <!-- Barra de Filtros Rápidos y Buscador -->
-  <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-    <!-- Píldoras de Filtro por Régimen -->
-    <div class="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
-      <span class="text-xs font-bold text-slate-400 uppercase mr-1">Régimen:</span>
-      <button
-        type="button"
-        (click)="filtroRegimen = 'Todos'"
-        class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-        [ngClass]="filtroRegimen === 'Todos' ? 'bg-slate-800 text-white shadow-xs' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'">
-        Todos ({{ totalEmpresas }})
-      </button>
-      <button
-        type="button"
-        (click)="filtroRegimen = 'RER'"
-        class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-        [ngClass]="filtroRegimen === 'RER' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-indigo-50/60 text-indigo-700 hover:bg-indigo-100/70'">
-        RER ({{ cantidadRer }})
-      </button>
-      <button
-        type="button"
-        (click)="filtroRegimen = 'MYPE Tributario'"
-        class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-        [ngClass]="filtroRegimen === 'MYPE Tributario' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50/60 text-emerald-700 hover:bg-emerald-100/70'">
-        MYPE ({{ cantidadMype }})
-      </button>
-      <button
-        type="button"
-        (click)="filtroRegimen = 'General'"
-        class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-        [ngClass]="filtroRegimen === 'General' ? 'bg-sky-600 text-white shadow-xs' : 'bg-sky-50/60 text-sky-700 hover:bg-sky-100/70'">
-        General ({{ cantidadGeneral }})
-      </button>
-      <button
-        type="button"
-        (click)="filtroRegimen = 'NRUS'"
-        class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-        [ngClass]="filtroRegimen === 'NRUS' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50/60 text-amber-700 hover:bg-amber-100/70'">
-        NRUS ({{ cantidadNrus }})
-      </button>
+  <!-- ============================================================================
+       3. BARRA DE FILTROS RÁPIDOS & BUSCADOR REACTIVO
+       ============================================================================ -->
+  <div class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col xl:flex-row items-center justify-between gap-4">
+    
+    <!-- Filtros de Semáforo y Régimen -->
+    <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+      
+      <!-- Píldoras Semáforo -->
+      <div class="flex items-center gap-1.5 bg-slate-50 p-1 rounded-2xl border border-slate-200/70">
+        <span class="text-[10.5px] font-bold text-slate-400 uppercase px-2">Semáforo:</span>
+        <button
+          type="button"
+          (click)="filtroSemaforo = 'TODOS'; paginaActual = 1"
+          class="px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer"
+          [ngClass]="filtroSemaforo === 'TODOS' ? 'bg-slate-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+        >
+          Todos ({{ totalEmpresas }})
+        </button>
+        <button
+          type="button"
+          (click)="filtroSemaforo = 'ROJO'; paginaActual = 1"
+          class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
+          [ngClass]="filtroSemaforo === 'ROJO' ? 'bg-rose-600 text-white shadow-xs' : 'text-rose-700 hover:bg-rose-50'"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-500" [ngClass]="{'bg-white': filtroSemaforo === 'ROJO'}"></span>
+          Críticos ({{ empresasEnRiesgo }})
+        </button>
+        <button
+          type="button"
+          (click)="filtroSemaforo = 'AMBAR'; paginaActual = 1"
+          class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
+          [ngClass]="filtroSemaforo === 'AMBAR' ? 'bg-amber-600 text-white shadow-xs' : 'text-amber-700 hover:bg-amber-50'"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500" [ngClass]="{'bg-white': filtroSemaforo === 'AMBAR'}"></span>
+          Alertas ({{ empresasEnAlerta }})
+        </button>
+        <button
+          type="button"
+          (click)="filtroSemaforo = 'VERDE'; paginaActual = 1"
+          class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
+          [ngClass]="filtroSemaforo === 'VERDE' ? 'bg-emerald-600 text-white shadow-xs' : 'text-emerald-700 hover:bg-emerald-50'"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" [ngClass]="{'bg-white': filtroSemaforo === 'VERDE'}"></span>
+          Óptimos ({{ empresasNormales }})
+        </button>
+      </div>
+
+      <!-- Píldoras Régimen -->
+      <div class="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+        <button
+          type="button"
+          (click)="filtroRegimen = 'TODOS'; paginaActual = 1"
+          class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer"
+          [ngClass]="filtroRegimen === 'TODOS' ? 'bg-slate-200 text-slate-800' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'"
+        >
+          Todos
+        </button>
+        <button
+          type="button"
+          (click)="filtroRegimen = 'RER'; paginaActual = 1"
+          class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer"
+          [ngClass]="filtroRegimen === 'RER' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-indigo-50/60 text-indigo-700 hover:bg-indigo-100/70'"
+        >
+          RER ({{ cantidadRer }})
+        </button>
+        <button
+          type="button"
+          (click)="filtroRegimen = 'RMT'; paginaActual = 1"
+          class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer"
+          [ngClass]="filtroRegimen === 'RMT' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50/60 text-emerald-700 hover:bg-emerald-100/70'"
+        >
+          MYPE ({{ cantidadMype }})
+        </button>
+        <button
+          type="button"
+          (click)="filtroRegimen = 'RG'; paginaActual = 1"
+          class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer"
+          [ngClass]="filtroRegimen === 'RG' ? 'bg-sky-600 text-white shadow-xs' : 'bg-sky-50/60 text-sky-700 hover:bg-sky-100/70'"
+        >
+          General ({{ cantidadGeneral }})
+        </button>
+        <button
+          type="button"
+          (click)="filtroRegimen = 'NRUS'; paginaActual = 1"
+          class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer"
+          [ngClass]="filtroRegimen === 'NRUS' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50/60 text-amber-700 hover:bg-amber-100/70'"
+        >
+          NRUS ({{ cantidadNrus }})
+        </button>
+      </div>
     </div>
 
-    <!-- Buscador en Vivo -->
-    <div class="relative w-full sm:w-80">
-      <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-      </span>
+    <!-- Buscador en Vivo (Icono a la Derecha) -->
+    <div class="relative w-full xl:w-80">
       <input
         type="text"
         [(ngModel)]="filtroBusqueda"
+        (ngModelChange)="paginaActual = 1"
         placeholder="Buscar por RUC o Razón Social..."
-        class="w-full pl-9 pr-7 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white transition-all shadow-2xs"
+        class="w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white transition-all shadow-2xs"
       />
-      <button *ngIf="filtroBusqueda" (click)="filtroBusqueda = ''" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-xs font-bold">✕</button>
+      <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center gap-1.5">
+        <button
+          *ngIf="filtroBusqueda"
+          type="button"
+          (click)="filtroBusqueda = ''; paginaActual = 1"
+          class="text-slate-400 hover:text-slate-600 text-xs font-bold p-0.5 rounded hover:bg-slate-200/60 transition-colors cursor-pointer"
+          title="Limpiar búsqueda"
+        >
+          ✕
+        </button>
+        <span class="text-slate-400 pointer-events-none">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </span>
+      </div>
     </div>
   </div>
 
-  <!-- Tabla de Indicadores de Empresas -->
-  <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
-    <div class="overflow-x-auto table-scroll">
+  <!-- ============================================================================
+       4. TABLA DE VIGILANCIA TRIBUTARIA CON DOBLE KPI VISUAL
+       ============================================================================ -->
+  <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+    
+    <!-- Estado de Carga (Skeleton Loader) -->
+    <div *ngIf="cargando" class="p-8 space-y-4">
+      <div class="h-8 bg-slate-100 rounded-xl animate-pulse w-1/3"></div>
+      <div class="space-y-3">
+        <div *ngFor="let item of [1,2,3,4,5]" class="h-16 bg-slate-50 rounded-2xl border border-slate-100 animate-pulse"></div>
+      </div>
+    </div>
+
+    <!-- Mensaje de Error con Reintento -->
+    <div *ngIf="!cargando && mensajeError" class="p-10 text-center space-y-3">
+      <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto border border-rose-200">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+      <p class="text-sm font-bold text-slate-800">{{ mensajeError }}</p>
+      <button
+        type="button"
+        (click)="cargarIndicadores(anioSeleccionado)"
+        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
+      >
+        Reintentar Consulta
+      </button>
+    </div>
+
+    <!-- Tabla Principal con Datos -->
+    <div *ngIf="!cargando && !mensajeError" class="overflow-x-auto">
       <table class="w-full text-xs text-left">
         <thead class="bg-slate-50/80 text-slate-500 font-semibold border-b border-slate-100 uppercase text-[10px] tracking-wider">
           <tr>
-            <th class="py-3.5 px-5">Empresa</th>
-            <th class="py-3.5 px-4 text-center">Régimen</th>
-            <th class="py-3.5 px-4 text-right cursor-pointer hover:text-slate-800 select-none" (click)="ordenar('ventasAcumuladasAnual')">
-              <div class="inline-flex items-center gap-1 justify-end">
-                <span>Ventas Acumuladas</span>
+            <th class="py-3.5 px-5 cursor-pointer hover:text-slate-800 select-none" (click)="ordenar('razonSocial')">
+              <div class="inline-flex items-center gap-1">
+                <span>Empresa</span>
                 <span class="text-[9px] font-mono text-slate-400">⇅</span>
               </div>
             </th>
-            <th class="py-3.5 px-4 text-right cursor-pointer hover:text-slate-800 select-none" (click)="ordenar('comprasAcumuladasAnual')">
-              <div class="inline-flex items-center gap-1 justify-end">
-                <span>Compras Acumuladas</span>
-                <span class="text-[9px] font-mono text-slate-400">⇅</span>
-              </div>
-            </th>
-            <th class="py-3.5 px-5 cursor-pointer hover:text-slate-800 select-none" (click)="ordenar('porcentajeUso')">
+            <th class="py-3.5 px-3 text-center">Régimen</th>
+            <th class="py-3.5 px-4 cursor-pointer hover:text-slate-800 select-none min-w-[220px]" (click)="ordenar('ventasPorcentaje')">
               <div class="flex items-center justify-between">
-                <span>% Tope SUNAT</span>
+                <span>Límite de Ventas (KPI)</span>
                 <span class="text-[9px] font-mono text-slate-400">⇅</span>
               </div>
             </th>
-            <th class="py-3.5 px-4 text-center">Estado / Alerta</th>
-            <th class="py-3.5 px-5 text-center">Acción</th>
+            <th class="py-3.5 px-4 cursor-pointer hover:text-slate-800 select-none min-w-[210px]" (click)="ordenar('comprasMonto')">
+              <div class="flex items-center justify-between">
+                <span>Límite de Compras (KPI)</span>
+                <span class="text-[9px] font-mono text-slate-400">⇅</span>
+              </div>
+            </th>
+            <th class="py-3.5 px-4 text-center cursor-pointer hover:text-slate-800 select-none" (click)="ordenar('estado')">
+              <div class="inline-flex items-center gap-1 justify-center">
+                <span>Estado / Alerta Sunat</span>
+                <span class="text-[9px] font-mono text-slate-400">⇅</span>
+              </div>
+            </th>
+            <th class="py-3.5 px-3 text-center">Acciones</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 text-slate-700">
-          <tr *ngFor="let emp of empresasPaginadas" class="hover:bg-slate-50/60 transition-colors">
-            <!-- Empresa Info -->
+          <tr *ngFor="let emp of empresasPaginadas" class="hover:bg-slate-50/70 transition-colors">
+            
+            <!-- Columna 1: Empresa Info -->
             <td class="py-4 px-5">
               <div class="font-bold text-slate-900 text-xs">{{ emp.razonSocial }}</div>
-              <div class="text-[11px] font-mono text-slate-400 font-normal mt-0.5">RUC: {{ emp.ruc }} · {{ emp.totalComprobantes }} CPs</div>
+              <div class="text-[11px] font-mono text-slate-400 font-normal mt-0.5 flex items-center gap-2">
+                <span>RUC: {{ emp.empresaRuc }}</span>
+                <span *ngIf="emp.nombreComercial" class="text-slate-300 font-sans">· {{ emp.nombreComercial }}</span>
+              </div>
             </td>
 
-            <!-- Régimen Badge -->
-            <td class="py-4 px-4 text-center">
+            <!-- Columna 2: Régimen Badge -->
+            <td class="py-4 px-3 text-center whitespace-nowrap">
               <span [ngClass]="{
-                'bg-indigo-50 text-indigo-700 border-indigo-200/80': emp.regimen === 'RER',
-                'bg-emerald-50 text-emerald-700 border-emerald-200/80': emp.regimen === 'MYPE Tributario',
-                'bg-sky-50 text-sky-700 border-sky-200/80': emp.regimen === 'General',
-                'bg-amber-50 text-amber-700 border-amber-200/80': emp.regimen === 'NRUS'
-              }" class="px-2.5 py-1 rounded-xl text-[10.5px] font-bold border">
-                {{ emp.regimen }}
+                'bg-indigo-50 text-indigo-700 border-indigo-200/80': emp.codigoRegimenTributario === 'RER',
+                'bg-emerald-50 text-emerald-700 border-emerald-200/80': emp.codigoRegimenTributario === 'RMT',
+                'bg-sky-50 text-sky-700 border-sky-200/80': emp.codigoRegimenTributario === 'RG',
+                'bg-amber-50 text-amber-700 border-amber-200/80': emp.codigoRegimenTributario === 'NRUS'
+              }" class="px-2.5 py-1 rounded-xl text-[10.5px] font-bold border shadow-2xs">
+                {{ emp.codigoRegimenTributario }}
               </span>
             </td>
 
-            <!-- Ventas -->
-            <td class="py-4 px-4 text-right font-mono font-bold text-slate-900">
-              S/ {{ emp.ventasAcumuladasAnual | number:'1.2-2' }}
-            </td>
-
-            <!-- Compras -->
-            <td class="py-4 px-4 text-right font-mono text-slate-600">
-              S/ {{ emp.comprasAcumuladasAnual | number:'1.2-2' }}
-            </td>
-
-            <!-- Barra de Progreso Límite Pastel -->
-            <td class="py-4 px-5 min-w-[210px]">
-              <div *ngIf="emp.limiteRegimen > 0">
-                <div class="flex items-center justify-between text-[11px] mb-1 font-medium">
-                  <span class="text-slate-400">Límite: S/ {{ emp.limiteRegimen | number:'1.0-0' }}</span>
+            <!-- Columna 3: KPI Ventas (Monto + Barra + % + Saldo) -->
+            <td class="py-4 px-4">
+              <div *ngIf="!emp.ventas?.sinLimite && emp.ventas?.limiteAnual">
+                <div class="flex items-center justify-between text-[11px] mb-1">
+                  <span class="font-mono font-bold text-slate-900">
+                    S/ {{ (emp.ventas?.acumuladoAnual || 0) | number:'1.2-2' }}
+                  </span>
                   <span class="font-bold font-mono text-xs" [ngClass]="{
-                    'text-rose-600': emp.porcentajeUso >= 90,
-                    'text-amber-600': emp.porcentajeUso >= 75 && emp.porcentajeUso < 90,
-                    'text-emerald-600': emp.porcentajeUso < 75
-                  }">{{ emp.porcentajeUso | number:'1.1-1' }}%</span>
+                    'text-rose-600': emp.ventas?.semaforo === 'ROJO',
+                    'text-amber-600': emp.ventas?.semaforo === 'AMBAR',
+                    'text-emerald-600': emp.ventas?.semaforo === 'VERDE'
+                  }">
+                    {{ (emp.ventas?.porcentajeConsumo || 0) | number:'1.1-1' }}%
+                  </span>
                 </div>
-                <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/60">
+                <!-- Barra de Progreso Soft UI -->
+                <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/60 mb-1">
                   <div
                     class="h-full rounded-full transition-all duration-500"
-                    [style.width.%]="emp.porcentajeUso > 100 ? 100 : emp.porcentajeUso"
+                    [style.width.%]="(emp.ventas?.porcentajeConsumo || 0) > 100 ? 100 : (emp.ventas?.porcentajeConsumo || 0)"
                     [ngClass]="{
-                      'bg-rose-500': emp.porcentajeUso >= 90,
-                      'bg-amber-400': emp.porcentajeUso >= 75 && emp.porcentajeUso < 90,
-                      'bg-emerald-500': emp.porcentajeUso < 75
+                      'bg-rose-500 shadow-xs shadow-rose-500/20': emp.ventas?.semaforo === 'ROJO',
+                      'bg-amber-400': emp.ventas?.semaforo === 'AMBAR',
+                      'bg-emerald-500': emp.ventas?.semaforo === 'VERDE'
                     }"
                   ></div>
                 </div>
+                <div class="flex items-center justify-between text-[10px] text-slate-400">
+                  <span>Tope: S/ {{ (emp.ventas?.limiteAnual || 0) | number:'1.0-0' }}</span>
+                  <span *ngIf="(emp.ventas?.saldoDisponible || 0) > 0" class="text-slate-500 font-medium">Quedan S/ {{ (emp.ventas?.saldoDisponible || 0) | number:'1.0-0' }}</span>
+                  <span *ngIf="(emp.ventas?.saldoDisponible || 0) === 0" class="text-rose-600 font-bold">Tope alcanzado</span>
+                </div>
               </div>
-              <div *ngIf="emp.limiteRegimen === 0" class="text-slate-400 text-[11px] italic">
-                Sin restricción de límite
+
+              <!-- Sin Límite en Ventas -->
+              <div *ngIf="emp.ventas?.sinLimite || !emp.ventas?.limiteAnual" class="py-1">
+                <div class="font-mono font-bold text-slate-900 text-xs">
+                  S/ {{ (emp.ventas?.acumuladoAnual || 0) | number:'1.2-2' }}
+                </div>
+                <span class="inline-flex items-center gap-1 text-[10px] text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md mt-1 border border-sky-100 font-medium">
+                  <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                  Sin Límite Anual
+                </span>
               </div>
             </td>
 
-            <!-- Estado de Alerta Pastel -->
-            <td class="py-4 px-4 text-center">
-              <span *ngIf="emp.estadoAlerta === 'Critico'" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-[10px] border border-rose-200/70 shadow-2xs">
-                <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                Alerta Crítica (>90%)
-              </span>
-              <span *ngIf="emp.estadoAlerta === 'Advertencia'" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 font-bold text-[10px] border border-amber-200/70 shadow-2xs">
-                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                Seguimiento (>75%)
-              </span>
-              <span *ngIf="emp.estadoAlerta === 'Normal'" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-[10px] border border-emerald-200/70 shadow-2xs">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Óptimo
-              </span>
+            <!-- Columna 4: KPI Compras (Monto + Barra o Etiqueta) -->
+            <td class="py-4 px-4">
+              <div *ngIf="!emp.compras?.sinLimite && emp.compras?.limiteAnual">
+                <div class="flex items-center justify-between text-[11px] mb-1">
+                  <span class="font-mono font-bold text-slate-900">
+                    S/ {{ (emp.compras?.acumuladoAnual || 0) | number:'1.2-2' }}
+                  </span>
+                  <span class="font-bold font-mono text-xs" [ngClass]="{
+                    'text-rose-600': emp.compras?.semaforo === 'ROJO',
+                    'text-amber-600': emp.compras?.semaforo === 'AMBAR',
+                    'text-emerald-600': emp.compras?.semaforo === 'VERDE'
+                  }">
+                    {{ (emp.compras?.porcentajeConsumo || 0) | number:'1.1-1' }}%
+                  </span>
+                </div>
+                <!-- Barra de Progreso Soft UI -->
+                <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/60 mb-1">
+                  <div
+                    class="h-full rounded-full transition-all duration-500"
+                    [style.width.%]="(emp.compras?.porcentajeConsumo || 0) > 100 ? 100 : (emp.compras?.porcentajeConsumo || 0)"
+                    [ngClass]="{
+                      'bg-rose-500 shadow-xs shadow-rose-500/20': emp.compras?.semaforo === 'ROJO',
+                      'bg-amber-400': emp.compras?.semaforo === 'AMBAR',
+                      'bg-emerald-500': emp.compras?.semaforo === 'VERDE'
+                    }"
+                  ></div>
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-slate-400">
+                  <span>Tope: S/ {{ (emp.compras?.limiteAnual || 0) | number:'1.0-0' }}</span>
+                  <span *ngIf="(emp.compras?.saldoDisponible || 0) > 0" class="text-slate-500 font-medium">Quedan S/ {{ (emp.compras?.saldoDisponible || 0) | number:'1.0-0' }}</span>
+                  <span *ngIf="(emp.compras?.saldoDisponible || 0) === 0" class="text-rose-600 font-bold">Tope alcanzado</span>
+                </div>
+              </div>
+
+              <!-- Sin Límite en Compras (RMT o RG) -->
+              <div *ngIf="emp.compras?.sinLimite || !emp.compras?.limiteAnual" class="py-1">
+                <div class="font-mono font-bold text-slate-900 text-xs">
+                  S/ {{ (emp.compras?.acumuladoAnual || 0) | number:'1.2-2' }}
+                </div>
+                <span class="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md mt-1 border border-emerald-100 font-medium">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  Sin Límite (Ley MYPE)
+                </span>
+              </div>
             </td>
 
-            <!-- Acción -->
-            <td class="py-4 px-5 text-center">
+            <!-- Columna 5: Estado / Alerta Sunat con Modal Informativo -->
+            <td class="py-4 px-4 text-center whitespace-nowrap">
+              
+              <!-- Semáforo ROJO (Crítico) -->
+              <div *ngIf="emp.estadoGeneralSemaforo === 'ROJO'" class="inline-flex items-center justify-center gap-1.5">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 text-rose-700 font-bold text-[10.5px] border border-rose-200/80 shadow-2xs">
+                  <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                  <span>Riesgo Crítico (≥95%)</span>
+                </span>
+                <button
+                  type="button"
+                  (click)="mostrarDetalleAlerta(emp, $event)"
+                  class="w-7 h-7 rounded-full bg-rose-100/80 hover:bg-rose-200 text-rose-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105"
+                  title="Ver detalle de la alerta SUNAT"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Semáforo AMBAR (Alerta Preventiva) -->
+              <div *ngIf="emp.estadoGeneralSemaforo === 'AMBAR'" class="inline-flex items-center justify-center gap-1.5">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 font-bold text-[10.5px] border border-amber-200/80 shadow-2xs">
+                  <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                  <span>Alerta Preventiva (80-95%)</span>
+                </span>
+                <button
+                  type="button"
+                  (click)="mostrarDetalleAlerta(emp, $event)"
+                  class="w-7 h-7 rounded-full bg-amber-100/80 hover:bg-amber-200 text-amber-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105"
+                  title="Ver detalle de la alerta SUNAT"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Semáforo VERDE (Óptimo) -->
+              <div *ngIf="emp.estadoGeneralSemaforo === 'VERDE'" class="inline-flex items-center justify-center gap-1.5">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-[10.5px] border border-emerald-200/80 shadow-2xs">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>Óptimo (&lt;80%)</span>
+                </span>
+                <button
+                  type="button"
+                  (click)="mostrarDetalleAlerta(emp, $event)"
+                  class="w-7 h-7 rounded-full bg-emerald-100/80 hover:bg-emerald-200 text-emerald-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105"
+                  title="Ver información tributaria"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+
+            <!-- Columna 6: Acciones con Botón Icono Compacto y Llamativo -->
+            <td class="py-4 px-3 text-center whitespace-nowrap">
               <a
                 [routerLink]="['/home/contabilidad/empresa', emp.idEmpresa, 'ventas']"
-                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 font-semibold text-xs transition-all shadow-2xs cursor-pointer"
-                title="Ver comprobantes de esta empresa"
+                class="w-8 h-8 mx-auto rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white flex items-center justify-center transition-all shadow-md shadow-emerald-600/25 hover:shadow-lg hover:shadow-emerald-600/40 hover:scale-110 active:scale-95 cursor-pointer group"
+                title="Ver datos y comprobantes de la empresa"
               >
-                <span>Ver Datos</span>
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                <svg class="w-4 h-4 text-white transition-transform group-hover:scale-105" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
               </a>
             </td>
           </tr>
 
           <!-- Estado Vacío -->
           <tr *ngIf="empresasPaginadas.length === 0">
-            <td colspan="7" class="py-12 text-center text-slate-400">
-              <svg class="w-10 h-10 mx-auto mb-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <p class="font-medium text-xs">No se encontraron empresas con los filtros aplicados.</p>
+            <td colspan="6" class="py-14 text-center text-slate-400">
+              <div class="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 text-slate-300 flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <p class="font-bold text-xs text-slate-700">No se encontraron empresas con los filtros aplicados</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Prueba ajustando los filtros de semáforo, régimen o término de búsqueda.</p>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Barra de Paginación Premium -->
-    <div class="px-5 py-3.5 bg-slate-50/70 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
-      <!-- Selector de Tamaño y Conteo -->
+    <!-- ============================================================================
+         5. BARRA DE PAGINACIÓN SOFT-MODERN
+         ============================================================================ -->
+    <div *ngIf="!cargando && !mensajeError && totalRegistrosFiltrados > 0" class="px-5 py-3.5 bg-slate-50/70 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+      
+      <!-- Selector de Filas y Conteo -->
       <div class="flex items-center gap-3">
         <span>Mostrando <strong class="text-slate-800">{{ indiceInicio }}</strong> a <strong class="text-slate-800">{{ indiceFin }}</strong> de <strong class="text-slate-800">{{ totalRegistrosFiltrados }}</strong> empresas</span>
         
@@ -294,7 +617,7 @@
           <select
             [ngModel]="tamanoPagina"
             (ngModelChange)="cambiarTamanoPagina($event)"
-            class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-2xs"
+            class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-2xs cursor-pointer"
           >
             <option *ngFor="let opt of opcionesTamanoPagina" [value]="opt">{{ opt }}</option>
           </select>
@@ -303,7 +626,6 @@
 
       <!-- Botones de Navegación -->
       <div class="flex items-center gap-1">
-        <!-- Botón Anterior -->
         <button
           type="button"
           (click)="cambiarPagina(paginaActual - 1)"
@@ -314,7 +636,6 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         </button>
 
-        <!-- Botones de Páginas Numéricas -->
         <button
           *ngFor="let pag of listaPaginas"
           type="button"
@@ -325,7 +646,6 @@
           {{ pag }}
         </button>
 
-        <!-- Botón Siguiente -->
         <button
           type="button"
           (click)="cambiarPagina(paginaActual + 1)"

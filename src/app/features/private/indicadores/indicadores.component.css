@@ -3,8 +3,8 @@
   width: 100%;
 }
 
-/* Animación sutil de entrada */
-@keyframes fadeInUp {
+/* Animaciones sutiles de entrada Soft-Modern */
+@keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(6px);
@@ -15,26 +15,49 @@
   }
 }
 
-.animate-card {
-  animation: fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-/* Scrollbars pastel sutiles para tablas */
-.table-scroll::-webkit-scrollbar {
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Estilo sólido y flotante para el popover de selección de año */
+.year-picker-popover {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 20px 30px -5px rgba(15, 23, 42, 0.18), 0 10px 15px -5px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.9) !important;
+  z-index: 100 !important;
+}
+
+/* Scrollbars sutiles */
+::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
-.table-scroll::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: #f8fafc;
   border-radius: 4px;
 }
 
-.table-scroll::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
 }
 
-.table-scroll::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
