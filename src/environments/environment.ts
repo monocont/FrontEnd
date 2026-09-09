@@ -6,7 +6,7 @@ export const environment = {
     inactividadMs: 30 * 60 * 1000,
     avisoMs: 2 * 60 * 1000
   },
-  gateway: 'http://localhost:5050',
+  gateway: 'https://gateway-service-1013839615049.us-central1.run.app',
   microservicios: {
     seguridad:   'seguridad_service',
     empresa:     'empresa_service',
